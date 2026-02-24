@@ -1,0 +1,36 @@
+openapi: 3.0.3
+info:
+  title: User Management Service API
+  description: Handles authentication, registration, and profile management
+  version: 1.0.0
+servers:
+  - url: http://localhost:5001
+    description: Local development server
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  service:
+                    type: string
+                    example: user-management
+  /api/users:
+    get:
+      summary: Get all users
+      tags:
+        - Users
+      responses:
+        '200':
+          description: List of users retrieved successfully
+        '500':
+          description: Internal Server Error

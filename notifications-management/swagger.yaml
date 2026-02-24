@@ -1,0 +1,36 @@
+openapi: 3.0.3
+info:
+  title: Notifications Management Service API
+  description: Communication hub - in-app and email alerts for task changes and deadlines
+  version: 1.0.0
+servers:
+  - url: http://localhost:5003
+    description: Local development server
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  service:
+                    type: string
+                    example: notifications-management
+  /api/notifications:
+    get:
+      summary: Get all notifications
+      tags:
+        - Notifications
+      responses:
+        '200':
+          description: List of notifications retrieved successfully
+        '500':
+          description: Internal Server Error
