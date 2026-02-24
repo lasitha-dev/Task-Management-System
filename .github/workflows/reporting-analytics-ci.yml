@@ -1,0 +1,157 @@
+# =============================================================================
+# CI/CD Pipeline for Reporting & Analytics Microservice
+# =============================================================================
+# This workflow handles the full lifecycle: Build → Test → Security Scan →
+# Docker Image Push → Deployment for the Reporting & Analytics service.
+# It only triggers when files inside reporting-analytics/ change.
+# =============================================================================
+
+name: Reporting & Analytics CI/CD
+
+# ---------------------------------------------------------------------------
+# Trigger: Only run on pushes to 'main' that modify reporting-analytics files
+# ---------------------------------------------------------------------------
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'reporting-analytics/**'
+
+# ---------------------------------------------------------------------------
+# Job 1: Build & Test
+# ---------------------------------------------------------------------------
+# Installs dependencies and runs the Jest test suite with coverage reporting.
+# This is the gate — all subsequent jobs depend on this passing.
+# ---------------------------------------------------------------------------
+jobs:
+  build-and-test:
+    name: 🏗️ Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./reporting-analytics
+
+    steps:
+      # Step 1: Checkout the repository source code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Node.js 18 runtime (matches our Dockerfile base)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: reporting-analytics/package-lock.json
+
+      # Step 3: Install dependencies using clean install for reproducibility
+      - name: Install Dependencies
+        run: npm ci
+
+      # Step 4: Run unit/integration tests with coverage output
+      - name: Run Tests
+        run: npm test
+
+  # ---------------------------------------------------------------------------
+  # Job 2: Security Scan (DevSecOps)
+  # ---------------------------------------------------------------------------
+  # Uses Snyk to scan for vulnerabilities in both code and dependencies.
+  # Continues on error so findings are logged without blocking the pipeline.
+  # Requires SNYK_TOKEN secret to be configured in the repository.
+  # ---------------------------------------------------------------------------
+  security-scan:
+    name: 🔒 Snyk Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    defaults:
+      run:
+        working-directory: ./reporting-analytics
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: reporting-analytics/package-lock.json
+
+      # Install deps so Snyk can resolve the full dependency tree
+      - name: Install Dependencies
+        run: npm ci
+
+      # Run Snyk vulnerability scan on the project dependencies
+      - name: Run Snyk Vulnerability Scan
+        uses: snyk/actions/node@master
+        continue-on-error: true # Log findings without failing the pipeline
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --project-name=reporting-analytics
+          command: test
+
+  # ---------------------------------------------------------------------------
+  # Job 3: Docker Build & Push
+  # ---------------------------------------------------------------------------
+  # Builds the Docker image using the service's Dockerfile (node:18-alpine)
+  # and pushes it to Docker Hub with two tags:
+  #   - 'latest' for convenience
+  #   - '<commit-sha>' for traceability and rollback
+  # ---------------------------------------------------------------------------
+  docker-build-push:
+    name: 🐳 Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: security-scan
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Authenticate with Docker Hub using repository secrets
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Build and push the container image with 'latest' and SHA tags
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./reporting-analytics
+          file: ./reporting-analytics/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/reporting-analytics:latest
+            ${{ secrets.DOCKER_USERNAME }}/reporting-analytics:${{ github.sha }}
+
+  # ---------------------------------------------------------------------------
+  # Job 4: Deploy (Placeholder)
+  # ---------------------------------------------------------------------------
+  # This job serves as a placeholder for cloud deployment.
+  # Replace the echo commands with actual deployment steps for your provider:
+  #   - AWS ECS: aws ecs update-service ...
+  #   - Google Cloud Run: gcloud run deploy ...
+  #   - Azure Container Apps: az containerapp update ...
+  #   - Kubernetes: kubectl set image ...
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: 🚀 Deploy to Cloud
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+
+    steps:
+      - name: Deploy Reporting & Analytics Service
+        run: |
+          echo "============================================="
+          echo "  DEPLOYMENT PLACEHOLDER"
+          echo "============================================="
+          echo "Service:  Reporting & Analytics"
+          echo "Image:    ${{ secrets.DOCKER_USERNAME }}/reporting-analytics:${{ github.sha }}"
+          echo "Status:   Ready for cloud deployment"
+          echo ""
+          echo "To enable real deployment, replace this step"
+          echo "with your cloud provider's deployment command."
+          echo "============================================="
