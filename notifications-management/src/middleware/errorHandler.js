@@ -2,6 +2,8 @@
  * Global Error Handler Middleware
  * Ensures stack traces are never exposed to the client.
  */
+
+// This is a harmless comment to test CI/CD workflows
 const errorHandler = (err, req, res, _next) => {
     console.error(`Error: ${err.message}`);
 
