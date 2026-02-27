@@ -5,8 +5,6 @@ In this application, users will be able to track their progression in a seamless
 
 The system demonstrates a secure, microservice-based architecture leveraging the **MERN stack**, designed to fulfill the core objectives of modern **Cloud Computing** and **DevOps** practices.
 
-**Deadline:** March 14, 2026
-
 ---
 
 ## 🏗️ System Architecture
