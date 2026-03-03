@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { DragDropContext } from '@hello-pangea/dnd'
 import KanbanColumn from './KanbanColumn'
-import axios from 'axios'
+import api from '../api/axios'
 
 const COLUMNS = ['todo', 'in_progress', 'done']
 
@@ -19,7 +19,7 @@ export default function KanbanBoard({ onNewTask, onEdit }) {
 
   async function fetchTasks() {
     try {
-      const { data } = await axios.get('/api/tasks')
+      const { data } = await api.get('/api/tasks')
       // Support { tasks: [...] } or plain array
       setTasks(Array.isArray(data) ? data : data.tasks || [])
     } catch (err) {
@@ -36,7 +36,7 @@ export default function KanbanBoard({ onNewTask, onEdit }) {
   async function handleDelete(taskId) {
     if (!window.confirm('Delete this task?')) return
     try {
-      await axios.delete(`/api/tasks/${taskId}`)
+      await api.delete(`/api/tasks/${taskId}`)
       setTasks((prev) => prev.filter((t) => t._id !== taskId))
     } catch {
       alert('Failed to delete task.')
@@ -56,7 +56,7 @@ export default function KanbanBoard({ onNewTask, onEdit }) {
     )
 
     try {
-      await axios.patch(`/api/tasks/${draggableId}`, { status: newStatus })
+      await api.patch(`/api/tasks/${draggableId}`, { status: newStatus })
     } catch {
       // Revert on failure
       fetchTasks()

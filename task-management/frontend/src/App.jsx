@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import KanbanBoard from './components/KanbanBoard'
 import CreateTaskModal from './components/CreateTaskModal'
-import axios from 'axios'
+import api from './api/axios'
 
 // ─── Toast notification ───────────────────────────────────────────────────────
 function Toast({ message, type, onClose }) {
@@ -27,7 +27,7 @@ function KanbanPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
   const [toast, setToast] = useState(null)
-  const boardRef = useRef()
+  const [refreshKey, setRefreshKey] = useState(0)
 
   function showToast(message, type = 'success') {
     setToast({ message, type })
@@ -47,15 +47,13 @@ function KanbanPage() {
   async function handleSubmit(formData) {
     try {
       if (editingTask) {
-        await axios.put(`/api/tasks/${editingTask._id}`, formData)
+        await api.put(`/api/tasks/${editingTask._id}`, formData)
         showToast('Task updated successfully')
       } else {
-        await axios.post('/api/tasks', formData)
+        await api.post('/api/tasks', formData)
         showToast('Task created successfully')
       }
-      // Refresh board
-      boardRef.current?.refresh?.()
-      window.location.reload() // simple refresh until board exposes refresh
+      setRefreshKey((k) => k + 1)
     } catch (err) {
       showToast(err?.response?.data?.message || 'Something went wrong', 'error')
       throw err // keep modal open
@@ -70,7 +68,7 @@ function KanbanPage() {
         onNewTask={openCreate}
       />
       <div className="flex-1 overflow-x-auto overflow-y-hidden p-8 bg-slate-50 dark:bg-background-dark custom-scrollbar">
-        <KanbanBoard ref={boardRef} onNewTask={openCreate} onEdit={openEdit} />
+        <KanbanBoard key={refreshKey} onNewTask={openCreate} onEdit={openEdit} />
       </div>
 
       <CreateTaskModal
