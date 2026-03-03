@@ -10,6 +10,12 @@ const {
     deleteTask,
     getTaskStats,
     getUsers,
+    searchUsersHandler,
+    addAssignee,
+    removeAssignee,
+    addComment,
+    deleteComment,
+    logTime,
 } = require('../controllers/taskController');
 const { protect } = require('../middleware/auth');
 
@@ -47,15 +53,29 @@ const updateTaskValidation = [
 // ─── Routes ────────────────────────────────────────────────────────────────────
 
 // Stats & Users (specific routes before :id to avoid conflicts)
-router.get('/stats',       protect, getTaskStats);
-router.get('/users',       protect, getUsers);
+router.get('/stats',               protect, getTaskStats);
+router.get('/users',               protect, getUsers);
+router.get('/users/search',        protect, searchUsersHandler);
 
 // CRUD
-router.get('/',            protect, getAllTasks);
-router.post('/',           protect, createTaskValidation, createTask);
-router.get('/:id',         protect, getTaskById);
-router.put('/:id',         protect, updateTaskValidation, updateTask);
-router.patch('/:id',       protect, updateTaskValidation, patchTask);
-router.delete('/:id',      protect, deleteTask);
+router.get('/',                    protect, getAllTasks);
+router.post('/',                   protect, createTaskValidation, createTask);
+router.get('/:id',                 protect, getTaskById);
+router.put('/:id',                 protect, updateTaskValidation, updateTask);
+router.patch('/:id',               protect, updateTaskValidation, patchTask);
+router.delete('/:id',              protect, deleteTask);
+
+// Assignees
+router.post('/:id/assignees',                  protect, addAssignee);
+router.delete('/:id/assignees/:userId',        protect, removeAssignee);
+
+// Comments
+router.post('/:id/comments',                   protect, addComment);
+router.delete('/:id/comments/:commentId',      protect, deleteComment);
+
+// Time logging
+router.post('/:id/time-logs',                  protect, logTime);
+
+module.exports = router;
 
 module.exports = router;

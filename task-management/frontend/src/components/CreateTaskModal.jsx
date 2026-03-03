@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import UserSearchInput from './UserSearchInput'
 
 const DEFAULT_FORM = {
   title: '',
@@ -6,7 +7,7 @@ const DEFAULT_FORM = {
   deadline: '',
   priority: 'medium',
   status: 'todo',
-  assignedTo: '',
+  assignees: [],
 }
 
 export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData }) {
@@ -21,7 +22,7 @@ export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData
         deadline: initialData.deadline ? initialData.deadline.slice(0, 10) : '',
         priority: initialData.priority || 'medium',
         status: initialData.status || 'todo',
-        assignedTo: initialData.assignedTo || '',
+        assignees: initialData.assignees || [],
       })
     } else {
       setForm(DEFAULT_FORM)
@@ -165,19 +166,12 @@ export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData
               </div>
             )}
 
-            {/* Assigned To */}
+            {/* Assignees */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5" htmlFor="assignedTo">
-                Assign To
-              </label>
-              <input
-                id="assignedTo"
-                name="assignedTo"
-                type="text"
-                value={form.assignedTo}
-                onChange={handleChange}
-                placeholder="Team member name or email"
-                className="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              <UserSearchInput
+                label="Assign To"
+                selected={form.assignees}
+                onChange={(users) => setForm((prev) => ({ ...prev, assignees: users }))}
               />
             </div>
           </div>

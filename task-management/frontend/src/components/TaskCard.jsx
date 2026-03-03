@@ -31,9 +31,15 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
 }
 
-export default function TaskCard({ task, isDone, onEdit, onDelete, provided }) {
+export default function TaskCard({ task, isDone, onEdit, onDelete, onViewDetail, provided }) {
   const overdue = isOverdue(task.deadline)
   const today = isDueToday(task.deadline)
+
+  const assignees = task.assignees?.length > 0
+    ? task.assignees
+    : task.assignedTo
+      ? [{ id: 'legacy', name: task.assignedTo, avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(task.assignedTo)}&background=144bb8&color=fff` }]
+      : []
 
   return (
     <div
@@ -78,7 +84,11 @@ export default function TaskCard({ task, isDone, onEdit, onDelete, provided }) {
       </div>
 
       {/* Title */}
-      <h4 className={`font-bold mb-2 leading-tight ${isDone ? 'text-slate-500 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}>
+      <h4
+        onClick={() => onViewDetail?.(task)}
+        className={`font-bold mb-2 leading-tight cursor-pointer hover:text-primary transition-colors
+          ${isDone ? 'text-slate-500 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-white'}`}
+      >
         {task.title}
       </h4>
 
@@ -99,18 +109,31 @@ export default function TaskCard({ task, isDone, onEdit, onDelete, provided }) {
 
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-slate-100 dark:border-surface-highlight/50 pt-3">
-        {/* Assignee */}
-        {task.assignedTo ? (
-          <img
-            alt="Assignee"
-            className={`h-6 w-6 rounded-full border border-slate-200 dark:border-slate-700 ${isDone ? 'grayscale opacity-50' : ''}`}
-            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(task.assignedTo)}&background=144bb8&color=fff&size=48`}
-          />
-        ) : (
-          <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-[8px] text-white font-bold uppercase">
-            {task.title?.slice(0, 2).toUpperCase()}
-          </div>
-        )}
+        {/* Assignee avatars (stacked) */}
+        <div className="flex -space-x-2">
+          {assignees.length > 0 ? (
+            <>
+              {assignees.slice(0, 4).map((u, i) => (
+                <img
+                  key={u.id || i}
+                  alt={u.name}
+                  title={u.name}
+                  className={`h-6 w-6 rounded-full border-2 border-white dark:border-surface-dark ${isDone ? 'grayscale opacity-50' : ''}`}
+                  src={u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=144bb8&color=fff&size=48`}
+                />
+              ))}
+              {assignees.length > 4 && (
+                <div className="h-6 w-6 rounded-full border-2 border-white dark:border-surface-dark bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-bold text-slate-600 dark:text-slate-300">
+                  +{assignees.length - 4}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-[8px] text-white font-bold uppercase">
+              {task.title?.slice(0, 2).toUpperCase()}
+            </div>
+          )}
+        </div>
 
         {/* Due date */}
         {isDone ? (

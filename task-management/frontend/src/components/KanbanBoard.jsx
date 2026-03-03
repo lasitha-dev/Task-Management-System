@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { DragDropContext } from '@hello-pangea/dnd'
 import KanbanColumn from './KanbanColumn'
+import TaskDetailModal from './TaskDetailModal'
 import api from '../api/axios'
 
 const COLUMNS = ['todo', 'in_progress', 'done']
@@ -13,9 +14,10 @@ function groupByStatus(tasks) {
 }
 
 export default function KanbanBoard({ onNewTask, onEdit }) {
-  const [tasks, setTasks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [tasks, setTasks]         = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState(null)
+  const [detailTaskId, setDetailTaskId] = useState(null)
 
   async function fetchTasks() {
     try {
@@ -64,6 +66,10 @@ export default function KanbanBoard({ onNewTask, onEdit }) {
     }
   }
 
+  function handleTaskUpdated(updatedTask) {
+    setTasks((prev) => prev.map((t) => (t._id === updatedTask._id ? updatedTask : t)))
+  }
+
   const grouped = groupByStatus(tasks)
 
   if (loading) {
@@ -91,25 +97,35 @@ export default function KanbanBoard({ onNewTask, onEdit }) {
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-8 h-full min-w-max pb-4">
-        {COLUMNS.map((colId) => (
-          <KanbanColumn
-            key={colId}
-            columnId={colId}
-            tasks={grouped[colId]}
-            onEdit={onEdit}
-            onDelete={handleDelete}
-            onAddTask={onNewTask}
-          />
-        ))}
+    <>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex gap-8 h-full min-w-max pb-4">
+          {COLUMNS.map((colId) => (
+            <KanbanColumn
+              key={colId}
+              columnId={colId}
+              tasks={grouped[colId]}
+              onEdit={onEdit}
+              onDelete={handleDelete}
+              onAddTask={onNewTask}
+              onViewDetail={(task) => setDetailTaskId(task._id)}
+            />
+          ))}
 
-        {/* Add new column placeholder */}
-        <div className="w-[350px] shrink-0 border-2 border-dashed border-slate-200 dark:border-surface-highlight/30 rounded-2xl flex flex-col items-center justify-center gap-3 p-6 text-slate-400 dark:text-slate-600 hover:text-primary dark:hover:text-primary hover:border-primary/50 transition-all cursor-pointer group">
-          <span className="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">add_circle</span>
-          <p className="text-sm font-bold uppercase tracking-widest">Add New Column</p>
+          {/* Add new column placeholder */}
+          <div className="w-[350px] shrink-0 border-2 border-dashed border-slate-200 dark:border-surface-highlight/30 rounded-2xl flex flex-col items-center justify-center gap-3 p-6 text-slate-400 dark:text-slate-600 hover:text-primary dark:hover:text-primary hover:border-primary/50 transition-all cursor-pointer group">
+            <span className="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">add_circle</span>
+            <p className="text-sm font-bold uppercase tracking-widest">Add New Column</p>
+          </div>
         </div>
-      </div>
-    </DragDropContext>
+      </DragDropContext>
+
+      <TaskDetailModal
+        taskId={detailTaskId}
+        isOpen={Boolean(detailTaskId)}
+        onClose={() => setDetailTaskId(null)}
+        onTaskUpdated={handleTaskUpdated}
+      />
+    </>
   )
 }

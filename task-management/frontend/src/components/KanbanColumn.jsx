@@ -26,7 +26,7 @@ const COLUMN_LABELS = {
   done: 'Done',
 }
 
-export default function KanbanColumn({ columnId, tasks, onEdit, onDelete, onAddTask }) {
+export default function KanbanColumn({ columnId, tasks, onEdit, onDelete, onAddTask, onViewDetail }) {
   const meta = COLUMN_META[columnId] || COLUMN_META.todo
   const label = COLUMN_LABELS[columnId] || columnId
   const isDone = columnId === 'done'
@@ -70,6 +70,7 @@ export default function KanbanColumn({ columnId, tasks, onEdit, onDelete, onAddT
                     isDone={isDone}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onViewDetail={onViewDetail}
                     provided={dragProvided}
                   />
                 )}

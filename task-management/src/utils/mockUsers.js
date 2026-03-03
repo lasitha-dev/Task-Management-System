@@ -36,6 +36,34 @@ const MOCK_USERS = [
         role: 'tester',
         avatar: 'https://ui-avatars.com/api/?name=Jordan+Lee&background=059669&color=fff',
     },
+    {
+        id: 'user_005',
+        name: 'Pramod Wijenayake',
+        email: 'pramod@merncore.dev',
+        role: 'admin',
+        avatar: 'https://ui-avatars.com/api/?name=Pramod+Wijenayake&background=dc2626&color=fff',
+    },
+    {
+        id: 'user_006',
+        name: 'Riley Chen',
+        email: 'riley@merncore.dev',
+        role: 'developer',
+        avatar: 'https://ui-avatars.com/api/?name=Riley+Chen&background=d97706&color=fff',
+    },
+    {
+        id: 'user_007',
+        name: 'Morgan Smith',
+        email: 'morgan@merncore.dev',
+        role: 'designer',
+        avatar: 'https://ui-avatars.com/api/?name=Morgan+Smith&background=7c3aed&color=fff',
+    },
+    {
+        id: 'user_008',
+        name: 'Taylor Nguyen',
+        email: 'taylor@merncore.dev',
+        role: 'devops',
+        avatar: 'https://ui-avatars.com/api/?name=Taylor+Nguyen&background=0f766e&color=fff',
+    },
 ];
 
 /**
@@ -66,4 +94,15 @@ function isValidUser(id) {
     return MOCK_USERS.some((u) => u.id === id);
 }
 
-module.exports = { getAllUsers, getUserById, getUserByEmail, isValidUser, MOCK_USERS };
+/**
+ * Search users by name or email (case-insensitive)
+ */
+function searchUsers(query, limit = 10) {
+    if (!query || query.trim() === '') return MOCK_USERS.slice(0, limit);
+    const q = query.toLowerCase();
+    return MOCK_USERS
+        .filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+        .slice(0, limit);
+}
+
+module.exports = { getAllUsers, getUserById, getUserByEmail, isValidUser, searchUsers, MOCK_USERS };

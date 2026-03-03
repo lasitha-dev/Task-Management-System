@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const taskService = require('../services/taskService');
-const { getAllUsers } = require('../utils/mockUsers');
+const { getAllUsers, searchUsers } = require('../utils/mockUsers');
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 function handleValidationErrors(req, res) {
@@ -59,21 +59,24 @@ const createTask = async (req, res) => {
     if (validationError) return;
 
     try {
-        const { title, description, status, priority, deadline, assignedTo, progress, tags, project, sprint } = req.body;
+        const { title, description, status, priority, deadline, assignees, progress, tags, project, sprint, estimatedHours } = req.body;
 
-        const task = await taskService.createTask({
-            title,
-            description,
-            status,
-            priority,
-            deadline: deadline || null,
-            assignedTo: assignedTo || null,
-            createdBy: req.user?.name || req.user?.id || 'system',
-            progress: progress || 0,
-            tags: tags || [],
-            project: project || 'General',
-            sprint: sprint || null,
-        });
+        const task = await taskService.createTask(
+            {
+                title,
+                description,
+                status,
+                priority,
+                deadline: deadline || null,
+                assignees: assignees || [],
+                progress: progress || 0,
+                tags: tags || [],
+                project: project || 'General',
+                sprint: sprint || null,
+                estimatedHours: estimatedHours || null,
+            },
+            req.user,
+        );
 
         res.status(201).json({ success: true, message: 'Task created successfully.', task });
     } catch (error) {
@@ -87,7 +90,7 @@ const updateTask = async (req, res) => {
     if (validationError) return;
 
     try {
-        const task = await taskService.updateTask(req.params.id, req.body);
+        const task = await taskService.updateTask(req.params.id, req.body, req.user);
 
         if (!task) {
             return res.status(404).json({ success: false, message: 'Task not found.' });
@@ -106,7 +109,7 @@ const updateTask = async (req, res) => {
 // Used by drag-and-drop to update status only (or any partial update)
 const patchTask = async (req, res) => {
     try {
-        const task = await taskService.patchTask(req.params.id, req.body);
+        const task = await taskService.patchTask(req.params.id, req.body, req.user);
 
         if (!task) {
             return res.status(404).json({ success: false, message: 'Task not found.' });
@@ -149,10 +152,88 @@ const getTaskStats = async (req, res) => {
     }
 };
 
-// ─── GET /api/tasks/users (mock — replace with real service call later) ───────
+// ─── GET /api/tasks/users ────────────────────────────────────────────────────────────────
 const getUsers = (req, res) => {
     const users = getAllUsers();
     res.status(200).json({ success: true, users });
+};
+
+// ─── GET /api/tasks/users/search?q= ───────────────────────────────────────────────────
+const searchUsersHandler = (req, res) => {
+    const { q = '', limit } = req.query;
+    const users = searchUsers(q, limit ? parseInt(limit, 10) : 10);
+    res.status(200).json({ success: true, users });
+};
+
+// ─── POST /api/tasks/:id/assignees ───────────────────────────────────────────────────
+const addAssignee = async (req, res) => {
+    try {
+        const { id: assigneeId, name, email, role, avatar } = req.body;
+        if (!assigneeId || !name) {
+            return res.status(400).json({ success: false, message: 'assignee id and name are required.' });
+        }
+        const task = await taskService.addAssignee(
+            req.params.id,
+            { id: assigneeId, name, email: email || '', role: role || 'member', avatar: avatar || '' },
+            req.user,
+        );
+        if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
+        res.status(200).json({ success: true, message: 'Assignee added.', task });
+    } catch (error) {
+        res.status(error.status || 500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── DELETE /api/tasks/:id/assignees/:userId ────────────────────────────────────────
+const removeAssignee = async (req, res) => {
+    try {
+        const task = await taskService.removeAssignee(req.params.id, req.params.userId, req.user);
+        if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
+        res.status(200).json({ success: true, message: 'Assignee removed.', task });
+    } catch (error) {
+        res.status(error.status || 500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── POST /api/tasks/:id/comments ───────────────────────────────────────────────────
+const addComment = async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text || text.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Comment text is required.' });
+        }
+        const task = await taskService.addComment(req.params.id, text.trim(), req.user);
+        if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
+        res.status(201).json({ success: true, message: 'Comment added.', task });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── DELETE /api/tasks/:id/comments/:commentId ───────────────────────────────────────
+const deleteComment = async (req, res) => {
+    try {
+        const task = await taskService.deleteComment(req.params.id, req.params.commentId, req.user);
+        if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
+        res.status(200).json({ success: true, message: 'Comment deleted.', task });
+    } catch (error) {
+        res.status(error.status || 500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── POST /api/tasks/:id/time-logs ──────────────────────────────────────────────────
+const logTime = async (req, res) => {
+    try {
+        const { hours, note } = req.body;
+        if (!hours || isNaN(hours) || Number(hours) <= 0) {
+            return res.status(400).json({ success: false, message: 'hours must be a positive number.' });
+        }
+        const task = await taskService.logTime(req.params.id, Number(hours), note || '', req.user);
+        if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
+        res.status(201).json({ success: true, message: 'Time logged.', task });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 module.exports = {
@@ -164,4 +245,10 @@ module.exports = {
     deleteTask,
     getTaskStats,
     getUsers,
+    searchUsersHandler,
+    addAssignee,
+    removeAssignee,
+    addComment,
+    deleteComment,
+    logTime,
 };

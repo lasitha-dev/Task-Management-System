@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import KanbanBoard from './components/KanbanBoard'
@@ -113,6 +115,15 @@ export default function App() {
           <Route path="/settings" element={<PlaceholderPage title="Settings" icon="settings" />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <ToastContainer
+          position="bottom-right"
+          autoClose={3500}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          theme="dark"
+        />
       </div>
     </BrowserRouter>
   )
