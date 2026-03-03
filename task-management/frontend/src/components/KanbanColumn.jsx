@@ -6,18 +6,20 @@ const COLUMN_META = {
   todo: {
     dot: 'bg-slate-400',
     badge: 'bg-slate-200 dark:bg-surface-highlight text-slate-600 dark:text-slate-400',
-    icon: 'add_circle',
   },
   in_progress: {
     dot: 'bg-primary animate-pulse',
     badge: 'bg-primary/10 text-primary',
-    icon: 'more_horiz',
   },
   done: {
     dot: 'bg-green-500',
     badge: 'bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-400',
-    icon: 'check_circle',
   },
+}
+
+const DEFAULT_META = {
+  dot: 'bg-slate-400',
+  badge: 'bg-slate-200 dark:bg-surface-highlight text-slate-600 dark:text-slate-400',
 }
 
 const COLUMN_LABELS = {
@@ -26,9 +28,9 @@ const COLUMN_LABELS = {
   done: 'Done',
 }
 
-export default function KanbanColumn({ columnId, tasks, onEdit, onDelete, onAddTask, onViewDetail }) {
-  const meta = COLUMN_META[columnId] || COLUMN_META.todo
-  const label = COLUMN_LABELS[columnId] || columnId
+export default function KanbanColumn({ columnId, customLabel, tasks, onEdit, onDelete, onAddTask, onViewDetail }) {
+  const meta  = COLUMN_META[columnId] || DEFAULT_META
+  const label = customLabel || COLUMN_LABELS[columnId] || columnId.replace(/_/g, ' ')
   const isDone = columnId === 'done'
 
   return (
@@ -45,10 +47,11 @@ export default function KanbanColumn({ columnId, tasks, onEdit, onDelete, onAddT
           </span>
         </div>
         <button
-          onClick={onAddTask}
+          onClick={() => onAddTask?.(columnId)}
+          title={`Add task to ${label}`}
           className="text-slate-400 hover:text-primary transition-colors"
         >
-          <span className="material-symbols-outlined text-[20px]">{meta.icon}</span>
+          <span className="material-symbols-outlined text-[20px]">add_circle</span>
         </button>
       </div>
 

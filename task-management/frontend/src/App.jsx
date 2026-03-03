@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import KanbanBoard from './components/KanbanBoard'
 import CreateTaskModal from './components/CreateTaskModal'
+import CreateBoardModal from './components/CreateBoardModal'
 import api from './api/axios'
 
 // ─── Toast notification ───────────────────────────────────────────────────────
@@ -26,18 +27,69 @@ function Toast({ message, type, onClose }) {
 
 // ─── Main Kanban page ─────────────────────────────────────────────────────────
 function KanbanPage() {
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState(null)
-  const [toast, setToast] = useState(null)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [modalOpen, setModalOpen]     = useState(false)
+  const [editingTask, setEditingTask]   = useState(null)
+  const [defaultStatus, setDefaultStatus] = useState('todo')
+  const [toast, setToast]             = useState(null)
+  const [refreshKey, setRefreshKey]   = useState(0)
+  
+  // Board management
+  const [boards, setBoards] = useState([])
+  const [selectedBoard, setSelectedBoard] = useState(null)
+  const [boardModalOpen, setBoardModalOpen] = useState(false)
+  const [loadingBoards, setLoadingBoards] = useState(true)
+
+  // Fetch boards on mount
+  useEffect(() => {
+    fetchBoards()
+  }, [])
+
+  async function fetchBoards() {
+    try {
+      const { data } = await api.get('/api/boards')
+      const boardList = data.boards || []
+      setBoards(boardList)
+      
+      // Auto-select first board if available
+      if (boardList.length > 0 && !selectedBoard) {
+        setSelectedBoard(boardList[0]._id)
+      } else if (boardList.length === 0) {
+        // No boards exist, prompt user to create one
+        setSelectedBoard(null)
+      }
+    } catch (err) {
+      showToast('Failed to load boards', 'error')
+    } finally {
+      setLoadingBoards(false)
+    }
+  }
+
+  async function handleCreateBoard(boardData) {
+    try {
+      const { data } = await api.post('/api/boards', boardData)
+      const newBoard = data.board
+      setBoards([newBoard, ...boards])
+      setSelectedBoard(newBoard._id)
+      showToast('Board created successfully')
+      setRefreshKey((k) => k + 1) // Refresh tasks
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Failed to create board', 'error')
+      throw err
+    }
+  }
 
   function showToast(message, type = 'success') {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3500)
   }
 
-  function openCreate() {
+  function openCreate(status = 'todo') {
+    if (!selectedBoard) {
+      showToast('Please create or select a board first', 'error')
+      return
+    }
     setEditingTask(null)
+    setDefaultStatus(status)
     setModalOpen(true)
   }
 
@@ -48,11 +100,14 @@ function KanbanPage() {
 
   async function handleSubmit(formData) {
     try {
+      // Add board to task data
+      const taskData = { ...formData, board: selectedBoard }
+      
       if (editingTask) {
-        await api.put(`/api/tasks/${editingTask._id}`, formData)
+        await api.put(`/api/tasks/${editingTask._id}`, taskData)
         showToast('Task updated successfully')
       } else {
-        await api.post('/api/tasks', formData)
+        await api.post('/api/tasks', taskData)
         showToast('Task created successfully')
       }
       setRefreshKey((k) => k + 1)
@@ -62,15 +117,42 @@ function KanbanPage() {
     }
   }
 
+  const currentBoard = boards.find(b => b._id === selectedBoard)
+
   return (
     <main className="flex flex-col h-screen overflow-hidden" style={{ marginLeft: 260 }}>
       <Header
-        projectName="Microservices Migration"
+        boards={boards}
+        selectedBoard={selectedBoard}
+        onSelectBoard={setSelectedBoard}
+        onCreateBoard={() => setBoardModalOpen(true)}
+        boardName={currentBoard?.name || 'No Board Selected'}
         sprint="Sprint 4"
         onNewTask={openCreate}
+        loadingBoards={loadingBoards}
       />
       <div className="flex-1 overflow-x-auto overflow-y-hidden p-8 bg-slate-50 dark:bg-background-dark custom-scrollbar">
-        <KanbanBoard key={refreshKey} onNewTask={openCreate} onEdit={openEdit} />
+        {selectedBoard ? (
+          <KanbanBoard 
+            key={`${refreshKey}-${selectedBoard}`} 
+            boardId={selectedBoard}
+            onNewTask={openCreate} 
+            onEdit={openEdit} 
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4">
+            <span className="material-symbols-outlined text-6xl text-slate-300">dashboard</span>
+            <p className="text-xl font-semibold">No board selected</p>
+            <p className="text-sm">Create a new board to get started</p>
+            <button
+              onClick={() => setBoardModalOpen(true)}
+              className="mt-4 px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[20px]">add_circle</span>
+              Create Your First Board
+            </button>
+          </div>
+        )}
       </div>
 
       <CreateTaskModal
@@ -78,6 +160,13 @@ function KanbanPage() {
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         initialData={editingTask}
+        defaultStatus={defaultStatus}
+      />
+
+      <CreateBoardModal
+        isOpen={boardModalOpen}
+        onClose={() => setBoardModalOpen(false)}
+        onSubmit={handleCreateBoard}
       />
 
       {toast && (

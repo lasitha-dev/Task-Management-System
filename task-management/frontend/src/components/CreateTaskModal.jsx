@@ -10,7 +10,7 @@ const DEFAULT_FORM = {
   assignees: [],
 }
 
-export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData }) {
+export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData, defaultStatus }) {
   const [form, setForm] = useState(DEFAULT_FORM)
   const [loading, setLoading] = useState(false)
 
@@ -25,9 +25,9 @@ export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData
         assignees: initialData.assignees || [],
       })
     } else {
-      setForm(DEFAULT_FORM)
+      setForm({ ...DEFAULT_FORM, status: defaultStatus || 'todo' })
     }
-  }, [initialData, isOpen])
+  }, [initialData, isOpen, defaultStatus])
 
   if (!isOpen) return null
 
@@ -146,25 +146,27 @@ export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData
               </div>
             </div>
 
-            {/* Status (edit mode) */}
-            {isEditing && (
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5" htmlFor="status">
-                  Status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-white"
-                >
-                  <option value="todo">To Do</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="done">Done</option>
-                </select>
-              </div>
-            )}
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5" htmlFor="status">
+                Column / Status
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-white"
+              >
+                <option value="todo">To Do</option>
+                <option value="in_progress">In Progress</option>
+                <option value="done">Done</option>
+                {/* Dynamically include custom column if passed */}
+                {defaultStatus && !['todo', 'in_progress', 'done'].includes(defaultStatus) && (
+                  <option value={defaultStatus}>{defaultStatus.replace(/_/g, ' ')}</option>
+                )}
+              </select>
+            </div>
 
             {/* Assignees */}
             <div>

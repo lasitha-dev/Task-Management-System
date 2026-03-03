@@ -4,26 +4,51 @@ import KanbanColumn from './KanbanColumn'
 import TaskDetailModal from './TaskDetailModal'
 import api from '../api/axios'
 
-const COLUMNS = ['todo', 'in_progress', 'done']
+const DEFAULT_COLUMNS = ['todo', 'in_progress', 'done']
+const COLUMN_LABELS = { todo: 'To Do', in_progress: 'In Progress', done: 'Done' }
 
-function groupByStatus(tasks) {
-  return COLUMNS.reduce((acc, col) => {
+function groupByStatus(tasks, columns) {
+  return columns.reduce((acc, col) => {
     acc[col] = tasks.filter((t) => t.status === col)
     return acc
   }, {})
 }
 
-export default function KanbanBoard({ onNewTask, onEdit }) {
-  const [tasks, setTasks]         = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState(null)
+export default function KanbanBoard({ boardId, onNewTask, onEdit }) {
+  const [tasks, setTasks]               = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [error, setError]               = useState(null)
   const [detailTaskId, setDetailTaskId] = useState(null)
+  const [columns, setColumns]           = useState(DEFAULT_COLUMNS)
+  const [addingColumn, setAddingColumn] = useState(false)
+  const [newColName, setNewColName]     = useState('')
 
   async function fetchTasks() {
     try {
-      const { data } = await api.get('/api/tasks')
-      // Support { tasks: [...] } or plain array
-      setTasks(Array.isArray(data) ? data : data.tasks || [])
+      // Fetch tasks filtered by board
+      const { data } = await api.get('/api/tasks', {
+        params: { board: boardId }
+      })
+      const taskList = Array.isArray(data) ? data : data.tasks || []
+      setTasks(taskList)
+
+      // Auto-discover any custom column statuses stored in the DB
+      const known = new Set(DEFAULT_COLUMNS)
+      const discovered = []
+      taskList.forEach((t) => {
+        if (t.status && !known.has(t.status)) {
+          known.add(t.status)
+          COLUMN_LABELS[t.status] = t.status.replace(/_/g, ' ')
+          discovered.push(t.status)
+        }
+      })
+      if (discovered.length) {
+        setColumns((prev) => {
+          const merged = [...prev]
+          discovered.forEach((s) => { if (!merged.includes(s)) merged.push(s) })
+          return merged
+        })
+      }
     } catch (err) {
       setError('Failed to load tasks. Make sure the backend is running.')
     } finally {
@@ -70,7 +95,24 @@ export default function KanbanBoard({ onNewTask, onEdit }) {
     setTasks((prev) => prev.map((t) => (t._id === updatedTask._id ? updatedTask : t)))
   }
 
-  const grouped = groupByStatus(tasks)
+  function handleAddColumn() {
+    const name = newColName.trim()
+    if (!name) return
+    // Convert display name to a safe id: lowercase, spaces → underscores
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
+    if (columns.includes(id)) {
+      setNewColName('')
+      setAddingColumn(false)
+      return
+    }
+    // Register the label so COLUMN_LABELS works in KanbanColumn
+    COLUMN_LABELS[id] = name
+    setColumns((prev) => [...prev, id])
+    setNewColName('')
+    setAddingColumn(false)
+  }
+
+  const grouped = groupByStatus(tasks, columns)
 
   if (loading) {
     return (
@@ -100,23 +142,61 @@ export default function KanbanBoard({ onNewTask, onEdit }) {
     <>
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-8 h-full min-w-max pb-4">
-          {COLUMNS.map((colId) => (
+          {columns.map((colId) => (
             <KanbanColumn
               key={colId}
               columnId={colId}
-              tasks={grouped[colId]}
+              customLabel={COLUMN_LABELS[colId]}
+              tasks={grouped[colId] || []}
               onEdit={onEdit}
               onDelete={handleDelete}
-              onAddTask={onNewTask}
+              onAddTask={(status) => onNewTask(status)}
               onViewDetail={(task) => setDetailTaskId(task._id)}
             />
           ))}
 
-          {/* Add new column placeholder */}
-          <div className="w-[350px] shrink-0 border-2 border-dashed border-slate-200 dark:border-surface-highlight/30 rounded-2xl flex flex-col items-center justify-center gap-3 p-6 text-slate-400 dark:text-slate-600 hover:text-primary dark:hover:text-primary hover:border-primary/50 transition-all cursor-pointer group">
-            <span className="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">add_circle</span>
-            <p className="text-sm font-bold uppercase tracking-widest">Add New Column</p>
-          </div>
+          {/* Add new column */}
+          {addingColumn ? (
+            <div className="w-[350px] shrink-0 border-2 border-primary/40 bg-primary/5 dark:bg-primary/10 rounded-2xl flex flex-col items-center justify-center gap-3 p-6">
+              <span className="material-symbols-outlined text-3xl text-primary">view_column</span>
+              <p className="text-sm font-bold text-slate-700 dark:text-white uppercase tracking-wide">Name your column</p>
+              <input
+                autoFocus
+                type="text"
+                value={newColName}
+                onChange={(e) => setNewColName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddColumn()
+                  if (e.key === 'Escape') { setAddingColumn(false); setNewColName('') }
+                }}
+                placeholder="e.g. In Review, Blocked…"
+                className="w-full bg-white dark:bg-background-dark border border-slate-300 dark:border-surface-highlight rounded-lg px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-center"
+              />
+              <div className="flex gap-2 w-full">
+                <button
+                  onClick={() => { setAddingColumn(false); setNewColName('') }}
+                  className="flex-1 py-2 text-sm font-medium rounded-lg border border-slate-200 dark:border-surface-highlight text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-highlight transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddColumn}
+                  disabled={!newColName.trim()}
+                  className="flex-1 py-2 text-sm font-bold rounded-lg bg-primary hover:bg-blue-700 text-white transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                >
+                  Add Column
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => setAddingColumn(true)}
+              className="w-[350px] shrink-0 border-2 border-dashed border-slate-200 dark:border-surface-highlight/30 rounded-2xl flex flex-col items-center justify-center gap-3 p-6 text-slate-400 dark:text-slate-600 hover:text-primary dark:hover:text-primary hover:border-primary/50 transition-all cursor-pointer group"
+            >
+              <span className="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">add_circle</span>
+              <p className="text-sm font-bold uppercase tracking-widest">Add New Column</p>
+            </div>
+          )}
         </div>
       </DragDropContext>
 

@@ -14,7 +14,7 @@ function handleValidationErrors(req, res) {
 // ─── GET /api/tasks ───────────────────────────────────────────────────────────
 const getAllTasks = async (req, res) => {
     try {
-        const { status, priority, assignedTo, project, sprint } = req.query;
+        const { status, priority, assignedTo, project, sprint, board } = req.query;
         const filters = {};
 
         if (status)     filters.status     = status;
@@ -22,6 +22,7 @@ const getAllTasks = async (req, res) => {
         if (assignedTo) filters.assignedTo = assignedTo;
         if (project)    filters.project    = project;
         if (sprint)     filters.sprint     = sprint;
+        if (board)      filters.board      = board;
 
         const tasks = await taskService.getAllTasks(filters);
 
@@ -59,7 +60,7 @@ const createTask = async (req, res) => {
     if (validationError) return;
 
     try {
-        const { title, description, status, priority, deadline, assignees, progress, tags, project, sprint, estimatedHours } = req.body;
+        const { title, description, status, priority, deadline, assignees, progress, tags, project, sprint, estimatedHours, board } = req.body;
 
         const task = await taskService.createTask(
             {
@@ -71,6 +72,7 @@ const createTask = async (req, res) => {
                 assignees: assignees || [],
                 progress: progress || 0,
                 tags: tags || [],
+                board: board || null,
                 project: project || 'General',
                 sprint: sprint || null,
                 estimatedHours: estimatedHours || null,

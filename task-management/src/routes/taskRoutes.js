@@ -24,9 +24,6 @@ const createTaskValidation = [
     body('title')
         .notEmpty().withMessage('Title is required')
         .isLength({ max: 200 }).withMessage('Title cannot exceed 200 characters'),
-    body('status')
-        .optional()
-        .isIn(['todo', 'in_progress', 'done']).withMessage('Invalid status'),
     body('priority')
         .optional()
         .isIn(['low', 'medium', 'high', 'urgent']).withMessage('Invalid priority'),
@@ -39,9 +36,6 @@ const updateTaskValidation = [
     body('title')
         .optional()
         .isLength({ min: 1, max: 200 }).withMessage('Title must be between 1 and 200 characters'),
-    body('status')
-        .optional()
-        .isIn(['todo', 'in_progress', 'done']).withMessage('Invalid status'),
     body('priority')
         .optional()
         .isIn(['low', 'medium', 'high', 'urgent']).withMessage('Invalid priority'),

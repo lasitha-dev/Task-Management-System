@@ -39,7 +39,7 @@ async function createTask(data, reporter = null) {
 
 /**
  * Get all tasks with optional filters
- * Supported filters: status, priority, assigneeId, reporterId, project, sprint
+ * Supported filters: status, priority, assigneeId, reporterId, project, sprint, board
  */
 async function getAllTasks(filters = {}) {
     const query = {};
@@ -53,6 +53,7 @@ async function getAllTasks(filters = {}) {
     if (filters.createdBy)  query['reporter.id']   = filters.createdBy;
     if (filters.project)    query.project          = filters.project;
     if (filters.sprint)     query.sprint           = filters.sprint;
+    if (filters.board)      query.board            = filters.board;
 
     return await Task.find(query).sort({ createdAt: -1 });
 }

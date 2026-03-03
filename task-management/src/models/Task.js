@@ -64,8 +64,8 @@ const taskSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['todo', 'in_progress', 'done'],
             default: 'todo',
+            trim: true,
         },
         priority: {
             type: String,
@@ -100,6 +100,11 @@ const taskSchema = new mongoose.Schema(
         tags: {
             type: [String],
             default: [],
+        },
+        board: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Board',
+            default: null,
         },
         project: {
             type: String,
@@ -147,6 +152,7 @@ taskSchema.index({ 'assignees.id': 1 });
 taskSchema.index({ 'assignees.email': 1 });
 taskSchema.index({ deadline: 1 });
 taskSchema.index({ project: 1 });
+taskSchema.index({ board: 1 });
 
 // ── Virtual: total logged hours ───────────────────────────────────────────────
 taskSchema.virtual('totalLoggedHours').get(function () {

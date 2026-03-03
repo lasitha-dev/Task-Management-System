@@ -3,31 +3,23 @@ import api from '../api/axios'
 
 /**
  * UserSearchInput
- * Debounced multi-user picker that calls GET /api/tasks/users/search?q=
+ * Debounced user search/picker that calls GET /api/tasks/users/search?q=
  * Props:
- *   selected  — array of user objects already selected
- *   onChange  — called with updated array when selection changes
+ *   selected  — array of user objects already selected (for multi-select mode)
+ *   onChange  — called with updated array when selection changes (multi-select mode)
+ *   onSelect  — called with single user when selected (single-select mode)
  *   max       — max number of assignees (default: unlimited)
- *   label     — field label text
+ *   label     — field label text (optional)
+ *   placeholder — input placeholder text
+ *   disabled  — disable the input
  */
-export default function UserSearchInput({ selected = [], onChange, max = 20, label = 'Assignees' }) {
+export default function UserSearchInput({ selected = [], onChange, onSelect, max = 20, label, placeholder = 'Search users...', disabled = false }) {
   const [query, setQuery]       = useState('')
   const [results, setResults]   = useState([])
   const [loading, setLoading]   = useState(false)
   const [open, setOpen]         = useState(false)
   const containerRef            = useRef(null)
   const debounceRef             = useRef(null)
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function onOutside(e) {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onOutside)
-    return () => document.removeEventListener('mousedown', onOutside)
-  }, [])
 
   const fetchUsers = useCallback(async (q) => {
     setLoading(true)
@@ -39,6 +31,22 @@ export default function UserSearchInput({ selected = [], onChange, max = 20, lab
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  // Preload all users on mount so the dropdown shows immediately on focus
+  useEffect(() => {
+    fetchUsers('')
+  }, [fetchUsers])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function onOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onOutside)
+    return () => document.removeEventListener('mousedown', onOutside)
   }, [])
 
   function handleInput(e) {
@@ -55,11 +63,22 @@ export default function UserSearchInput({ selected = [], onChange, max = 20, lab
   }
 
   function toggleUser(user) {
-    const already = selected.some((u) => u.id === user.id)
-    if (already) {
-      onChange(selected.filter((u) => u.id !== user.id))
-    } else if (selected.length < max) {
-      onChange([...selected, user])
+    // Single-select mode (onSelect callback)
+    if (onSelect) {
+      onSelect(user)
+      setQuery('')
+      setOpen(false)
+      return
+    }
+    
+    // Multi-select mode (onChange callback)
+    if (onChange) {
+      const already = selected.some((u) => u.id === user.id)
+      if (already) {
+        onChange(selected.filter((u) => u.id !== user.id))
+      } else if (selected.length < max) {
+        onChange([...selected, user])
+      }
     }
   }
 
@@ -69,12 +88,15 @@ export default function UserSearchInput({ selected = [], onChange, max = 20, lab
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-        {label}
-      </label>
+      {/* Only show label if provided */}
+      {label && (
+        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          {label}
+        </label>
+      )}
 
-      {/* Selected pills */}
-      {selected.length > 0 && (
+      {/* Selected pills - only in multi-select mode */}
+      {onChange && selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
           {selected.map((u) => (
             <span
@@ -105,8 +127,9 @@ export default function UserSearchInput({ selected = [], onChange, max = 20, lab
           value={query}
           onChange={handleInput}
           onFocus={handleFocus}
-          placeholder="Search by name or email…"
-          className="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-lg pl-9 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+          placeholder={placeholder}
+          disabled={disabled}
+          className="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-lg pl-9 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed"
         />
         {loading && (
           <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[16px] text-slate-400 animate-spin">
