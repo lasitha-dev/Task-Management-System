@@ -13,10 +13,10 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-lg hover:border-primary dark:hover:border-primary transition-colors"
       >
-        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-text-dark">
+        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-white">
           dashboard
         </span>
-        <span className="font-semibold text-slate-800 dark:text-text-dark max-w-[200px] truncate">
+        <span className="font-semibold text-slate-800 dark:text-white max-w-[200px] truncate">
           {currentBoardName}
         </span>
         <span className={`material-symbols-outlined text-[18px] text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
@@ -65,11 +65,11 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
                       selectedBoard === board._id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-primary' : ''
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-text-dark mt-0.5">
+                    <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-white mt-0.5">
                       {selectedBoard === board._id ? 'check_circle' : 'dashboard'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-slate-800 dark:text-text-dark truncate">
+                      <div className="font-semibold text-slate-800 dark:text-white truncate">
                         {board.name}
                       </div>
                       {board.description && (
@@ -77,7 +77,14 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
                           {board.description}
                         </div>
                       )}
-                      <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-400">
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
+                        {board.sprint && (
+                          <>
+                            <span className="material-symbols-outlined text-[14px]">flag</span>
+                            <span>{board.sprint}</span>
+                            <span className="text-slate-300 dark:text-slate-600">•</span>
+                          </>
+                        )}
                         <span className="material-symbols-outlined text-[14px]">group</span>
                         <span>{board.members?.length || 0} members</span>
                       </div>

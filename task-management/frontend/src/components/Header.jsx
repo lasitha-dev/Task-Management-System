@@ -1,13 +1,11 @@
 import React from 'react'
 import BoardSelector from './BoardSelector'
 
-const TEAM_AVATARS = [
-  'https://ui-avatars.com/api/?name=Alex+Morgan&background=144bb8&color=fff',
-  'https://ui-avatars.com/api/?name=Jamie+D&background=8b5cf6&color=fff',
-  'https://ui-avatars.com/api/?name=Sam+K&background=0891b2&color=fff',
-]
+export default function Header({ boards, selectedBoard, onSelectBoard, onCreateBoard, boardName, sprint, onNewTask, loadingBoards, boardMembers = [] }) {
+  // Get up to 4 members to display
+  const displayMembers = boardMembers.slice(0, 4)
+  const remainingCount = Math.max(0, boardMembers.length - 4)
 
-export default function Header({ boards, selectedBoard, onSelectBoard, onCreateBoard, boardName, sprint, onNewTask, loadingBoards }) {
   return (
     <header className="h-16 flex items-center justify-between px-8 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-surface-highlight/50 z-40 shrink-0">
       <div className="flex items-center gap-5">
@@ -35,25 +33,34 @@ export default function Header({ boards, selectedBoard, onSelectBoard, onCreateB
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Team avatars */}
-        <div className="flex items-center -space-x-3">
-          {TEAM_AVATARS.map((src, i) => (
-            <img
-              key={i}
-              alt="Team member"
-              className="h-8 w-8 rounded-full ring-2 ring-white dark:ring-surface-dark border border-slate-300 dark:border-transparent"
-              src={src}
-            />
-          ))}
-          <div className="h-8 w-8 rounded-full bg-surface-highlight flex items-center justify-center ring-2 ring-white dark:ring-surface-dark text-xs font-bold text-white">
-            +3
+        {/* Team avatars - dynamic based on board members */}
+        {boardMembers.length > 0 && (
+          <div className="flex items-center -space-x-3">
+            {displayMembers.map((member) => (
+              <img
+                key={member.id}
+                alt={member.name}
+                title={member.name}
+                className="h-8 w-8 rounded-full ring-2 ring-white dark:ring-surface-dark border border-slate-300 dark:border-transparent"
+                src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=144bb8&color=fff`}
+              />
+            ))}
+            {remainingCount > 0 && (
+              <div 
+                className="h-8 w-8 rounded-full bg-surface-highlight flex items-center justify-center ring-2 ring-white dark:ring-surface-dark text-xs font-bold text-white"
+                title={`+${remainingCount} more members`}
+              >
+                +{remainingCount}
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* New Task button */}
         <button
-          onClick={onNewTask}
-          className="bg-primary hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-blue-600/20 active:scale-95"
+          onClick={() => onNewTask && onNewTask()}
+          disabled={!selectedBoard}
+          className="bg-primary hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
           <span>New Task</span>

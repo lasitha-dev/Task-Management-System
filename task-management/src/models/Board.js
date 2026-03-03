@@ -29,6 +29,12 @@ const boardSchema = new mongoose.Schema(
             maxlength: [500, 'Description cannot exceed 500 characters'],
             default: '',
         },
+        sprint: {
+            type: String,
+            trim: true,
+            maxlength: [50, 'Sprint cannot exceed 50 characters'],
+            default: 'Sprint 1',
+        },
         members: {
             type: [memberSchema],
             default: [],

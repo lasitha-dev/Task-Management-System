@@ -127,7 +127,8 @@ function KanbanPage() {
         onSelectBoard={setSelectedBoard}
         onCreateBoard={() => setBoardModalOpen(true)}
         boardName={currentBoard?.name || 'No Board Selected'}
-        sprint="Sprint 4"
+        sprint={currentBoard?.sprint || 'Sprint 1'}
+        boardMembers={currentBoard?.members || []}
         onNewTask={openCreate}
         loadingBoards={loadingBoards}
       />
@@ -161,6 +162,7 @@ function KanbanPage() {
         onSubmit={handleSubmit}
         initialData={editingTask}
         defaultStatus={defaultStatus}
+        boardMembers={currentBoard?.members || []}
       />
 
       <CreateBoardModal

@@ -10,7 +10,7 @@ const DEFAULT_FORM = {
   assignees: [],
 }
 
-export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData, defaultStatus }) {
+export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData, defaultStatus, boardMembers = [] }) {
   const [form, setForm] = useState(DEFAULT_FORM)
   const [loading, setLoading] = useState(false)
 
@@ -174,7 +174,14 @@ export default function CreateTaskModal({ isOpen, onClose, onSubmit, initialData
                 label="Assign To"
                 selected={form.assignees}
                 onChange={(users) => setForm((prev) => ({ ...prev, assignees: users }))}
+                filterUsers={boardMembers.length > 0 ? boardMembers.map(m => m.id) : null}
               />
+              {boardMembers.length === 0 && (
+                <p className="text-xs text-amber-500 dark:text-amber-400 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">info</span>
+                  <span>No board members. Add members to the board to assign tasks.</span>
+                </p>
+              )}
             </div>
           </div>
 

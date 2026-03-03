@@ -4,12 +4,14 @@ import UserSearchInput from './UserSearchInput'
 export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [sprint, setSprint] = useState('')
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(false)
 
   function reset() {
     setName('')
     setDescription('')
+    setSprint('')
     setMembers([])
     setLoading(false)
   }
@@ -28,6 +30,7 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
       await onSubmit({
         name: name.trim(),
         description: description.trim(),
+        sprint: sprint.trim() || 'Sprint 1',
         members: members.map(m => ({
           id: m.id,
           name: m.name,
@@ -95,7 +98,7 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
               maxLength={100}
               required
               disabled={loading}
-              className="w-full px-4 py-3 border border-slate-200 dark:border-border-dark rounded-xl bg-white dark:bg-background-dark text-slate-800 dark:text-text-dark placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-slate-200 dark:border-border-dark rounded-xl bg-white dark:bg-background-dark text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             />
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
               {name.length}/100 characters
@@ -114,10 +117,29 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
               maxLength={500}
               rows={3}
               disabled={loading}
-              className="w-full px-4 py-3 border border-slate-200 dark:border-border-dark rounded-xl bg-white dark:bg-background-dark text-slate-800 dark:text-text-dark placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 border border-slate-200 dark:border-border-dark rounded-xl bg-white dark:bg-background-dark text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
             />
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
               {description.length}/500 characters
+            </p>
+          </div>
+
+          {/* Sprint/Subtitle */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-text-dark mb-2">
+              Sprint/Phase <span className="text-slate-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={sprint}
+              onChange={(e) => setSprint(e.target.value)}
+              placeholder="e.g., Sprint 4, Phase 1, Q1 2024"
+              maxLength={50}
+              disabled={loading}
+              className="w-full px-4 py-3 border border-slate-200 dark:border-border-dark rounded-xl bg-white dark:bg-background-dark text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            />
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              {sprint.length}/50 characters
             </p>
           </div>
 

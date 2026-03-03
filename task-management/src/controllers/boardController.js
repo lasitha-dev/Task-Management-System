@@ -67,12 +67,13 @@ const createBoard = async (req, res) => {
     if (validationError) return;
 
     try {
-        const { name, description, members } = req.body;
+        const { name, description, sprint, members } = req.body;
         const user = req.user || { id: 'system', name: 'System', email: 'system@example.com' };
 
         const board = await Board.create({
             name,
             description: description || '',
+            sprint: sprint || 'Sprint 1',
             members: members || [],
             createdBy: {
                 id: user.id,
@@ -95,7 +96,7 @@ const createBoard = async (req, res) => {
 // ─── PUT /api/boards/:id ──────────────────────────────────────────────────────
 const updateBoard = async (req, res) => {
     try {
-        const { name, description, members } = req.body;
+        const { name, description, sprint, members } = req.body;
         const board = await Board.findById(req.params.id);
 
         if (!board) {
@@ -110,6 +111,7 @@ const updateBoard = async (req, res) => {
 
         if (name !== undefined) board.name = name;
         if (description !== undefined) board.description = description;
+        if (sprint !== undefined) board.sprint = sprint;
         if (members !== undefined) board.members = members;
 
         await board.save();

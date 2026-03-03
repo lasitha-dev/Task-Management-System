@@ -12,8 +12,9 @@ import api from '../api/axios'
  *   label     — field label text (optional)
  *   placeholder — input placeholder text
  *   disabled  — disable the input
+ *   filterUsers — array of user IDs to filter results (only show these users)
  */
-export default function UserSearchInput({ selected = [], onChange, onSelect, max = 20, label, placeholder = 'Search users...', disabled = false }) {
+export default function UserSearchInput({ selected = [], onChange, onSelect, max = 20, label, placeholder = 'Search users...', disabled = false, filterUsers = null }) {
   const [query, setQuery]       = useState('')
   const [results, setResults]   = useState([])
   const [loading, setLoading]   = useState(false)
@@ -25,13 +26,20 @@ export default function UserSearchInput({ selected = [], onChange, onSelect, max
     setLoading(true)
     try {
       const { data } = await api.get('/api/tasks/users/search', { params: { q, limit: 8 } })
-      setResults(data.users || [])
+      let users = data.users || []
+      
+      // Filter to only show specific users if filterUsers is provided
+      if (filterUsers && Array.isArray(filterUsers) && filterUsers.length > 0) {
+        users = users.filter(user => filterUsers.includes(user.id))
+      }
+      
+      setResults(users)
     } catch {
       setResults([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [filterUsers])
 
   // Preload all users on mount so the dropdown shows immediately on focus
   useEffect(() => {

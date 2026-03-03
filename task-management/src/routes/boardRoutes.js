@@ -10,6 +10,8 @@ const createBoardValidation = [
         .isLength({ max: 100 }).withMessage('Board name cannot exceed 100 characters'),
     body('description').optional().trim()
         .isLength({ max: 500 }).withMessage('Description cannot exceed 500 characters'),
+    body('sprint').optional().trim()
+        .isLength({ max: 50 }).withMessage('Sprint cannot exceed 50 characters'),
     body('members').optional().isArray().withMessage('Members must be an array'),
 ];
 
@@ -18,6 +20,8 @@ const updateBoardValidation = [
         .isLength({ max: 100 }).withMessage('Board name cannot exceed 100 characters'),
     body('description').optional().trim()
         .isLength({ max: 500 }).withMessage('Description cannot exceed 500 characters'),
+    body('sprint').optional().trim()
+        .isLength({ max: 50 }).withMessage('Sprint cannot exceed 50 characters'),
     body('members').optional().isArray().withMessage('Members must be an array'),
 ];
 
