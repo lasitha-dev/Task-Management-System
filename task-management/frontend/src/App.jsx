@@ -37,7 +37,9 @@ function KanbanPage() {
   const [boards, setBoards] = useState([])
   const [selectedBoard, setSelectedBoard] = useState(null)
   const [boardModalOpen, setBoardModalOpen] = useState(false)
+  const [editingBoard, setEditingBoard] = useState(null)
   const [loadingBoards, setLoadingBoards] = useState(true)
+  const currentUserId = 'user_001' // Mock user ID for Alex Morgan
 
   // Fetch boards on mount
   useEffect(() => {
@@ -66,15 +68,52 @@ function KanbanPage() {
 
   async function handleCreateBoard(boardData) {
     try {
-      const { data } = await api.post('/api/boards', boardData)
-      const newBoard = data.board
-      setBoards([newBoard, ...boards])
-      setSelectedBoard(newBoard._id)
-      showToast('Board created successfully')
+      if (editingBoard) {
+        // Update existing board
+        const { data } = await api.put(`/api/boards/${editingBoard._id}`, boardData)
+        const updatedBoard = data.board
+        setBoards(boards.map(b => b._id === updatedBoard._id ? updatedBoard : b))
+        showToast('Board updated successfully')
+      } else {
+        // Create new board
+        const { data } = await api.post('/api/boards', boardData)
+        const newBoard = data.board
+        setBoards([newBoard, ...boards])
+        setSelectedBoard(newBoard._id)
+        showToast('Board created successfully')
+      }
       setRefreshKey((k) => k + 1) // Refresh tasks
+      setEditingBoard(null)
     } catch (err) {
-      showToast(err?.response?.data?.message || 'Failed to create board', 'error')
+      showToast(err?.response?.data?.message || `Failed to ${editingBoard ? 'update' : 'create'} board`, 'error')
       throw err
+    }
+  }
+
+  function handleEditBoard(board) {
+    setEditingBoard(board)
+    setBoardModalOpen(true)
+  }
+
+  async function handleDeleteBoard(board) {
+    if (!window.confirm(`Are you sure you want to delete "${board.name}"? This action cannot be undone.`)) {
+      return
+    }
+    
+    try {
+      await api.delete(`/api/boards/${board._id}`)
+      const updatedBoards = boards.filter(b => b._id !== board._id)
+      setBoards(updatedBoards)
+      
+      // If deleted board was selected, select first available board or null
+      if (selectedBoard === board._id) {
+        setSelectedBoard(updatedBoards.length > 0 ? updatedBoards[0]._id : null)
+      }
+      
+      showToast('Board deleted successfully')
+      setRefreshKey((k) => k + 1)
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Failed to delete board', 'error')
     }
   }
 
@@ -125,7 +164,13 @@ function KanbanPage() {
         boards={boards}
         selectedBoard={selectedBoard}
         onSelectBoard={setSelectedBoard}
-        onCreateBoard={() => setBoardModalOpen(true)}
+        onCreateBoard={() => {
+          setEditingBoard(null)
+          setBoardModalOpen(true)
+        }}
+        onEditBoard={handleEditBoard}
+        onDeleteBoard={handleDeleteBoard}
+        currentUserId={currentUserId}
         boardName={currentBoard?.name || 'No Board Selected'}
         sprint={currentBoard?.sprint || 'Sprint 1'}
         boardMembers={currentBoard?.members || []}
@@ -167,8 +212,12 @@ function KanbanPage() {
 
       <CreateBoardModal
         isOpen={boardModalOpen}
-        onClose={() => setBoardModalOpen(false)}
+        onClose={() => {
+          setBoardModalOpen(false)
+          setEditingBoard(null)
+        }}
         onSubmit={handleCreateBoard}
+        initialData={editingBoard}
       />
 
       {toast && (

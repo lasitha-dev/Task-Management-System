@@ -1,12 +1,26 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import UserSearchInput from './UserSearchInput'
 
-export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
+export default function CreateBoardModal({ isOpen, onClose, onSubmit, initialData = null }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [sprint, setSprint] = useState('')
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(false)
+
+  // Load initial data when editing
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setName(initialData.name || '')
+      setDescription(initialData.description || '')
+      setSprint(initialData.sprint || '')
+      setMembers(initialData.members || [])
+    } else if (isOpen && !initialData) {
+      reset()
+    }
+  }, [isOpen, initialData])
+
+  const isEditing = Boolean(initialData)
 
   function reset() {
     setName('')
@@ -64,13 +78,13 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
         {/* Header */}
         <div className="px-8 py-6 border-b border-slate-200 dark:border-border-dark flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-3xl text-primary">dashboard</span>
+            <span className="material-symbols-outlined text-3xl text-primary">{isEditing ? 'edit' : 'dashboard'}</span>
             <div>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-text-dark">
-                Create New Board
+                {isEditing ? 'Edit Board' : 'Create New Board'}
               </h2>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Create a board to organize tasks and collaborate with team members
+                {isEditing ? 'Update board details and members' : 'Create a board to organize tasks and collaborate with team members'}
               </p>
             </div>
           </div>
@@ -212,7 +226,7 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
             className="px-6 py-2.5 bg-primary hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
-            {loading ? 'Creating...' : 'Create Board'}
+            {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Board' : 'Create Board')}
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import React from 'react'
 import BoardSelector from './BoardSelector'
 
-export default function Header({ boards, selectedBoard, onSelectBoard, onCreateBoard, boardName, sprint, onNewTask, loadingBoards, boardMembers = [] }) {
+export default function Header({ boards, selectedBoard, onSelectBoard, onCreateBoard, onEditBoard, onDeleteBoard, currentUserId, boardName, sprint, onNewTask, loadingBoards, boardMembers = [] }) {
   // Get up to 4 members to display
   const displayMembers = boardMembers.slice(0, 4)
   const remainingCount = Math.max(0, boardMembers.length - 4)
@@ -20,6 +20,9 @@ export default function Header({ boards, selectedBoard, onSelectBoard, onCreateB
             selectedBoard={selectedBoard}
             onSelectBoard={onSelectBoard}
             onCreateBoard={onCreateBoard}
+            onEditBoard={onEditBoard}
+            onDeleteBoard={onDeleteBoard}
+            currentUserId={currentUserId}
           />
         )}
         <div className="flex items-center gap-3">

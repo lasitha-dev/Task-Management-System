@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 
-export default function BoardSelector({ boards, selectedBoard, onSelectBoard, onCreateBoard }) {
+export default function BoardSelector({ boards, selectedBoard, onSelectBoard, onCreateBoard, onEditBoard, onDeleteBoard, currentUserId }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [hoveredBoard, setHoveredBoard] = useState(null)
 
   const currentBoardName = selectedBoard 
     ? boards.find(b => b._id === selectedBoard)?.name || 'Select Board'
@@ -54,43 +55,80 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
               </div>
             ) : (
               <div className="space-y-1">
-                {boards.map((board) => (
-                  <button
-                    key={board._id}
-                    onClick={() => {
-                      onSelectBoard(board._id)
-                      setIsOpen(false)
-                    }}
-                    className={`w-full px-4 py-3 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-surface-highlight transition-colors text-left ${
-                      selectedBoard === board._id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-primary' : ''
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-white mt-0.5">
-                      {selectedBoard === board._id ? 'check_circle' : 'dashboard'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-slate-800 dark:text-white truncate">
-                        {board.name}
-                      </div>
-                      {board.description && (
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
-                          {board.description}
+                {boards.map((board) => {
+                  const isCreator = board.createdBy?.id === currentUserId
+                  return (
+                    <div
+                      key={board._id}
+                      className="relative group"
+                      onMouseEnter={() => setHoveredBoard(board._id)}
+                      onMouseLeave={() => setHoveredBoard(null)}
+                    >
+                      <button
+                        onClick={() => {
+                          onSelectBoard(board._id)
+                          setIsOpen(false)
+                        }}
+                        className={`w-full px-4 py-3 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-surface-highlight transition-colors text-left ${
+                          selectedBoard === board._id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-primary' : ''
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-white mt-0.5">
+                          {selectedBoard === board._id ? 'check_circle' : 'dashboard'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-slate-800 dark:text-white truncate">
+                            {board.name}
+                          </div>
+                          {board.description && (
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                              {board.description}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
+                            {board.sprint && (
+                              <>
+                                <span className="material-symbols-outlined text-[14px]">flag</span>
+                                <span>{board.sprint}</span>
+                                <span className="text-slate-300 dark:text-slate-600">•</span>
+                              </>
+                            )}
+                            <span className="material-symbols-outlined text-[14px]">group</span>
+                            <span>{board.members?.length || 0} members</span>
+                          </div>
+                        </div>
+                      </button>
+                      
+                      {/* Edit/Delete buttons for board creator */}
+                      {isCreator && hoveredBoard === board._id && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-surface-dark rounded-lg shadow-lg border border-slate-200 dark:border-border-dark p-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setIsOpen(false)
+                              onEditBoard(board)
+                            }}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-surface-highlight rounded transition-colors"
+                            title="Edit board"
+                          >
+                            <span className="material-symbols-outlined text-[18px] text-blue-500">edit</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setIsOpen(false)
+                              onDeleteBoard(board)
+                            }}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-surface-highlight rounded transition-colors"
+                            title="Delete board"
+                          >
+                            <span className="material-symbols-outlined text-[18px] text-red-500">delete</span>
+                          </button>
                         </div>
                       )}
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
-                        {board.sprint && (
-                          <>
-                            <span className="material-symbols-outlined text-[14px]">flag</span>
-                            <span>{board.sprint}</span>
-                            <span className="text-slate-300 dark:text-slate-600">•</span>
-                          </>
-                        )}
-                        <span className="material-symbols-outlined text-[14px]">group</span>
-                        <span>{board.members?.length || 0} members</span>
-                      </div>
                     </div>
-                  </button>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
