@@ -48,7 +48,7 @@ export default function LoginPage() {
       </header>
 
       <main className="flex-grow flex items-center justify-center pt-20 px-4">
-        <div className="w-full max-w-[440px] flex flex-col gap-6">
+        <div style={{ maxWidth: '440px', width: '100%' }} className="flex flex-col gap-6">
           <div className="bg-[#1e293b] rounded-xl shadow-lg border border-[#334155] p-8 w-full">
             <div className="text-center mb-8">
               <h1 className="text-white tracking-tight text-3xl font-bold leading-tight mb-2">Welcome Back</h1>
@@ -61,17 +61,19 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} autoComplete="off" className="flex flex-col gap-4">
               <label className="flex flex-col gap-1.5">
                 <span className="text-slate-300 text-sm font-medium">Email Address</span>
-                <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#144bb8] transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">mail</span>
-                  </span>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                    <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '20px' }}>mail</span>
+                  </div>
                   <input
-                    className="w-full rounded-lg border border-slate-600 bg-[#111621] h-12 px-4 pl-11 text-white text-sm placeholder:text-slate-400 focus:border-[#144bb8] focus:ring-1 focus:ring-[#144bb8] focus:outline-none transition-all"
+                    style={{ paddingLeft: '44px', paddingRight: '16px', backgroundColor: '#111621' }}
+                    className="w-full rounded-lg border border-slate-600 h-12 text-white text-sm placeholder:text-slate-400 focus:border-[#144bb8] focus:ring-1 focus:ring-[#144bb8] focus:outline-none transition-all"
                     placeholder="name@company.com"
                     type="email"
+                    autoComplete="off"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -84,14 +86,16 @@ export default function LoginPage() {
                   <span className="text-slate-300 text-sm font-medium">Password</span>
                   <Link to="#" className="text-[#144bb8] text-xs font-semibold hover:underline">Forgot password?</Link>
                 </div>
-                <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#144bb8] transition-colors">
-                    <span className="material-symbols-outlined text-[20px]">lock</span>
-                  </span>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                    <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '20px' }}>lock</span>
+                  </div>
                   <input
-                    className="w-full rounded-lg border border-slate-600 bg-[#111621] h-12 px-4 pl-11 pr-11 text-white text-sm placeholder:text-slate-400 focus:border-[#144bb8] focus:ring-1 focus:ring-[#144bb8] focus:outline-none transition-all"
+                    style={{ paddingLeft: '44px', paddingRight: '44px', backgroundColor: '#111621' }}
+                    className="w-full rounded-lg border border-slate-600 h-12 text-white text-sm placeholder:text-slate-400 focus:border-[#144bb8] focus:ring-1 focus:ring-[#144bb8] focus:outline-none transition-all"
                     placeholder="Enter your password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -101,7 +105,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
+                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
                       {showPassword ? 'visibility' : 'visibility_off'}
                     </span>
                   </button>

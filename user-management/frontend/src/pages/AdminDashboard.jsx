@@ -177,19 +177,21 @@ export default function AdminDashboard() {
             </a>
             <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
               <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">notifications</span>
-              <span className="text-sm font-medium flex-1">Notifications</span>
-              <span className="bg-[#144bb8] text-white text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+              <span className="text-sm font-medium">Notifications</span>
+              <span className="ml-auto bg-[#144bb8] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
             </a>
             <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
-              <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">analytics</span>
+              <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">pie_chart</span>
               <span className="text-sm font-medium">Analytics</span>
             </a>
           </nav>
 
           {/* Administration Section */}
-          <div>
-            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-3 mb-2">Administration</p>
-            <nav className="flex flex-col gap-1">
+          <div className="h-px bg-[#2d3544] my-1"></div>
+          <nav className="flex flex-col gap-1">
+            <div className="px-3 py-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Administration</span>
+            </div>
               <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#144bb8]/10 text-[#144bb8] transition-colors">
                 <span className="material-symbols-outlined">group</span>
                 <span className="text-sm font-medium">User Monitoring</span>
@@ -199,7 +201,6 @@ export default function AdminDashboard() {
                 <span className="text-sm font-medium">Settings</span>
               </a>
             </nav>
-          </div>
         </div>
 
         {/* Logout */}
@@ -216,26 +217,38 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <div className="overflow-y-auto bg-[#111621] p-4 md:p-8">
+        {/* Mobile Header */}
+        <header className="h-16 flex lg:hidden items-center justify-between px-4 bg-[#161b26] border-b border-[#2d3544]">
+          <div className="flex items-center gap-3">
+            <button className="text-slate-400 hover:text-white">
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+            <h1 className="text-white font-bold">TaskMaster</h1>
+          </div>
+          <div className="size-8 rounded-full bg-slate-700"></div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto bg-[#111621] p-4 md:p-8">
+          <div className="max-w-7xl mx-auto flex flex-col gap-8">
           {/* Page Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-black text-white">User Monitoring</h1>
-              <p className="text-slate-400 text-sm mt-1">
+              <h2 className="text-3xl font-black text-white tracking-tight">User Monitoring</h2>
+              <p className="text-slate-400 text-base mt-1">
                 Manage access, roles, and track activity across the microservices ecosystem.
               </p>
             </div>
             <button
               onClick={openModal}
-              className="bg-[#144bb8] hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-[#144bb8]/25"
+              className="bg-[#144bb8] hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-[#144bb8]/25"
             >
-              <span className="material-symbols-outlined text-xl">add</span>
+              <span className="material-symbols-outlined text-lg">add</span>
               Add New User
             </button>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Total Users */}
             <div className="bg-[#1c212c] p-5 rounded-xl border border-[#2d3544] shadow-sm">
               <div className="flex items-center justify-between mb-4">
@@ -246,38 +259,41 @@ export default function AdminDashboard() {
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-white">{totalUsers.toLocaleString()}</span>
+                <span className="text-xs text-emerald-500 font-medium">+12% this month</span>
               </div>
             </div>
 
-            {/* Admin Users */}
+            {/* Active Now */}
             <div className="bg-[#1c212c] p-5 rounded-xl border border-[#2d3544] shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-slate-400 text-sm font-medium">Admin Users</h3>
+                <h3 className="text-slate-400 text-sm font-medium">Active Now</h3>
                 <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
-                  <span className="material-symbols-outlined">admin_panel_settings</span>
+                  <span className="material-symbols-outlined">wifi</span>
                 </div>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-white">{adminCount}</span>
+                <span className="text-xs text-slate-500">Users online</span>
               </div>
             </div>
 
-            {/* Regular Users */}
+            {/* Pending Approvals */}
             <div className="bg-[#1c212c] p-5 rounded-xl border border-[#2d3544] shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-slate-400 text-sm font-medium">Regular Users</h3>
+                <h3 className="text-slate-400 text-sm font-medium">Pending Approvals</h3>
                 <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
-                  <span className="material-symbols-outlined">person</span>
+                  <span className="material-symbols-outlined">pending</span>
                 </div>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-white">{regularCount}</span>
+                <span className="text-xs text-amber-500 font-medium">Needs attention</span>
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -285,26 +301,28 @@ export default function AdminDashboard() {
           {/* Search Bar + Filter Tabs */}
           <div className="bg-[#1c212c] p-4 rounded-t-xl border border-[#2d3544] border-b-0 flex flex-col md:flex-row gap-4 justify-between items-center">
             {/* Search */}
-            <div className="relative w-full md:w-80">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+            <div className="relative w-full md:w-96">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="material-symbols-outlined text-slate-400 text-xl">search</span>
+              </div>
               <input
                 type="text"
-                placeholder="Search users..."
+                placeholder="Search by name, email, or ID..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="block w-full pl-10 pr-4 py-2 bg-[#161b26] border border-[#2d3544] rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#144bb8]/50 focus:border-[#144bb8] sm:text-sm transition-all"
+                className="block w-full pl-10 pr-3 py-2.5 bg-[#161b26] border border-[#2d3544] rounded-lg leading-5 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#144bb8] focus:border-[#144bb8] sm:text-sm transition-shadow"
               />
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex p-1 bg-[#161b26] rounded-lg">
+            <div className="flex p-1 bg-[#161b26] rounded-lg w-full md:w-auto">
               {filters.map((f) => (
                 <button
                   key={f}
                   onClick={() => setActiveFilter(f)}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                  className={`flex-1 md:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
                     activeFilter === f
-                      ? 'bg-[#144bb8] text-white'
+                      ? 'bg-[#144bb8] text-white shadow-sm'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -316,22 +334,23 @@ export default function AdminDashboard() {
 
           {/* Table */}
           <div className="bg-[#1c212c] rounded-b-xl border border-[#2d3544] overflow-hidden shadow-sm -mt-8">
+            <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#2d3544] bg-[#161b26]">
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider w-32">
                     User ID
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">
                     Role
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">
                     Actions
                   </th>
                 </tr>
@@ -353,7 +372,7 @@ export default function AdminDashboard() {
                   filteredUsers.map((u) => (
                     <tr
                       key={u._id}
-                      className="hover:bg-[#161b26]/50 transition-colors"
+                      className="hover:bg-[#161b26]/50 transition-colors group"
                     >
                       {/* User ID */}
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -378,7 +397,7 @@ export default function AdminDashboard() {
                       </td>
 
                       {/* Role Badge */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                         {u.role === 'Admin' ? (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 px-2.5 py-0.5 text-xs font-medium text-purple-400 border border-purple-500/20">
                             <span className="size-1.5 rounded-full bg-purple-500"></span>
@@ -406,12 +425,12 @@ export default function AdminDashboard() {
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => handleDeleteUser(u._id)}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-[#144bb8] hover:text-blue-300 transition-colors"
+                          className="text-slate-400 hover:text-[#144bb8] transition-colors inline-flex items-center gap-1"
                         >
-                          View Activity
+                          <span className="hidden sm:inline text-xs uppercase font-semibold">View Activity</span>
                           <span className="material-symbols-outlined text-lg">arrow_forward</span>
                         </button>
                       </td>
@@ -420,31 +439,41 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
+            </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-[#2d3544]">
-              <p className="text-slate-400 text-sm">
-                Showing <span className="font-medium text-white">1</span> to{' '}
-                <span className="font-medium text-white">
-                  {Math.min(filteredUsers.length, 10)}
-                </span>{' '}
-                of <span className="font-medium text-white">{filteredUsers.length}</span> results
-              </p>
-              <div className="flex gap-2">
-                <button className="px-3 py-1.5 text-sm border border-[#2d3544] rounded-md text-slate-400 hover:text-white hover:border-slate-500 transition-colors">
-                  Previous
-                </button>
-                <button className="px-3 py-1.5 text-sm rounded-md bg-[#144bb8] text-white">
-                  1
-                </button>
-                <button className="px-3 py-1.5 text-sm border border-[#2d3544] rounded-md text-slate-400 hover:text-white hover:border-slate-500 transition-colors">
-                  2
-                </button>
-                <button className="px-3 py-1.5 text-sm border border-[#2d3544] rounded-md text-slate-400 hover:text-white hover:border-slate-500 transition-colors">
-                  Next
-                </button>
+            <div className="bg-[#1c212c] px-4 py-3 flex items-center justify-between border-t border-[#2d3544] sm:px-6">
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-slate-400">
+                    Showing <span className="font-medium text-white">1</span> to{' '}
+                    <span className="font-medium text-white">
+                      {Math.min(filteredUsers.length, 5)}
+                    </span>{' '}
+                    of <span className="font-medium text-white">{filteredUsers.length}</span> results
+                  </p>
+                </div>
+                <div>
+                  <nav aria-label="Pagination" className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-[#2d3544] bg-[#161b26] text-sm font-medium text-slate-400 hover:bg-[#1c212c] transition-colors">
+                      <span className="sr-only">Previous</span>
+                      <span className="material-symbols-outlined text-lg">chevron_left</span>
+                    </button>
+                    <button aria-current="page" className="relative z-10 inline-flex items-center px-4 py-2 border border-[#144bb8] bg-[#144bb8]/10 text-sm font-medium text-[#144bb8]">
+                      1
+                    </button>
+                    <button className="relative inline-flex items-center px-4 py-2 border border-[#2d3544] bg-[#161b26] text-sm font-medium text-slate-400 hover:bg-[#1c212c] transition-colors">
+                      2
+                    </button>
+                    <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-[#2d3544] bg-[#161b26] text-sm font-medium text-slate-400 hover:bg-[#1c212c] transition-colors">
+                      <span className="sr-only">Next</span>
+                      <span className="material-symbols-outlined text-lg">chevron_right</span>
+                    </button>
+                  </nav>
+                </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -502,7 +531,7 @@ export default function AdminDashboard() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="john@taskmaster.com"
+                  placeholder="john@example.com"
                   required
                   className="block w-full px-3 py-2 bg-[#161b26] border border-[#2d3544] rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#144bb8]/50 focus:border-[#144bb8] sm:text-sm transition-all"
                 />

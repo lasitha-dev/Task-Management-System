@@ -194,9 +194,9 @@ export default function RegisterPage() {
               {/* Social Login Buttons */}
               <div className="mt-6 grid grid-cols-2 gap-4">
                 <a className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-[#2d3748] bg-[#1c2230] hover:bg-slate-800" href="#">
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.5 5.5H17.5L12 13.5L6.5 5.5H11.23L12 6.72L12.68 5.5H15.5Z" fill="currentColor" opacity="0.4"/>
-                    <path d="M4 4H8.5L12 9.5L15.5 4H20L14 12.5L20 20H15.5L12 15L8.5 20H4L10 12L4 4Z" fill="currentColor"/>
+                  <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 24 24">
+                    <path d="M12.0003 20.45C16.667 20.45 20.5836 17.2834 20.5836 12.5C20.5836 7.71668 16.667 4.55002 12.0003 4.55002C7.33366 4.55002 3.41699 7.71668 3.41699 12.5C3.41699 17.2834 7.33366 20.45 12.0003 20.45Z" fill="white" fillOpacity="0.01"></path>
+                    <path clipRule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM13.085 13.915H11.53V9.895H13.085V13.915ZM12.305 8.785C11.815 8.785 11.425 8.395 11.425 7.905C11.425 7.415 11.815 7.025 12.305 7.025C12.795 7.025 13.185 7.415 13.185 7.905C13.185 8.395 12.795 8.785 12.305 8.785Z" fill="currentColor" fillRule="evenodd"></path>
                   </svg>
                   <span className="text-sm font-semibold leading-6">SAML SSO</span>
                 </a>
@@ -219,6 +219,7 @@ export default function RegisterPage() {
           {/* Right Side: Testimonial Panel */}
           <div className="hidden lg:flex relative h-full min-h-[600px] w-full flex-col justify-between overflow-hidden rounded-2xl bg-[#1c2230] p-8 shadow-2xl ring-1 ring-white/10">
             <div className="absolute inset-0 bg-gradient-to-br from-[#144bb8]/30 via-[#111621] to-[#111621] z-0"></div>
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=2832&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay z-0"></div>
 
             {/* Floating Card 1: Task Completed */}
             <div className="relative z-10 self-end max-w-xs transform translate-y-4 translate-x-4">
