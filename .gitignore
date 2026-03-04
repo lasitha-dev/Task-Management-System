@@ -5,3 +5,7 @@ Task Management Application - Assignment 1.pdf
 nul
 tmpclaude-*
 stitch_*.html
+
+# MCP config (contains API keys)
+.vscode/mcp.json
+.mcp.json
