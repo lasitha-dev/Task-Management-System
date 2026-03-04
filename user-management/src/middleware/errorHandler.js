@@ -1,9 +1,16 @@
+const logger = require('../config/logger');
+
 /**
  * Global Error Handler Middleware
  * Ensures stack traces are never exposed to the client.
  */
 const errorHandler = (err, req, res, _next) => {
-    console.error(`Error: ${err.message}`);
+    logger.error(err.message, {
+        stack: err.stack,
+        path: req.originalUrl,
+        method: req.method,
+        statusCode: err.statusCode || 500,
+    });
 
     const statusCode = err.statusCode || 500;
 

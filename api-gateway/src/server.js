@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createProxyMiddleware, fixRequestBody } = require('http-proxy-middleware');
 const { rateLimiter } = require('./middleware/rateLimiter');
 const { logger } = require('./middleware/logger');
 const proxyConfig = require('./config/proxyConfig');
@@ -26,6 +26,9 @@ routes.forEach((route) => {
             target: route.target,
             changeOrigin: true,
             pathRewrite: route.pathRewrite || {},
+            on: {
+                proxyReq: fixRequestBody,
+            },
         })
     );
 });
