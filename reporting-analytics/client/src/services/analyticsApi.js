@@ -2,19 +2,21 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:5000';
 
+// Development token for testing
+const MOCK_JWT_TOKEN = 'mock-token-for-development';
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${MOCK_JWT_TOKEN}`
   }
 });
 
-// Add JWT token to all requests if it exists
+// Add JWT token to all requests if it exists in localStorage, otherwise use mock
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('jwt_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  const token = localStorage.getItem('jwt_token') || MOCK_JWT_TOKEN;
+  config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 

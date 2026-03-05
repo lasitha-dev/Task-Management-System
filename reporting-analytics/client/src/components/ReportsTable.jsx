@@ -15,6 +15,19 @@ export const ReportsTable = ({ reports = [], loading, onRefresh }) => {
     setIsDeleting(false);
   };
 
+  const handleDownload = (report) => {
+    const dataStr = JSON.stringify(report, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${report.title.replace(/\s+/g, '-').toLowerCase()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -88,16 +101,26 @@ export const ReportsTable = ({ reports = [], loading, onRefresh }) => {
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                    <span className={`text-xs px-3 py-1 rounded-full font-semibold inline-flex items-center gap-1 ${
                       report.status === 'ready'
                         ? 'bg-success/20 text-success'
-                        : 'bg-warning/20 text-warning'
+                        : report.status === 'processing'
+                        ? 'bg-warning/20 text-warning'
+                        : 'bg-dark-border/20 text-dark-border'
                     }`}>
-                      {report.status === 'ready' ? '✓ Ready' : '⏳ Processing'}
+                      {report.status === 'ready' ? '✓' : report.status === 'processing' ? '⏳' : '○'} 
+                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-center">
                     <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleDownload(report)}
+                        className="text-primary hover:text-primary-light transition"
+                        title="Download report"
+                      >
+                        ⬇️
+                      </button>
                       <button
                         onClick={() => setIsDeleteConfirm(report._id)}
                         className="text-danger hover:text-white transition"
