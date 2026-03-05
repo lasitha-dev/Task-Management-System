@@ -1,12 +1,12 @@
 import React from 'react';
 
-export const StatCard = ({ title, value, percentage, previousValue, icon: Icon, color = 'primary', isLoading = false, error = null }) => {
+const StatCard = ({ title, value, percentage, icon, isLoading = false, error = null }) => {
   if (error) {
     return (
-      <div className="bg-danger/10 border border-danger/20 rounded-lg p-6 flex justify-between items-start">
+      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 flex justify-between items-start">
         <div>
-          <p className="text-dark-border text-sm font-medium mb-2">{title}</p>
-          <p className="text-danger text-sm">{error}</p>
+          <p className="text-slate-400 text-xs font-medium mb-2 uppercase">{title}</p>
+          <p className="text-red-500 text-sm">{error}</p>
         </div>
       </div>
     );
@@ -14,11 +14,11 @@ export const StatCard = ({ title, value, percentage, previousValue, icon: Icon, 
 
   if (isLoading) {
     return (
-      <div className="bg-dark-surface border border-dark-border rounded-lg p-6 flex justify-between items-start">
+      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 flex justify-between items-start">
         <div>
-          <p className="text-dark-border text-sm font-medium mb-2">{title}</p>
+          <p className="text-slate-400 text-xs font-medium mb-2 uppercase">{title}</p>
           <div className="animate-pulse flex gap-2">
-            <div className="h-8 w-20 bg-dark-border rounded"></div>
+            <div className="h-8 w-20 bg-slate-700 rounded"></div>
           </div>
         </div>
       </div>
@@ -26,24 +26,23 @@ export const StatCard = ({ title, value, percentage, previousValue, icon: Icon, 
   }
 
   const isPositive = percentage >= 0;
-  const colorClass = color === 'primary' ? 'bg-gradient-to-br from-primary/20 to-primary-dark/20' : 'bg-dark-surface';
   const displayValue = value !== null && value !== undefined ? value : '--';
 
   return (
-    <div className={`${colorClass} border border-dark-border rounded-lg p-6 flex justify-between items-start`}>
-      <div>
-        <p className="text-dark-border text-sm font-medium mb-2">{title}</p>
-        <h3 className="text-3xl font-bold text-white mb-2">{displayValue}</h3>
+    <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 flex justify-between items-start">
+      <div className="flex-1">
+        <p className="text-slate-400 text-xs font-medium mb-4 uppercase">{title}</p>
+        <h3 className="text-4xl font-bold text-white mb-3">{displayValue}</h3>
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-semibold ${isPositive ? 'text-success' : 'text-danger'}`}>
-            {isPositive ? '↑' : '↓'} {Math.abs(percentage)}%
+          <span className={`text-sm font-semibold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+            {isPositive ? '↑' : '↓'}{Math.abs(percentage).toFixed(1)}%
           </span>
-          <span className="text-xs text-dark-border">vs. previous period</span>
+          <span className="text-xs text-slate-400">vs. previous period</span>
         </div>
       </div>
-      {Icon && (
-        <div className="text-primary/20">
-          <Icon size={48} />
+      {icon && (
+        <div className="text-slate-600 text-5xl ml-4 opacity-30">
+          {icon}
         </div>
       )}
     </div>

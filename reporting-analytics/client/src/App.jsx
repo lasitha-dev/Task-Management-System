@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { analyticsApi, reportsApi } from './services/analyticsApi';
 import Sidebar from './components/Sidebar';
+import Header from './components/Header';
 import StatCard from './components/StatCard';
 import WeeklyChart from './components/WeeklyChart';
 import StatusChart from './components/StatusChart';
@@ -66,97 +67,81 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-950 text-white flex">
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 md:ml-64 mb-20 md:mb-0">
-        {/* Top Navigation Bar */}
-        <div className="bg-dark-surface border-b border-dark-border sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-white hidden md:block">📊 Analytics</h1>
+      {/* Main Content Area */}
+      <div className="flex-1 ml-0 lg:ml-60 flex flex-col">
+        {/* Header */}
+        <Header onGenerateReport={() => setShowGenerate(true)} />
+
+        {/* Main scrollable content */}
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Breadcrumb & Time Filters */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+              <div className="text-sm text-slate-400">
+                Home <span className="mx-2">/</span> <span className="text-blue-500 font-medium">Analytics</span>
               </div>
-              <div className="flex items-center gap-4">
-                <button className="text-primary hover:text-primary-light transition">🔔</button>
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                  AR
-                </div>
+              <div className="flex gap-2 flex-wrap">
+                {['week', 'month', 'custom'].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => handlePeriodChange(p)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+                      period === p
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-slate-800 border border-slate-700 text-slate-300 hover:border-blue-500'
+                    }`}
+                  >
+                    {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : '📅 Custom'}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Breadcrumb */}
-            <div className="mt-4 text-sm text-dark-border">
-              Home <span className="mx-2">/</span> <span className="text-primary">Analytics</span>
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+              <StatCard
+                title="Total Tasks"
+                value={summary?.totalTasks}
+                percentage={summary?.totalChange || 0}
+                icon="📋"
+                isLoading={loading}
+                error={summaryError}
+              />
+              <StatCard
+                title="Completed Tasks"
+                value={summary?.completedTasks}
+                percentage={summary?.completedChange || 0}
+                icon="✓"
+                isLoading={loading}
+                error={summaryError}
+              />
+              <StatCard
+                title="Productivity %"
+                value={summary?.productivity ? `${Math.round(summary.productivity)}%` : '--'}
+                percentage={summary?.productivityChange || 0}
+                icon="⚡"
+                isLoading={loading}
+                error={summaryError}
+              />
             </div>
-          </div>
-        </div>
 
-        {/* Main Content Area */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Period Filter */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-8">
-            <div className="flex gap-2 flex-wrap">
-              {['week', 'month', 'custom'].map((p) => (
-                <button
-                  key={p}
-                  onClick={() => handlePeriodChange(p)}
-                  className={`px-4 py-2 rounded-lg font-medium transition ${
-                    period === p
-                      ? 'bg-primary text-white'
-                      : 'bg-dark-surface border border-dark-border text-dark-border hover:border-primary'
-                  }`}
-                >
-                  {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : 'Custom'}
-                </button>
-              ))}
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div className="lg:col-span-2">
+                <WeeklyChart data={weeklyData} loading={loading} error={weeklyError} />
+              </div>
+              <div className="lg:col-span-1">
+                <StatusChart data={statusData} loading={loading} />
+              </div>
             </div>
-            <button
-              onClick={() => setShowGenerate(true)}
-              className="bg-primary hover:bg-primary-light text-white px-6 py-2 rounded-lg font-medium transition whitespace-nowrap"
-            >
-              + Generate Report
-            </button>
-          </div>
 
-          {/* Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <StatCard
-              title="Total Tasks"
-              value={summary?.totalTasks}
-              percentage={summary?.totalChange || 0}
-              color="primary"
-              isLoading={loading}
-              error={summaryError}
-            />
-            <StatCard
-              title="Completed Tasks"
-              value={summary?.completedTasks}
-              percentage={summary?.completedChange || 0}
-              color="primary"
-              isLoading={loading}
-              error={summaryError}
-            />
-            <StatCard
-              title="Productivity"
-              value={summary?.productivity ? `${Math.round(summary.productivity)}%` : '--'}
-              percentage={summary?.productivityChange || 0}
-              color="primary"
-              isLoading={loading}
-              error={summaryError}
-            />
+            {/* Reports Table */}
+            <ReportsTable reports={reports} loading={loading} onRefresh={loadData} />
           </div>
-
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <WeeklyChart data={weeklyData} loading={loading} error={weeklyError} />
-            <StatusChart data={statusData} loading={loading} />
-          </div>
-
-          {/* Reports Table */}
-          <ReportsTable reports={reports} loading={loading} onRefresh={loadData} />
         </div>
       </div>
 

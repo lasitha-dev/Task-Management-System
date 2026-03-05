@@ -1,96 +1,96 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-export const Sidebar = ({ collapsed = false, onToggle }) => {
+const Sidebar = () => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'tasks', label: 'Task Board', icon: '📋' },
     { id: 'notifications', label: 'Notifications', icon: '🔔' },
     { id: 'team', label: 'Team Space', icon: '👥' },
-    { id: 'analytics', label: 'Analytics', icon: '📈', active: true }
+    { id: 'analytics', label: 'Analytics', icon: '📊', active: true }
   ];
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex flex-col w-64 bg-dark-surface border-r border-dark-border h-screen fixed left-0 top-0">
+      {/* Desktop Sidebar - Fixed left */}
+      <div className="hidden lg:flex flex-col w-60 bg-slate-900 h-screen fixed left-0 top-0 border-r border-slate-700">
         {/* Logo */}
-        <div className="p-6 border-b border-dark-border">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <span>📊</span>
-            <span>TaskMaster</span>
-          </h2>
+        <div className="p-6 border-b border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold text-sm">□</div>
+            <h2 className="text-lg font-bold text-white">TaskMaster</h2>
+          </div>
         </div>
 
-        {/* User Profile */}
-        <div className="p-6 border-b border-dark-border">
+        {/* User Profile Card */}
+        <div className="p-6 border-b border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-              AR
+            <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-slate-400">
+              <span className="text-lg">👤</span>
             </div>
-            <div className="flex-1">
-              <h4 className="text-white font-semibold text-sm">Alex Rivera</h4>
-              <p className="text-dark-border text-xs">Project Manager</p>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-white font-bold text-sm">Alex Rivera</h4>
+              <p className="text-slate-400 text-xs">Project Manager</p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-6 space-y-2">
+        <nav className="flex-1 px-0 py-6 space-y-1">
           {navItems.map((item) => (
             <a
               key={item.id}
               href={`#${item.id}`}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+              className={`flex items-center gap-3 mx-3 px-4 py-3 rounded-lg transition ${
                 item.active
-                  ? 'bg-primary/20 text-primary border border-primary/30'
-                  : 'text-dark-border hover:bg-dark-bg hover:text-white'
+                  ? 'bg-blue-500 text-white font-medium'
+                  : 'text-slate-300 hover:bg-slate-800'
               }`}
             >
               <span className="text-lg">{item.icon}</span>
-              <span className="font-medium">{item.label}</span>
+              <span className="font-medium text-sm">{item.label}</span>
             </a>
           ))}
         </nav>
 
-        {/* Bottom Section */}
-        <div className="border-t border-dark-border p-3 space-y-2">
+        {/* Bottom Menu */}
+        <div className="border-t border-slate-700 p-3 space-y-1">
           <a
             href="#settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-dark-border hover:bg-dark-bg hover:text-white transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition"
           >
             <span className="text-lg">⚙️</span>
-            <span className="font-medium">Settings</span>
+            <span className="font-medium text-sm">Settings</span>
           </a>
           <a
             href="#logout"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-dark-border hover:bg-dark-bg hover:text-white transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition"
           >
-            <span className="text-lg">🚪</span>
-            <span className="font-medium">Logout</span>
+            <span className="text-lg">↗️</span>
+            <span className="font-medium text-sm">Logout</span>
           </a>
         </div>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 md:hidden bg-dark-surface border-t border-dark-border">
+      <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-slate-900 border-t border-slate-700 z-50">
         <nav className="flex justify-around">
           {navItems.map((item) => (
             <a
               key={item.id}
               href={`#${item.id}`}
               className={`flex flex-col items-center py-3 px-4 flex-1 transition ${
-                item.active ? 'text-primary' : 'text-dark-border hover:text-white'
+                item.active ? 'text-blue-500' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <span className="text-2xl">{item.icon}</span>
-              <span className="text-xs mt-1">{item.label.split(' ')[0]}</span>
+              <span className="text-xl">{item.icon}</span>
+              <span className="text-xs mt-1 font-medium">{item.label.split(' ')[0]}</span>
             </a>
           ))}
         </nav>
       </div>
 
       {/* Spacer for mobile */}
-      <div className="md:hidden h-20"></div>
+      <div className="lg:hidden h-20"></div>
     </>
   );
 };
