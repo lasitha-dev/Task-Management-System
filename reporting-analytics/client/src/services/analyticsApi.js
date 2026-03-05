@@ -50,10 +50,14 @@ export const analyticsApi = {
   fetchWeeklyData: async () => {
     try {
       const response = await api.get('/api/analytics/weekly');
-      return { success: true, data: response.data.data };
+      const data = response.data.data || response.data;
+      // Ensure data is an array with proper format
+      const weeklyData = Array.isArray(data) ? data : [];
+      console.log('Weekly data fetched:', weeklyData);
+      return { success: true, data: weeklyData };
     } catch (error) {
       console.error('Error fetching weekly data:', error.message);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message, data: [] };
     }
   },
 

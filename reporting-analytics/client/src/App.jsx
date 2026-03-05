@@ -12,6 +12,7 @@ function App() {
   const [summary, setSummary] = useState(null);
   const [summaryError, setSummaryError] = useState(null);
   const [weeklyData, setWeeklyData] = useState(null);
+  const [weeklyError, setWeeklyError] = useState(null);
   const [statusData, setStatusData] = useState(null);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +21,7 @@ function App() {
   const loadData = async () => {
     setLoading(true);
     setSummaryError(null);
+    setWeeklyError(null);
     try {
       const [summaryRes, weeklyRes, statusRes, reportsRes] = await Promise.all([
         analyticsApi.fetchSummary(period),
@@ -34,12 +36,18 @@ function App() {
         setSummaryError('Failed to load analytics data');
       }
       
-      if (weeklyRes.success) setWeeklyData(weeklyRes.data);
+      if (weeklyRes.success) {
+        setWeeklyData(weeklyRes.data);
+      } else {
+        setWeeklyError(weeklyRes.error || 'Failed to load weekly data');
+      }
+      
       if (statusRes.success) setStatusData(statusRes.data);
       if (reportsRes.success) setReports(Array.isArray(reportsRes.data) ? reportsRes.data : []);
     } catch (error) {
       console.error('Error loading data:', error);
       setSummaryError('Unable to connect to analytics service');
+      setWeeklyError('Unable to connect to analytics service');
     } finally {
       setLoading(false);
     }
@@ -143,7 +151,7 @@ function App() {
 
           {/* Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <WeeklyChart data={weeklyData} loading={loading} />
+            <WeeklyChart data={weeklyData} loading={loading} error={weeklyError} />
             <StatusChart data={statusData} loading={loading} />
           </div>
 

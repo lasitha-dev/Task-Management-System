@@ -1,7 +1,7 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export const WeeklyChart = ({ data, loading }) => {
+export const WeeklyChart = ({ data, loading, error }) => {
   if (loading) {
     return (
       <div className="bg-dark-surface border border-dark-border rounded-lg p-6 h-80 flex items-center justify-center">
@@ -15,14 +15,23 @@ export const WeeklyChart = ({ data, loading }) => {
     );
   }
 
-  const chartData = data && Array.isArray(data) ? data : [
-    { day: 'Mon', completed: 12 },
-    { day: 'Tue', completed: 19 },
-    { day: 'Wed', completed: 15 },
-    { day: 'Thu', completed: 25 },
-    { day: 'Fri', completed: 22 },
-    { day: 'Sat', completed: 8 },
-    { day: 'Sun', completed: 5 }
+  if (error) {
+    return (
+      <div className="bg-dark-surface border border-dark-border rounded-lg p-6 h-80 flex items-center justify-center">
+        <p className="text-danger">{error}</p>
+      </div>
+    );
+  }
+
+  // Ensure chartData is always an array
+  const chartData = (Array.isArray(data) && data.length > 0) ? data : [
+    { day: 'Mon', completed: 0 },
+    { day: 'Tue', completed: 0 },
+    { day: 'Wed', completed: 0 },
+    { day: 'Thu', completed: 0 },
+    { day: 'Fri', completed: 0 },
+    { day: 'Sat', completed: 0 },
+    { day: 'Sun', completed: 0 }
   ];
 
   return (
