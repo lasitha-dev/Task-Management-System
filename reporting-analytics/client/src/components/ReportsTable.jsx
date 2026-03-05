@@ -106,10 +106,11 @@ export const ReportsTable = ({ reports = [], loading, onRefresh }) => {
                         ? 'bg-success/20 text-success'
                         : report.status === 'processing'
                         ? 'bg-warning/20 text-warning'
+                        : report.status === 'pending'
+                        ? 'bg-orange-500/20 text-orange-400'
                         : 'bg-dark-border/20 text-dark-border'
                     }`}>
-                      {report.status === 'ready' ? '✓' : report.status === 'processing' ? '⏳' : '○'} 
-                      {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                      {report.status === 'ready' ? '✓Ready' : report.status === 'processing' ? '⏳Processing' : report.status === 'pending' ? '🕐Pending' : report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-center">
