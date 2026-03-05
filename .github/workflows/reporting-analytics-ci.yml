@@ -13,9 +13,18 @@ name: Reporting & Analytics CI/CD
 # ---------------------------------------------------------------------------
 on:
   push:
-    branches: [main]
+    branches: [main, develop, feature/reporting-analytics]
     paths:
       - 'reporting-analytics/**'
+      - '.github/workflows/reporting-analytics-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'reporting-analytics/**'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/reporting-analytics
 
 # ---------------------------------------------------------------------------
 # Job 1: Build & Test
@@ -34,11 +43,11 @@ jobs:
     steps:
       # Step 1: Checkout the repository source code
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Step 2: Setup Node.js 18 runtime (matches our Dockerfile base)
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -47,10 +56,24 @@ jobs:
       # Step 3: Install dependencies using clean install for reproducibility
       - name: Install Dependencies
         run: npm ci
+        env:
+          CI: true
 
       # Step 4: Run unit/integration tests with coverage output
       - name: Run Tests
         run: npm test
+        env:
+          NODE_ENV: test
+
+      # Step 5: Upload coverage to Codecov
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: reporting-analytics-coverage
+          fail_ci_if_error: false
 
   # ---------------------------------------------------------------------------
   # Job 2: Security Scan (DevSecOps)
@@ -69,10 +92,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -84,74 +107,145 @@ jobs:
 
       # Run Snyk vulnerability scan on the project dependencies
       - name: Run Snyk Vulnerability Scan
-        uses: snyk/actions/node@master
-        continue-on-error: true # Log findings without failing the pipeline
+        run: npx snyk test --severity-threshold=high
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high --project-name=reporting-analytics
-          command: test
 
   # ---------------------------------------------------------------------------
   # Job 3: Docker Build & Push
   # ---------------------------------------------------------------------------
   # Builds the Docker image using the service's Dockerfile (node:18-alpine)
-  # and pushes it to Docker Hub with two tags:
-  #   - 'latest' for convenience
-  #   - '<commit-sha>' for traceability and rollback
+  # and pushes it to GitHub Container Registry with tags:
+  #   - 'latest' for latest stable
+  #   - '<commit-sha>' for traceability
+  #   - 'main' for main branch
   # ---------------------------------------------------------------------------
   docker-build-push:
     name: 🐳 Docker Build & Push
     runs-on: ubuntu-latest
-    needs: security-scan
+    needs: [build-and-test, security-scan]
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Authenticate with Docker Hub using repository secrets
-      - name: Login to Docker Hub
+      # Authenticate with GitHub Container Registry
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
+        if: github.event_name == 'push'
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push the container image with 'latest' and SHA tags
+      # Set up Docker Buildx for advanced build features
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Extract metadata for Docker image tags
+      - name: Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/reporting-analytics
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      # Build and push the container image
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: ./reporting-analytics
           file: ./reporting-analytics/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/reporting-analytics:latest
-            ${{ secrets.DOCKER_USERNAME }}/reporting-analytics:${{ github.sha }}
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # ---------------------------------------------------------------------------
-  # Job 4: Deploy (Placeholder)
+  # Job 4: Deploy to AWS App Runner
   # ---------------------------------------------------------------------------
-  # This job serves as a placeholder for cloud deployment.
-  # Replace the echo commands with actual deployment steps for your provider:
-  #   - AWS ECS: aws ecs update-service ...
-  #   - Google Cloud Run: gcloud run deploy ...
-  #   - Azure Container Apps: az containerapp update ...
-  #   - Kubernetes: kubectl set image ...
+  # Deploys the Docker image to AWS App Runner for production hosting.
+  # Only runs on successful push to main branch.
+  # Requires AWS credentials configured as repository secrets.
   # ---------------------------------------------------------------------------
   deploy:
-    name: 🚀 Deploy to Cloud
+    name: 🚀 Deploy to AWS App Runner
     runs-on: ubuntu-latest
     needs: docker-build-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://reporting-analytics-app.awsapprunner.com
 
     steps:
-      - name: Deploy Reporting & Analytics Service
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Configure AWS credentials for deployment
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      # Deploy service to AWS App Runner
+      - name: Deploy to AWS App Runner
         run: |
-          echo "============================================="
-          echo "  DEPLOYMENT PLACEHOLDER"
-          echo "============================================="
-          echo "Service:  Reporting & Analytics"
-          echo "Image:    ${{ secrets.DOCKER_USERNAME }}/reporting-analytics:${{ github.sha }}"
-          echo "Status:   Ready for cloud deployment"
-          echo ""
-          echo "To enable real deployment, replace this step"
-          echo "with your cloud provider's deployment command."
-          echo "============================================="
+          # Create or update AppRunner service
+          SERVICE_ARN=$(aws apprunner list-services \
+            --query "ServiceSummaryList[?ServiceName=='reporting-analytics'].ServiceArn" \
+            --output text 2>/dev/null || echo "")
+          
+          if [ -z "$SERVICE_ARN" ]; then
+            echo "Creating new AppRunner service..."
+            aws apprunner create-service \
+              --service-name reporting-analytics \
+              --source-configuration \
+                ImageRepository="{RepositoryUrl=${{ env.REGISTRY }}/${{ github.repository }}/reporting-analytics,ImageRepositoryType=ECR_PUBLIC,ImageConfiguration={Port=5000,StartCommand='node src/app.js'}}" \
+              --instance-configuration Cpu=1,Memory=2GB \
+              --auto-deployment-config AutoDeploymentsEnabled=true
+          else
+            echo "Updating existing AppRunner service..."
+            aws apprunner update-service \
+              --service-arn "$SERVICE_ARN" \
+              --source-configuration \
+                ImageRepository="{RepositoryUrl=${{ env.REGISTRY }}/${{ github.repository }}/reporting-analytics,ImageRepositoryType=ECR_PUBLIC,ImageConfiguration={Port=5000,StartCommand='node src/app.js'}}"
+          fi
+        continue-on-error: true
+
+  # ---------------------------------------------------------------------------
+  # Job 5: Notify Results
+  # ---------------------------------------------------------------------------
+  notify:
+    name: 📢 Notify Results
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [build-and-test, security-scan, docker-build-push, deploy]
+
+    steps:
+      - name: Check Pipeline Status
+        run: |
+          if [ "${{ needs.build-and-test.result }}" == "failure" ]; then
+            echo "❌ Tests Failed - Pipeline stopped"
+            exit 1
+          fi
+          if [ "${{ needs.security-scan.result }}" == "failure" ]; then
+            echo "⚠️  Security scan failed - Review results"
+          fi
+          if [ "${{ needs.docker-build-push.result }}" == "success" ]; then
+            echo "✅ Docker image built and pushed successfully"
+          fi
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "🚀 Deployment to AWS App Runner successful"
+          fi
+
