@@ -49,6 +49,17 @@ const ReportsTable = ({ reports = [], loading, onRefresh }) => {
     downloadPDF(report);
   };
 
+  const handleDelete = async (reportId) => {
+    setIsDeleting(true);
+    const result = await reportsApi.deleteReport(reportId);
+    setIsDeleting(false);
+    
+    if (result.success) {
+      setIsDeleteConfirm(null);
+      onRefresh();
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -137,20 +148,20 @@ const ReportsTable = ({ reports = [], loading, onRefresh }) => {
                     )}
                   </td>
                   <td className="py-4 px-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => handleDownload(report)}
-                        className="text-gray-400 hover:text-blue-400 transition-colors p-1"
-                        title="Download report"
-                      >
-                        <Download size={16} />
+                    <div className="flex items-center gap-2 justify-center">
+                      <button 
+                        onClick={() => downloadPDF(report)}
+                        title="Download PDF"
+                        className="p-1.5 text-gray-400 hover:text-blue-400 
+                        hover:bg-blue-400/10 rounded-md transition-colors">
+                        <Download size={15} />
                       </button>
-                      <button
+                      <button 
                         onClick={() => setIsDeleteConfirm(report._id)}
-                        className="text-gray-400 hover:text-red-400 transition-colors p-1"
-                        title="Delete report"
-                      >
-                        <Trash2 size={16} />
+                        title="Delete Report"
+                        className="p-1.5 text-gray-400 hover:text-red-400 
+                        hover:bg-red-400/10 rounded-md transition-colors">
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </td>
