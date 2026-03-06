@@ -19,6 +19,17 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [showGenerate, setShowGenerate] = useState(false);
 
+  const fetchReports = async () => {
+    try {
+      const response = await reportsApi.fetchReports();
+      const data = response.data?.data || response.data || [];
+      setReports(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.log('reports fetch error:', e.message);
+      setReports([]);
+    }
+  };
+
   const loadData = async () => {
     setSummaryError(null);
     setWeeklyError(null);
@@ -78,6 +89,14 @@ function App() {
     initializeApp();
   }, []);
 
+  // Auto-refresh reports every 5 seconds to check processing status
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchReports();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Reload data when period or dataMode changes
   useEffect(() => {
     if (!loading) {
@@ -94,8 +113,17 @@ function App() {
     setPeriod(newPeriod);
   };
 
+  const handleDeleteReport = async (reportId) => {
+    try {
+      await reportsApi.deleteReport(reportId);
+      await fetchReports();
+    } catch (error) {
+      console.error('Error deleting report:', error);
+    }
+  };
+
   const handleGenerateSuccess = () => {
-    loadData();
+    fetchReports();
   };
 
   return (
@@ -172,7 +200,11 @@ function App() {
             </div>
 
             {/* Reports Table */}
-            <ReportsTable reports={reports} loading={loading} onRefresh={loadData} />
+            <ReportsTable 
+              reports={reports}
+              onDelete={handleDeleteReport}
+              onRefresh={fetchReports}
+            />
           </div>
         </div>
       </div>

@@ -3,9 +3,7 @@ import { FileText, Download, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { reportsApi } from '../services/analyticsApi';
 
-const ReportsTable = ({ reports = [], loading, onRefresh }) => {
-  const [isDeleteConfirm, setIsDeleteConfirm] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+const ReportsTable = ({ reports, onDelete, onRefresh }) => {
 
   const downloadPDF = (report) => {
     const doc = new jsPDF();
@@ -49,17 +47,6 @@ const ReportsTable = ({ reports = [], loading, onRefresh }) => {
     downloadPDF(report);
   };
 
-  const handleDelete = async (reportId) => {
-    setIsDeleting(true);
-    const result = await reportsApi.deleteReport(reportId);
-    setIsDeleting(false);
-    
-    if (result.success) {
-      setIsDeleteConfirm(null);
-      onRefresh();
-    }
-  };
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -74,21 +61,6 @@ const ReportsTable = ({ reports = [], loading, onRefresh }) => {
       minute: '2-digit'
     });
   };
-
-  if (loading) {
-    return (
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-        <div className="flex items-center justify-center h-40">
-          <div className="text-center">
-            <div className="animate-spin mb-3">
-              <div className="w-8 h-8 border-4 border-slate-700 border-t-blue-500 rounded-full mx-auto"></div>
-            </div>
-            <p className="text-slate-400">Loading reports...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
@@ -133,34 +105,30 @@ const ReportsTable = ({ reports = [], loading, onRefresh }) => {
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    {report.status === 'ready' ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-900 text-green-400 border border-green-700">
-                        Ready
-                      </span>
-                    ) : report.status === 'processing' ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-900 text-yellow-400 border border-yellow-700">
-                        Processing
-                      </span>
-                    ) : (
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300 border border-slate-600">
-                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                      </span>
-                    )}
+                    <span className={
+                      report.status === 'ready' 
+                        ? 'px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : report.status === 'processing'
+                        ? 'px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'px-2.5 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                    }>
+                      {report.status === 'ready' ? '✓ Ready' 
+                        : report.status === 'processing' ? '⏳ Processing' 
+                        : '🕐 Pending'}
+                    </span>
                   </td>
                   <td className="py-4 px-4 text-center">
                     <div className="flex items-center gap-2 justify-center">
-                      <button 
-                        onClick={() => downloadPDF(report)}
-                        title="Download PDF"
+                      <button onClick={() => downloadPDF(report)}
                         className="p-1.5 text-gray-400 hover:text-blue-400 
-                        hover:bg-blue-400/10 rounded-md transition-colors">
+                        hover:bg-blue-400/10 rounded-md transition-colors"
+                        title="Download PDF">
                         <Download size={15} />
                       </button>
-                      <button 
-                        onClick={() => setIsDeleteConfirm(report._id)}
-                        title="Delete Report"
+                      <button onClick={() => onDelete(report._id)}
                         className="p-1.5 text-gray-400 hover:text-red-400 
-                        hover:bg-red-400/10 rounded-md transition-colors">
+                        hover:bg-red-400/10 rounded-md transition-colors"
+                        title="Delete">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -173,30 +141,6 @@ const ReportsTable = ({ reports = [], loading, onRefresh }) => {
       ) : (
         <div className="text-center py-8">
           <p className="text-slate-400">No reports yet. Generate your first report!</p>
-        </div>
-      )}
-
-      {isDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-sm w-full">
-            <h4 className="text-white text-lg font-semibold mb-2">Confirm Delete</h4>
-            <p className="text-slate-400 mb-6">Are you sure you want to delete this report? This action cannot be undone.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setIsDeleteConfirm(null)}
-                className="flex-1 bg-slate-700 text-white py-2 rounded-lg hover:bg-slate-600 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(isDeleteConfirm)}
-                disabled={isDeleting}
-                className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition disabled:opacity-50"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
