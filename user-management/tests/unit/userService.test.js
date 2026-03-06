@@ -295,4 +295,97 @@ describe('userService', () => {
       expect(result).toHaveLength(2);
     });
   });
+
+  describe('googleAuth', () => {
+    it('should return existing user if found by googleId', async () => {
+      const mockUser = {
+        _id: 'user-id-123',
+        name: 'Google User',
+        email: 'google@example.com',
+        role: 'User',
+        googleId: 'google-123',
+      };
+
+      // Mock the google-auth-library verifyIdToken
+      const { OAuth2Client } = require('google-auth-library');
+      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
+        getPayload: () => ({
+          sub: 'google-123',
+          email: 'google@example.com',
+          name: 'Google User',
+        }),
+      });
+
+      User.findOne
+        .mockResolvedValueOnce(mockUser); // findOne({ googleId })
+
+      const result = await userService.googleAuth('valid-id-token');
+
+      expect(result).toHaveProperty('token', 'mock-jwt-token');
+      expect(result.name).toBe('Google User');
+      expect(result.email).toBe('google@example.com');
+    });
+
+    it('should link Google account if user exists by email but not googleId', async () => {
+      const mockUser = {
+        _id: 'user-id-456',
+        name: 'Existing User',
+        email: 'existing@example.com',
+        role: 'User',
+        googleId: undefined,
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      const { OAuth2Client } = require('google-auth-library');
+      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
+        getPayload: () => ({
+          sub: 'google-456',
+          email: 'existing@example.com',
+          name: 'Existing User',
+        }),
+      });
+
+      User.findOne
+        .mockResolvedValueOnce(null)      // findOne({ googleId }) - not found
+        .mockResolvedValueOnce(mockUser);  // findOne({ email }) - found
+
+      const result = await userService.googleAuth('valid-id-token');
+
+      expect(mockUser.googleId).toBe('google-456');
+      expect(mockUser.save).toHaveBeenCalled();
+      expect(result).toHaveProperty('token', 'mock-jwt-token');
+    });
+
+    it('should create new user if no existing user found', async () => {
+      const { OAuth2Client } = require('google-auth-library');
+      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
+        getPayload: () => ({
+          sub: 'google-789',
+          email: 'newgoogle@example.com',
+          name: 'New Google User',
+        }),
+      });
+
+      User.findOne
+        .mockResolvedValueOnce(null)   // findOne({ googleId })
+        .mockResolvedValueOnce(null);  // findOne({ email })
+
+      User.create.mockResolvedValue({
+        _id: 'new-user-id',
+        name: 'New Google User',
+        email: 'newgoogle@example.com',
+        role: 'User',
+      });
+
+      const result = await userService.googleAuth('valid-id-token');
+
+      expect(User.create).toHaveBeenCalledWith({
+        name: 'New Google User',
+        email: 'newgoogle@example.com',
+        googleId: 'google-789',
+      });
+      expect(result).toHaveProperty('token', 'mock-jwt-token');
+      expect(result.name).toBe('New Google User');
+    });
+  });
 });

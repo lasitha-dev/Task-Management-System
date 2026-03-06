@@ -38,6 +38,15 @@ export function AuthProvider({ children }) {
     return data.data;
   };
 
+  const googleLogin = async (idToken) => {
+    const { data } = await API.post('/google', { idToken });
+    localStorage.setItem('token', data.data.token);
+    localStorage.setItem('user', JSON.stringify(data.data));
+    setToken(data.data.token);
+    setUser(data.data);
+    return data.data;
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -49,7 +58,7 @@ export function AuthProvider({ children }) {
   const isAdmin = user?.role === 'Admin';
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isAuthenticated, isAdmin, loading }}>
+    <AuthContext.Provider value={{ user, token, login, register, googleLogin, logout, isAuthenticated, isAdmin, loading }}>
       {children}
     </AuthContext.Provider>
   );

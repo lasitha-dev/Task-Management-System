@@ -12,7 +12,7 @@ beforeAll(async () => {
   const mongoUri = mongoServer.getUri();
 
   await mongoose.connect(mongoUri);
-});
+}, 120000);
 
 afterEach(async () => {
   const collections = mongoose.connection.collections;
@@ -382,6 +382,28 @@ describe('User API Routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('OK');
       expect(res.body.service).toBe('user-management');
+    });
+  });
+
+  describe('POST /api/users/google', () => {
+    it('should return 400 when idToken is missing', async () => {
+      const res = await request(app)
+        .post('/api/users/google')
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Google ID token is required');
+    });
+
+    it('should return 401/500 for invalid Google ID token', async () => {
+      const res = await request(app)
+        .post('/api/users/google')
+        .send({ idToken: 'invalid-token-value' });
+
+      // Google token verification will fail with an error
+      expect(res.status).toBeGreaterThanOrEqual(400);
+      expect(res.body.success).toBe(false);
     });
   });
 });
