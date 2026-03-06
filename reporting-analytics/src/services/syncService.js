@@ -44,7 +44,8 @@ const generateMockTasks = () => {
     if (config.status === 'done' && config.daysAgo !== null) {
       completedAt = new Date(today);
       completedAt.setDate(today.getDate() - config.daysAgo);
-      completedAt.setHours(10 + index, 30, 0, 0);
+      // Spread hours across different times to create chart curve: [9,14,10,16,8,15,11,17,9,13,10,15]
+      completedAt.setHours([9, 14, 10, 16, 8, 15, 11, 17, 9, 13, 10, 15][index], 30, 0, 0);
     }
 
     tasks.push({

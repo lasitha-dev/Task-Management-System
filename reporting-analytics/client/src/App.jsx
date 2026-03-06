@@ -89,11 +89,11 @@ function App() {
     initializeApp();
   }, []);
 
-  // Auto-refresh reports every 5 seconds to check processing status
+  // Auto-refresh reports every 30 seconds to check processing status
   useEffect(() => {
     const interval = setInterval(() => {
       fetchReports();
-    }, 5000);
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
