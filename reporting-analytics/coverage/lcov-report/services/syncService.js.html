@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.83% </span>
+                <span class="strong">95.34% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>46/48</span>
+                <span class='fraction'>41/43</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">83.33% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>5/6</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.45% </span>
+                <span class="strong">95.23% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>42/44</span>
+                <span class='fraction'>40/42</span>
             </div>
         
             
@@ -162,17 +162,7 @@
 <a name='L97'></a><a href='#L97'>97</a>
 <a name='L98'></a><a href='#L98'>98</a>
 <a name='L99'></a><a href='#L99'>99</a>
-<a name='L100'></a><a href='#L100'>100</a>
-<a name='L101'></a><a href='#L101'>101</a>
-<a name='L102'></a><a href='#L102'>102</a>
-<a name='L103'></a><a href='#L103'>103</a>
-<a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a>
-<a name='L106'></a><a href='#L106'>106</a>
-<a name='L107'></a><a href='#L107'>107</a>
-<a name='L108'></a><a href='#L108'>108</a>
-<a name='L109'></a><a href='#L109'>109</a>
-<a name='L110'></a><a href='#L110'>110</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">4x</span>
+<a name='L100'></a><a href='#L100'>100</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -183,40 +173,30 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">132x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">209x</span>
-<span class="cline-any cline-yes">209x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">220x</span>
 <span class="cline-any cline-yes">220x</span>
-<span class="cline-any cline-yes">220x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">220x</span>
 <span class="cline-any cline-yes">220x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-yes">88x</span>
-<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">220x</span>
+<span class="cline-any cline-yes">220x</span>
+<span class="cline-any cline-yes">220x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">220x</span>
+<span class="cline-any cline-yes">220x</span>
+<span class="cline-any cline-yes">152x</span>
+<span class="cline-any cline-yes">152x</span>
+<span class="cline-any cline-yes">152x</span>
+<span class="cline-any cline-yes">152x</span>
+<span class="cline-any cline-yes">152x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">220x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -287,55 +267,45 @@ const { getRandomDate } = require('../utils/helpers');
 &nbsp;
 /**
  * Generate fake tasks for mock mode
- * Ensures at least 8 tasks are 'done' with completedAt dates in current week
+ * Ensures tasks are 'done' with completedAt dates in current week
  * @returns {Array} - array of fake tasks
  */
 const generateMockTasks = () =&gt; {
-    const mockTasks = [];
+  const statuses = ['todo', 'inProgress', 'done', 'done', 'done', 'done', 'done'];
+  const userNames = ['Alice Johnson', 'Bob Smith', 'Carol Williams', 'David Brown', 'Emma Davis'];
+  const tasks = [];
+  const today = new Date();
+&nbsp;
+  for (let i = 1; i &lt;= 20; i++) {
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const assignedUserName = userNames[Math.floor(Math.random() * userNames.length)];
     
-    // Create status array: at least 8 'done', rest distributed
-    const statuses = [];
-    for (let i = 0; i &lt; 8; i++) {
-        statuses.push(TASK_STATUS.DONE);
-    }
-    for (let i = 8; i &lt; TASK_GENERATION_COUNT; i++) {
-        statuses.push(i % 2 === 0 ? TASK_STATUS.TODO : TASK_STATUS.IN_PROGRESS);
-    }
-    
-    // Shuffle statuses randomly
-    for (let i = statuses.length - 1; i &gt; 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [statuses[i], statuses[j]] = [statuses[j], statuses[i]];
+    const createdDaysAgo = Math.floor(Math.random() * 7);
+    const createdAt = new Date(today);
+    createdAt.setDate(today.getDate() - createdDaysAgo);
+    createdAt.setHours(Math.floor(Math.random() * 20) + 1);
+    createdAt.setMinutes(Math.floor(Math.random() * 59));
+&nbsp;
+    let completedAt = null;
+    if (status === 'done') {
+      const completedDaysAgo = Math.floor(Math.random() * 7);
+      completedAt = new Date(today);
+      completedAt.setDate(today.getDate() - completedDaysAgo);
+      completedAt.setHours(Math.floor(Math.random() * 20) + 1);
+      completedAt.setMinutes(Math.floor(Math.random() * 59));
     }
 &nbsp;
-    for (let i = 1; i &lt;= TASK_GENERATION_COUNT; i++) {
-        const status = statuses[i - 1];
-        const assignedUserName = MOCK_USERNAMES[Math.floor(Math.random() * MOCK_USERNAMES.length)];
-        const createdDate = getRandomDate();
-        
-        // For done tasks, ensure completedAt is within current week (last 7 days)
-        let completedAt = null;
-        if (status === TASK_STATUS.DONE) {
-            const today = new Date();
-            const daysAgo = Math.floor(Math.random() * 7);
-            completedAt = new Date(today);
-            completedAt.setDate(today.getDate() - daysAgo);
-            completedAt.setHours(Math.floor(Math.random() * 23));
-            completedAt.setMinutes(Math.floor(Math.random() * 59));
-        }
-&nbsp;
-        mockTasks.push({
-            taskId: `TASK-${String(i).padStart(3, '0')}`,
-            title: `Task ${i} - ${['Design homepage', 'Implement API', 'Fix bugs', 'Write tests', 'Review code'][i % 5]}`,
-            status,
-            assignedUserId: `USER-${String(Math.floor(i / 4) + 1).padStart(2, '0')}`,
-            assignedUserName,
-            createdAt: createdDate,
-            completedAt
-        });
-    }
-&nbsp;
-    return mockTasks;
+    tasks.push({
+      taskId: `TASK-${String(i).padStart(3, '0')}`,
+      title: `Task ${i}`,
+      status,
+      assignedUserId: `USER-0${(i % 5) + 1}`,
+      assignedUserName,
+      createdAt,
+      completedAt
+    });
+  }
+  return tasks;
 };
 &nbsp;
 /**
@@ -397,7 +367,7 @@ module.exports = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-06T05:33:58.191Z
+                at 2026-03-06T05:43:58.231Z
             </div>
         <script src="../prettify.js"></script>
         <script>

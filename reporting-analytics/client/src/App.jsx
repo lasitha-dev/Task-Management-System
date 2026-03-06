@@ -60,6 +60,9 @@ function App() {
         console.log('🔄 Syncing tasks from external service...');
         await syncApi.syncTasks();
         console.log('✅ Sync complete');
+        
+        // Step 1.5: Wait 2 seconds for DB to index data
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Step 2: Load all analytics in parallel
         await loadData();

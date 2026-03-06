@@ -93,7 +93,7 @@ const getWeeklyData = async () => {
 
         // Get all tasks completed in the week
         const completedTasks = await TasksMirror.find({
-            status: TASK_STATUS.DONE,
+            status: 'done',
             completedAt: { $gte: monday, $lte: sunday }
         });
 

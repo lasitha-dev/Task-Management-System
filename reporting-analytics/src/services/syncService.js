@@ -4,55 +4,45 @@ const { getRandomDate } = require('../utils/helpers');
 
 /**
  * Generate fake tasks for mock mode
- * Ensures at least 8 tasks are 'done' with completedAt dates in current week
+ * Ensures tasks are 'done' with completedAt dates in current week
  * @returns {Array} - array of fake tasks
  */
 const generateMockTasks = () => {
-    const mockTasks = [];
+  const statuses = ['todo', 'inProgress', 'done', 'done', 'done', 'done', 'done'];
+  const userNames = ['Alice Johnson', 'Bob Smith', 'Carol Williams', 'David Brown', 'Emma Davis'];
+  const tasks = [];
+  const today = new Date();
+
+  for (let i = 1; i <= 20; i++) {
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const assignedUserName = userNames[Math.floor(Math.random() * userNames.length)];
     
-    // Create status array: at least 8 'done', rest distributed
-    const statuses = [];
-    for (let i = 0; i < 8; i++) {
-        statuses.push(TASK_STATUS.DONE);
-    }
-    for (let i = 8; i < TASK_GENERATION_COUNT; i++) {
-        statuses.push(i % 2 === 0 ? TASK_STATUS.TODO : TASK_STATUS.IN_PROGRESS);
-    }
-    
-    // Shuffle statuses randomly
-    for (let i = statuses.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [statuses[i], statuses[j]] = [statuses[j], statuses[i]];
+    const createdDaysAgo = Math.floor(Math.random() * 7);
+    const createdAt = new Date(today);
+    createdAt.setDate(today.getDate() - createdDaysAgo);
+    createdAt.setHours(Math.floor(Math.random() * 20) + 1);
+    createdAt.setMinutes(Math.floor(Math.random() * 59));
+
+    let completedAt = null;
+    if (status === 'done') {
+      const completedDaysAgo = Math.floor(Math.random() * 7);
+      completedAt = new Date(today);
+      completedAt.setDate(today.getDate() - completedDaysAgo);
+      completedAt.setHours(Math.floor(Math.random() * 20) + 1);
+      completedAt.setMinutes(Math.floor(Math.random() * 59));
     }
 
-    for (let i = 1; i <= TASK_GENERATION_COUNT; i++) {
-        const status = statuses[i - 1];
-        const assignedUserName = MOCK_USERNAMES[Math.floor(Math.random() * MOCK_USERNAMES.length)];
-        const createdDate = getRandomDate();
-        
-        // For done tasks, ensure completedAt is within current week (last 7 days)
-        let completedAt = null;
-        if (status === TASK_STATUS.DONE) {
-            const today = new Date();
-            const daysAgo = Math.floor(Math.random() * 7);
-            completedAt = new Date(today);
-            completedAt.setDate(today.getDate() - daysAgo);
-            completedAt.setHours(Math.floor(Math.random() * 23));
-            completedAt.setMinutes(Math.floor(Math.random() * 59));
-        }
-
-        mockTasks.push({
-            taskId: `TASK-${String(i).padStart(3, '0')}`,
-            title: `Task ${i} - ${['Design homepage', 'Implement API', 'Fix bugs', 'Write tests', 'Review code'][i % 5]}`,
-            status,
-            assignedUserId: `USER-${String(Math.floor(i / 4) + 1).padStart(2, '0')}`,
-            assignedUserName,
-            createdAt: createdDate,
-            completedAt
-        });
-    }
-
-    return mockTasks;
+    tasks.push({
+      taskId: `TASK-${String(i).padStart(3, '0')}`,
+      title: `Task ${i}`,
+      status,
+      assignedUserId: `USER-0${(i % 5) + 1}`,
+      assignedUserName,
+      createdAt,
+      completedAt
+    });
+  }
+  return tasks;
 };
 
 /**

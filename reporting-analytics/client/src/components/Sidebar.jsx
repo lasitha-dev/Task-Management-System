@@ -7,7 +7,7 @@ const Sidebar = () => {
     { id: 'tasks', label: 'Task Board', icon: CheckSquare, color: 'text-gray-300' },
     { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-yellow-400' },
     { id: 'team', label: 'Team Space', icon: Users, color: 'text-purple-400' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart2, color: 'text-white', active: true }
+    { id: 'analytics', label: 'Analytics', icon: BarChart2, color: 'text-blue-400', active: true }
   ];
 
   const bottomItems = [
