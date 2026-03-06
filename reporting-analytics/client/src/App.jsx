@@ -10,7 +10,7 @@ import GenerateReportModal from './components/GenerateReportModal';
 
 function App() {
   const [period, setPeriod] = useState('week');
-  const [summary, setSummary] = useState(null);
+  const [summaryData, setSummaryData] = useState(null);
   const [summaryError, setSummaryError] = useState(null);
   const [weeklyData, setWeeklyData] = useState(null);
   const [weeklyError, setWeeklyError] = useState(null);
@@ -18,6 +18,9 @@ function App() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showGenerate, setShowGenerate] = useState(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
 
   const fetchReports = async () => {
     try {
@@ -30,37 +33,24 @@ function App() {
     }
   };
 
-  const loadData = async () => {
-    setSummaryError(null);
-    setWeeklyError(null);
+  const loadAllData = async (selectedPeriod = period) => {
     try {
-      const summaryRes = await analyticsApi.fetchSummary(period);
-      const reportsRes = await reportsApi.fetchReports();
-
-      const [weeklyRes, statusRes] = await Promise.all([
-        analyticsApi.fetchWeeklyData(),
-        analyticsApi.fetchStatusBreakdown()
-      ]);
-
-      if (summaryRes.success && summaryRes.data) {
-        setSummary(summaryRes.data);
-      } else if (!summaryRes.success) {
-        setSummaryError('Failed to load analytics data');
-      }
-      
-      if (weeklyRes.success) {
-        setWeeklyData(weeklyRes.data);
-      } else {
-        setWeeklyError(weeklyRes.error || 'Failed to load weekly data');
-      }
-      
-      if (statusRes.success) setStatusData(statusRes.data);
-      if (reportsRes.success) setReports(Array.isArray(reportsRes.data) ? reportsRes.data : []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      setSummaryError('Unable to connect to analytics service');
-      setWeeklyError('Unable to connect to analytics service');
-    }
+      await syncApi.syncTasks();
+    } catch(e) {}
+    
+    await new Promise(r => setTimeout(r, 500));
+    
+    const [summary, weekly, status, reports] = await Promise.all([
+      analyticsApi.fetchSummary(selectedPeriod),
+      analyticsApi.fetchWeeklyData(),
+      analyticsApi.fetchStatusBreakdown(),
+      reportsApi.fetchReports()
+    ]);
+    
+    setSummaryData(summary?.data?.data || summary?.data);
+    setWeeklyData(weekly?.data?.data || weekly?.data || []);
+    setStatusData(status?.data?.data || status?.data);
+    setReports(reports?.data?.data || reports?.data || []);
   };
 
   // Startup sequence: sync first, then load data
@@ -77,7 +67,7 @@ function App() {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Step 2: Load all analytics in parallel
-        await loadData();
+        await loadAllData('week');
       } catch (error) {
         console.error('Error during app initialization:', error);
         setSummaryError('Failed to initialize analytics');
@@ -97,12 +87,12 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Reload data when period or dataMode changes
+  // Reload data when period changes
   useEffect(() => {
-    if (!loading) {
+    if (!loading && period !== 'custom') {
       const reloadData = async () => {
         setLoading(true);
-        await loadData();
+        await loadAllData(period);
         setLoading(false);
       };
       reloadData();
@@ -110,7 +100,14 @@ function App() {
   }, [period]);
 
   const handlePeriodChange = (newPeriod) => {
-    setPeriod(newPeriod);
+    if (newPeriod === 'custom') {
+      setPeriod('custom');
+      setShowCustomPicker(true);
+    } else {
+      setPeriod(newPeriod);
+      setShowCustomPicker(false);
+      loadAllData(newPeriod);
+    }
   };
 
   const handleDeleteReport = async (reportId) => {
@@ -144,20 +141,47 @@ function App() {
               <div className="text-sm text-slate-400">
                 Home <span className="mx-2">/</span> <span className="text-blue-500 font-medium">Analytics</span>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {['week', 'month', 'custom'].map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => handlePeriodChange(p)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
-                      period === p
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-slate-800 border border-slate-700 text-slate-300 hover:border-blue-500'
-                    }`}
-                  >
-                    {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : '📅 Custom'}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-3 flex-wrap">
+                <div className="flex gap-2 flex-wrap">
+                  {['week', 'month', 'custom'].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => handlePeriodChange(p)}
+                      className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+                        period === p
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-[#1e293b] text-gray-300 hover:bg-blue-600 hover:text-white'
+                      }`}
+                    >
+                      {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : '📅 Custom'}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Custom Date Picker */}
+                {showCustomPicker && (
+                  <div className="flex items-center gap-3 p-3 bg-[#1e293b] rounded-lg border border-[#334155]">
+                    <label className="text-gray-400 text-sm">From:</label>
+                    <input type="date" value={customFrom}
+                      onChange={(e) => setCustomFrom(e.target.value)}
+                      className="bg-[#0f172a] border border-[#334155] rounded px-3 py-1.5 text-white text-sm"/>
+                    <label className="text-gray-400 text-sm">To:</label>
+                    <input type="date" value={customTo}
+                      onChange={(e) => setCustomTo(e.target.value)}
+                      className="bg-[#0f172a] border border-[#334155] rounded px-3 py-1.5 text-white text-sm"/>
+                    <button onClick={() => {
+                      if(customFrom && customTo) {
+                        loadAllData('custom');
+                        setShowCustomPicker(false);
+                      }
+                    }} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Apply</button>
+                    <button onClick={() => {
+                      setShowCustomPicker(false);
+                      setPeriod('week');
+                      loadAllData('week');
+                    }} className="px-3 py-1.5 text-gray-400 text-sm">Cancel</button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -165,24 +189,24 @@ function App() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
               <StatCard
                 title="Total Tasks"
-                value={summary?.totalTasks}
-                percentage={summary?.totalChange || 0}
+                value={summaryData?.totalTasks}
+                percentage={summaryData?.totalChange || 0}
                 icon="📋"
                 isLoading={loading}
                 error={summaryError}
               />
               <StatCard
                 title="Completed Tasks"
-                value={summary?.completedTasks}
-                percentage={summary?.completedChange || 0}
+                value={summaryData?.completedTasks}
+                percentage={summaryData?.completedChange || 0}
                 icon="✓"
                 isLoading={loading}
                 error={summaryError}
               />
               <StatCard
                 title="Productivity %"
-                value={summary?.productivity ? `${Math.round(summary.productivity)}%` : '--'}
-                percentage={summary?.productivityChange || 0}
+                value={summaryData?.productivity ? `${Math.round(summaryData.productivity)}%` : '--'}
+                percentage={summaryData?.productivityChange || 0}
                 icon="⚡"
                 isLoading={loading}
                 error={summaryError}
