@@ -25,11 +25,12 @@ const generateMockTasks = () => {
 
     let completedAt = null;
     if (status === 'done') {
-      const completedDaysAgo = Math.floor(Math.random() * 7);
-      completedAt = new Date(today);
-      completedAt.setDate(today.getDate() - completedDaysAgo);
-      completedAt.setHours(Math.floor(Math.random() * 20) + 1);
+      completedAt = new Date();
+      const daysBack = Math.floor(Math.random() * 6);
+      completedAt.setDate(completedAt.getDate() - daysBack);
+      completedAt.setHours(8 + Math.floor(Math.random() * 10));
       completedAt.setMinutes(Math.floor(Math.random() * 59));
+      completedAt.setSeconds(0);
     }
 
     tasks.push({

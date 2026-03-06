@@ -7,16 +7,16 @@ const Sidebar = () => {
   const userRole = localStorage.getItem('userRole') || 'Project Manager';
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-red-400' },
-    { id: 'tasks', label: 'Task Board', icon: CheckSquare, color: 'text-gray-300' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-yellow-400' },
-    { id: 'team', label: 'Team Space', icon: Users, color: 'text-purple-400' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart2, color: 'text-blue-400', active: true }
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-gray-400' },
+    { id: 'tasks', label: 'Task Board', icon: CheckSquare, color: 'text-gray-400' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-gray-400' },
+    { id: 'team', label: 'Team Space', icon: Users, color: 'text-gray-400' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart2, color: 'text-gray-400', active: true }
   ];
 
   const bottomItems = [
     { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-400' },
-    { id: 'logout', label: 'Logout', icon: LogOut, color: 'text-blue-400' }
+    { id: 'logout', label: 'Logout', icon: LogOut, color: 'text-gray-400' }
   ];
 
   return (

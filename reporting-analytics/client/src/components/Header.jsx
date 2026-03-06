@@ -11,14 +11,18 @@ const Header = ({onGenerateReport}) => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 bg-slate-700 rounded-lg px-3 py-2 border border-slate-600">
-              <span className="text-slate-400"></span>
-              <input
-                type="text"
-                placeholder="Search analytics..."
-                className="bg-transparent text-white placeholder-slate-400 outline-none text-sm w-40"
-              />
-            </div>
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 
+          bg-[#1e293b] border border-[#334155] rounded-lg 
+          text-gray-400 text-sm w-64 focus-within:border-blue-500 
+          focus-within:ring-1 focus-within:ring-blue-500 transition-all">
+            <span className="text-slate-400">🔍</span>
+            <input
+              type="text"
+              placeholder="Search analytics..."
+              className="bg-transparent outline-none text-white 
+              placeholder-gray-500 text-sm w-full"
+            />
+          </div>
 
             <button className="relative text-slate-300 hover:text-white transition">
               

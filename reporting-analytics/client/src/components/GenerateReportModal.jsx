@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { reportsApi } from '../services/analyticsApi';
 
 export const GenerateReportModal = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     title: '',
-    authorName: '',
+    authorName: localStorage.getItem('userName') || 'Alex Rivera',
     period: 'week'
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -45,13 +45,13 @@ export const GenerateReportModal = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-dark-surface border border-dark-border rounded-lg p-6 max-w-md w-full">
+      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-md w-full">
         <h2 className="text-xl font-semibold text-white mb-4">Generate New Report</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-dark-border mb-2">
-              Report Title <span className="text-danger">*</span>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Report Title <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -59,33 +59,33 @@ export const GenerateReportModal = ({ isOpen, onClose, onSuccess }) => {
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g., Weekly Task Summary"
-              className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-white placeholder-dark-border focus:outline-none focus:border-primary transition"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-dark-border mb-2">
-              Author Name <span className="text-danger">*</span>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Author Name <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
               name="authorName"
               value={formData.authorName}
-              onChange={handleChange}
-              placeholder="e.g., John Doe"
-              className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-white placeholder-dark-border focus:outline-none focus:border-primary transition"
+              disabled
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition opacity-75 cursor-not-allowed"
             />
+            <p className="text-xs text-slate-400 mt-1">Auto-filled with your login name</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-dark-border mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               Period
             </label>
             <select
               name="period"
               value={formData.period}
               onChange={handleChange}
-              className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition"
             >
               <option value="week">This Week</option>
               <option value="month">This Month</option>
@@ -94,8 +94,8 @@ export const GenerateReportModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
 
           {error && (
-            <div className="bg-danger/10 border border-danger/20 rounded-lg p-3">
-              <p className="text-danger text-sm">{error}</p>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
@@ -103,16 +103,16 @@ export const GenerateReportModal = ({ isOpen, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-dark-border text-white py-2 rounded-lg hover:bg-dark-border/80 transition"
+              className="flex-1 bg-slate-700 text-white py-2 rounded-lg hover:bg-slate-600 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-primary-light transition disabled:opacity-50"
+              className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
             >
-              {isLoading ? 'Generating...' : 'Generate'}
+              {isLoading ? 'Generating...' : 'Generate Report'}
             </button>
           </div>
         </form>
