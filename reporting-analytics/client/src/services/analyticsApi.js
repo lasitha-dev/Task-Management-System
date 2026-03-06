@@ -131,4 +131,18 @@ export const reportsApi = {
   }
 };
 
+// Sync API calls
+export const syncApi = {
+  // Sync tasks from external service
+  syncTasks: async () => {
+    try {
+      const response = await api.post('/api/sync/tasks');
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      console.error('Error syncing tasks:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+};
+
 export default api;

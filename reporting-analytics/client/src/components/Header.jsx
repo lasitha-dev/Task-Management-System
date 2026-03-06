@@ -27,6 +27,12 @@ const Header = ({onGenerateReport}) => {
 
             <button className="text-slate-300 hover:text-white transition"></button>
 
+            <button onClick={onGenerateReport}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 
+              text-white rounded-lg text-sm font-medium transition-colors">
+              + Generate Report
+            </button>
+
             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:bg-blue-600 transition">
               A
             </div>

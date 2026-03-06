@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+import { FileText, Download, Trash2 } from 'lucide-react';
 import { reportsApi } from '../services/analyticsApi';
 
 const ReportsTable = ({ reports = [], loading, onRefresh }) => {
@@ -85,8 +86,8 @@ const ReportsTable = ({ reports = [], loading, onRefresh }) => {
                 <tr key={report._id} className="border-b border-slate-700 hover:bg-slate-700/30 transition">
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-blue-500"></span>
-                      <span className="text-white font-medium">{report.title}</span>
+                      <FileText size={15} className="text-blue-400 flex-shrink-0" />
+                      <span className="text-white">{report.title}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4 text-slate-300 text-sm">
@@ -102,33 +103,35 @@ const ReportsTable = ({ reports = [], loading, onRefresh }) => {
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <span className={
-                      report.status === 'ready'
-                        ? 'text-xs px-3 py-1 rounded-full font-semibold inline-flex items-center gap-1 bg-green-500/20 text-green-400'
-                        : report.status === 'processing'
-                        ? 'text-xs px-3 py-1 rounded-full font-semibold inline-flex items-center gap-1 bg-yellow-500/20 text-yellow-400'
-                        : report.status === 'pending'
-                        ? 'text-xs px-3 py-1 rounded-full font-semibold inline-flex items-center gap-1 bg-orange-500/20 text-orange-400'
-                        : 'text-xs px-3 py-1 rounded-full font-semibold inline-flex items-center gap-1 bg-slate-700 text-slate-300'
-                    }>
-                      {report.status === 'ready' ? ' Ready' : report.status === 'processing' ? ' Processing' : report.status === 'pending' ? ' Pending' : report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                    </span>
+                    {report.status === 'ready' ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-900 text-green-400 border border-green-700">
+                        Ready
+                      </span>
+                    ) : report.status === 'processing' ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-900 text-yellow-400 border border-yellow-700">
+                        Processing
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-700 text-slate-300 border border-slate-600">
+                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                      </span>
+                    )}
                   </td>
                   <td className="py-4 px-4 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => handleDownload(report)}
-                        className="text-slate-400 hover:text-blue-500 transition"
+                        className="text-gray-400 hover:text-blue-400 transition-colors p-1"
                         title="Download report"
                       >
-                        
+                        <Download size={16} />
                       </button>
                       <button
                         onClick={() => setIsDeleteConfirm(report._id)}
-                        className="text-slate-400 hover:text-red-500 transition"
+                        className="text-gray-400 hover:text-red-400 transition-colors p-1"
                         title="Delete report"
                       >
-                        
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

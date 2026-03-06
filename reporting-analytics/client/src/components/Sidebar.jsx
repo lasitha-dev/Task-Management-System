@@ -1,12 +1,18 @@
 import React from 'react';
+import { LayoutDashboard, CheckSquare, Bell, Users, BarChart2, Settings, LogOut } from 'lucide-react';
 
 const Sidebar = () => {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'tasks', label: 'Task Board', icon: '📋' },
-    { id: 'notifications', label: 'Notifications', icon: '🔔' },
-    { id: 'team', label: 'Team Space', icon: '👥' },
-    { id: 'analytics', label: 'Analytics', icon: '📊', active: true }
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-red-400' },
+    { id: 'tasks', label: 'Task Board', icon: CheckSquare, color: 'text-gray-300' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-yellow-400' },
+    { id: 'team', label: 'Team Space', icon: Users, color: 'text-purple-400' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart2, color: 'text-white', active: true }
+  ];
+
+  const bottomItems = [
+    { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-400' },
+    { id: 'logout', label: 'Logout', icon: LogOut, color: 'text-blue-400' }
   ];
 
   return (
@@ -36,56 +42,61 @@ const Sidebar = () => {
 
         {/* Navigation */}
         <nav className="flex-1 px-0 py-6 space-y-1">
-          {navItems.map((item) => (
-            <a
-              key={item.id}
-              href={`#${item.id}`}
-              className={`flex items-center gap-3 mx-3 px-4 py-3 rounded-lg transition ${
-                item.active
-                  ? 'bg-blue-500 text-white font-medium'
-                  : 'text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              <span className="text-lg">{item.icon}</span>
-              <span className="font-medium text-sm">{item.label}</span>
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className={`flex items-center gap-3 mx-3 px-4 py-3 rounded-lg transition ${
+                  item.active
+                    ? 'bg-blue-500 text-white font-medium'
+                    : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <Icon size={18} className={item.active ? 'text-white' : item.color} />
+                <span className="font-medium text-sm">{item.label}</span>
+              </a>
+            );
+          })}
         </nav>
 
         {/* Bottom Menu */}
         <div className="border-t border-slate-700 p-3 space-y-1">
-          <a
-            href="#settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition"
-          >
-            <span className="text-lg">⚙️</span>
-            <span className="font-medium text-sm">Settings</span>
-          </a>
-          <a
-            href="#logout"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition"
-          >
-            <span className="text-lg">↗️</span>
-            <span className="font-medium text-sm">Logout</span>
-          </a>
+          {bottomItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-800 transition"
+              >
+                <Icon size={18} className={item.color} />
+                <span className="font-medium text-sm">{item.label}</span>
+              </a>
+            );
+          })}
         </div>
       </div>
 
       {/* Mobile Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-slate-900 border-t border-slate-700 z-50">
         <nav className="flex justify-around">
-          {navItems.map((item) => (
-            <a
-              key={item.id}
-              href={`#${item.id}`}
-              className={`flex flex-col items-center py-3 px-4 flex-1 transition ${
-                item.active ? 'text-blue-500' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span className="text-xs mt-1 font-medium">{item.label.split(' ')[0]}</span>
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className={`flex flex-col items-center py-3 px-4 flex-1 transition ${
+                  item.active ? 'text-blue-500' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Icon size={20} className={item.active ? 'text-blue-500' : item.color} />
+                <span className="text-xs mt-1 font-medium">{item.label.split(' ')[0]}</span>
+              </a>
+            );
+          })}
         </nav>
       </div>
 

@@ -31,29 +31,37 @@ const StatusChart = ({ data, loading }) => {
         <button className="text-slate-400 hover:text-white transition"></button>
       </div>
 
-      <div className="flex flex-col items-center">
-        <ResponsiveContainer width="100%" height={220}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="45%"
-              innerRadius={50}
-              outerRadius={80}
-              paddingAngle={2}
-              dataKey="count"
-              isAnimationActive={false}
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colors[index]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="flex flex-col items-center relative">
+        <div style={{position: 'relative', width: '100%', height: 220}}>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="45%"
+                innerRadius={70}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="count"
+                isAnimationActive={false}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={colors[index]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          
+          {/* Center text overlay */}
+          <div style={{position:'absolute', top:'42%', left:'50%', 
+            transform:'translate(-50%,-50%)', textAlign:'center', pointerEvents: 'none'}}>
+            <div style={{fontSize:'28px', fontWeight:'bold', color:'white'}}>{total}</div>
+            <div style={{fontSize:'11px', color:'#94a3b8', letterSpacing:'1px'}}>TOTAL</div>
+          </div>
+        </div>
 
         <div className="text-center mt-2 mb-6">
-          <p className="text-3xl font-bold text-white">{total}</p>
-          <p className="text-xs text-slate-400 uppercase tracking-wider mt-1">Total</p>
+          {/* Removed duplicate total display */}
         </div>
       </div>
 

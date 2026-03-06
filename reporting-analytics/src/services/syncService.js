@@ -4,17 +4,42 @@ const { getRandomDate } = require('../utils/helpers');
 
 /**
  * Generate fake tasks for mock mode
+ * Ensures at least 8 tasks are 'done' with completedAt dates in current week
  * @returns {Array} - array of fake tasks
  */
 const generateMockTasks = () => {
     const mockTasks = [];
-    const statuses = [TASK_STATUS.TODO, TASK_STATUS.IN_PROGRESS, TASK_STATUS.DONE];
+    
+    // Create status array: at least 8 'done', rest distributed
+    const statuses = [];
+    for (let i = 0; i < 8; i++) {
+        statuses.push(TASK_STATUS.DONE);
+    }
+    for (let i = 8; i < TASK_GENERATION_COUNT; i++) {
+        statuses.push(i % 2 === 0 ? TASK_STATUS.TODO : TASK_STATUS.IN_PROGRESS);
+    }
+    
+    // Shuffle statuses randomly
+    for (let i = statuses.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [statuses[i], statuses[j]] = [statuses[j], statuses[i]];
+    }
 
     for (let i = 1; i <= TASK_GENERATION_COUNT; i++) {
-        const status = statuses[Math.floor(Math.random() * statuses.length)];
+        const status = statuses[i - 1];
         const assignedUserName = MOCK_USERNAMES[Math.floor(Math.random() * MOCK_USERNAMES.length)];
         const createdDate = getRandomDate();
-        const completedAt = status === TASK_STATUS.DONE ? getRandomDate() : null;
+        
+        // For done tasks, ensure completedAt is within current week (last 7 days)
+        let completedAt = null;
+        if (status === TASK_STATUS.DONE) {
+            const today = new Date();
+            const daysAgo = Math.floor(Math.random() * 7);
+            completedAt = new Date(today);
+            completedAt.setDate(today.getDate() - daysAgo);
+            completedAt.setHours(Math.floor(Math.random() * 23));
+            completedAt.setMinutes(Math.floor(Math.random() * 59));
+        }
 
         mockTasks.push({
             taskId: `TASK-${String(i).padStart(3, '0')}`,
@@ -50,6 +75,9 @@ const syncTasksFromExternal = async () => {
             console.log('🌐 Real mode configured but not implemented yet');
             tasks = generateMockTasks();
         }
+
+        // Clear old mock data before inserting fresh data
+        await TasksMirror.deleteMany({});
 
         // Upsert tasks to TasksMirror collection
         for (const task of tasks) {

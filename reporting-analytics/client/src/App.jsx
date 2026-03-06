@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { analyticsApi, reportsApi } from './services/analyticsApi';
+import { analyticsApi, reportsApi, syncApi } from './services/analyticsApi';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import StatCard from './components/StatCard';
@@ -20,7 +20,6 @@ function App() {
   const [showGenerate, setShowGenerate] = useState(false);
 
   const loadData = async () => {
-    setLoading(true);
     setSummaryError(null);
     setWeeklyError(null);
     try {
@@ -49,13 +48,42 @@ function App() {
       console.error('Error loading data:', error);
       setSummaryError('Unable to connect to analytics service');
       setWeeklyError('Unable to connect to analytics service');
-    } finally {
-      setLoading(false);
     }
   };
 
+  // Startup sequence: sync first, then load data
   useEffect(() => {
-    loadData();
+    const initializeApp = async () => {
+      setLoading(true);
+      try {
+        // Step 1: Force sync fresh data
+        console.log('🔄 Syncing tasks from external service...');
+        await syncApi.syncTasks();
+        console.log('✅ Sync complete');
+
+        // Step 2: Load all analytics in parallel
+        await loadData();
+      } catch (error) {
+        console.error('Error during app initialization:', error);
+        setSummaryError('Failed to initialize analytics');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
+  // Reload data when period changes
+  useEffect(() => {
+    if (!loading) {
+      const reloadData = async () => {
+        setLoading(true);
+        await loadData();
+        setLoading(false);
+      };
+      reloadData();
+    }
   }, [period]);
 
   const handlePeriodChange = (newPeriod) => {

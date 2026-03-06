@@ -44,26 +44,16 @@ const WeeklyChart = ({ data, loading, error }) => {
         <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={true} vertical={false} />
-          <XAxis dataKey="day" stroke="#64748b" />
-          <YAxis stroke="#64748b" />
-          <Tooltip 
-            contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-            labelStyle={{ color: '#ffffff' }}
-            formatter={(value) => [value, 'Completed']}
-          />
-          <Area
-            type="monotone"
-            dataKey="completed"
-            stroke="#3b82f6"
-            strokeWidth={3}
-            fill="url(#colorCompleted)"
-            isAnimationActive={false}
-          />
+          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false}/>
+          <XAxis dataKey="day" stroke="#64748b" tick={{fill:'#64748b', fontSize:12}}/>
+          <YAxis stroke="#64748b" tick={{fill:'#64748b', fontSize:12}}/>
+          <Tooltip contentStyle={{backgroundColor:'#1e293b', border:'none', borderRadius:'8px', color:'#fff'}}/>
+          <Area type="monotone" dataKey="completed" stroke="#3b82f6" strokeWidth={2}
+            fill="url(#colorCompleted)" dot={false}/>
         </AreaChart>
       </ResponsiveContainer>
     </div>

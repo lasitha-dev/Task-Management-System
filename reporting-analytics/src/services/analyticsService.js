@@ -14,31 +14,47 @@ const {
  */
 const getSummary = async (period = 'week') => {
     try {
-        const { startDate, endDate } = getDateRangeForPeriod(period);
-        const { startDate: prevStart, endDate: prevEnd } = getPreviousPeriodDateRange(period);
+        // For current implementation, focus on current week
+        // Calculate current week Monday to Sunday
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
 
-        // Current period stats
+        // Calculate previous week
+        const prevSunday = new Date(monday);
+        prevSunday.setDate(monday.getDate() - 1);
+        prevSunday.setHours(23, 59, 59, 999);
+        const prevMonday = new Date(prevSunday);
+        prevMonday.setDate(prevSunday.getDate() - 6);
+        prevMonday.setHours(0, 0, 0, 0);
+
+        // Current week stats
         const totalTasksCurrent = await TasksMirror.countDocuments({
-            createdAt: { $gte: startDate, $lte: endDate }
+            createdAt: { $gte: monday, $lte: sunday }
         });
 
         const completedTasksCurrent = await TasksMirror.countDocuments({
             status: TASK_STATUS.DONE,
-            completedAt: { $gte: startDate, $lte: endDate }
+            completedAt: { $gte: monday, $lte: sunday }
         });
 
         const productivityCurrent = totalTasksCurrent > 0 
             ? ((completedTasksCurrent / totalTasksCurrent) * 100).toFixed(2)
             : 0;
 
-        // Previous period stats
+        // Previous week stats
         const totalTasksPrevious = await TasksMirror.countDocuments({
-            createdAt: { $gte: prevStart, $lte: prevEnd }
+            createdAt: { $gte: prevMonday, $lte: prevSunday }
         });
 
         const completedTasksPrevious = await TasksMirror.countDocuments({
             status: TASK_STATUS.DONE,
-            completedAt: { $gte: prevStart, $lte: prevEnd }
+            completedAt: { $gte: prevMonday, $lte: prevSunday }
         });
 
         const productivityPrevious = totalTasksPrevious > 0
@@ -65,12 +81,20 @@ const getSummary = async (period = 'week') => {
  */
 const getWeeklyData = async () => {
     try {
-        const { startDate, endDate } = getDateRangeForPeriod('week');
+        // Calculate current week Monday to Sunday
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
 
         // Get all tasks completed in the week
         const completedTasks = await TasksMirror.find({
             status: TASK_STATUS.DONE,
-            completedAt: { $gte: startDate, $lte: endDate }
+            completedAt: { $gte: monday, $lte: sunday }
         });
 
         // Initialize day data
