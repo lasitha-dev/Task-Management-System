@@ -10,8 +10,6 @@ import GenerateReportModal from './components/GenerateReportModal';
 
 function App() {
   const [period, setPeriod] = useState('week');
-  const [dataMode, setDataMode] = useState('all'); // 'all' or 'my'
-  const [userName, setUserName] = useState('');
   const [summary, setSummary] = useState(null);
   const [summaryError, setSummaryError] = useState(null);
   const [weeklyData, setWeeklyData] = useState(null);
@@ -21,27 +19,12 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [showGenerate, setShowGenerate] = useState(false);
 
-  // Extract user info from mock token on mount
-  useEffect(() => {
-    const userNameFromStorage = localStorage.getItem('userName') || 'Alex Rivera';
-    setUserName(userNameFromStorage);
-  }, []);
-
   const loadData = async () => {
     setSummaryError(null);
     setWeeklyError(null);
     try {
-      let summaryRes, reportsRes;
-      
-      if (dataMode === 'my') {
-        // Fetch user-specific data
-        summaryRes = await analyticsApi.fetchMyStats();
-        reportsRes = await analyticsApi.fetchMyReports();
-      } else {
-        // Fetch all data
-        summaryRes = await analyticsApi.fetchSummary(period);
-        reportsRes = await reportsApi.fetchReports();
-      }
+      const summaryRes = await analyticsApi.fetchSummary(period);
+      const reportsRes = await reportsApi.fetchReports();
 
       const [weeklyRes, statusRes] = await Promise.all([
         analyticsApi.fetchWeeklyData(),
@@ -105,7 +88,7 @@ function App() {
       };
       reloadData();
     }
-  }, [period, dataMode]);
+  }, [period]);
 
   const handlePeriodChange = (newPeriod) => {
     setPeriod(newPeriod);
@@ -129,58 +112,24 @@ function App() {
         <div className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Breadcrumb & Time Filters */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-              <div>
-                <div className="text-sm text-slate-400 mb-2">
-                  Home <span className="mx-2">/</span> <span className="text-blue-500 font-medium">Analytics</span>
-                </div>
-                <h2 className="text-2xl font-bold text-white">
-                  Welcome back, {userName}
-                </h2>
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+              <div className="text-sm text-slate-400">
+                Home <span className="mx-2">/</span> <span className="text-blue-500 font-medium">Analytics</span>
               </div>
-              <div className="flex gap-2 flex-col sm:flex-row">
-                {/* Data Mode Toggle */}
-                <div className="flex gap-2 bg-slate-800 border border-slate-700 rounded-lg p-1">
+              <div className="flex gap-2 flex-wrap">
+                {['week', 'month', 'custom'].map((p) => (
                   <button
-                    onClick={() => setDataMode('all')}
-                    className={`px-4 py-2 rounded font-medium text-sm transition ${
-                      dataMode === 'all'
+                    key={p}
+                    onClick={() => handlePeriodChange(p)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
+                      period === p
                         ? 'bg-blue-500 text-white'
-                        : 'text-slate-300 hover:text-white'
+                        : 'bg-slate-800 border border-slate-700 text-slate-300 hover:border-blue-500'
                     }`}
                   >
-                    All Data
+                    {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : '📅 Custom'}
                   </button>
-                  <button
-                    onClick={() => setDataMode('my')}
-                    className={`px-4 py-2 rounded font-medium text-sm transition ${
-                      dataMode === 'my'
-                        ? 'bg-blue-500 text-white'
-                        : 'text-slate-300 hover:text-white'
-                    }`}
-                  >
-                    My Data
-                  </button>
-                </div>
-                
-                {/* Period Filters (hide in 'my' mode) */}
-                {dataMode === 'all' && (
-                  <div className="flex gap-2 flex-wrap">
-                    {['week', 'month', 'custom'].map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => handlePeriodChange(p)}
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
-                          period === p
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-slate-800 border border-slate-700 text-slate-300 hover:border-blue-500'
-                        }`}
-                      >
-                        {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : '📅 Custom'}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                ))}
               </div>
             </div>
 
