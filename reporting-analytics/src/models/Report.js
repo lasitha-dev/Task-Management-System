@@ -15,6 +15,11 @@ const reportSchema = new mongoose.Schema(
             type: String,
             required: true
         },
+        userId: {
+            type: String,
+            default: null,
+            index: true
+        },
         status: {
             type: String,
             enum: ['ready', 'processing'],

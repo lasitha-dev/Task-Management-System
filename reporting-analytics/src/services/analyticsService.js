@@ -154,11 +154,15 @@ const getStatusBreakdown = async () => {
 
 /**
  * Get user breakdown - productivity per user
+ * @param {string} userId - optional user ID to filter for specific user
  * @returns {Promise<Array>} - array of user productivity stats
  */
-const getUserBreakdown = async () => {
+const getUserBreakdown = async (userId = null) => {
     try {
+        const matchStage = userId ? { assignedUserId: userId } : {};
+        
         const userStats = await TasksMirror.aggregate([
+            { $match: matchStage },
             {
                 $group: {
                     _id: '$assignedUserId',

@@ -2,6 +2,10 @@ import React from 'react';
 import { LayoutDashboard, CheckSquare, Bell, Users, BarChart2, Settings, LogOut } from 'lucide-react';
 
 const Sidebar = () => {
+  // Read user info from localStorage, fallback to defaults
+  const userName = localStorage.getItem('userName') || 'Alex Rivera';
+  const userRole = localStorage.getItem('userRole') || 'Project Manager';
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-red-400' },
     { id: 'tasks', label: 'Task Board', icon: CheckSquare, color: 'text-gray-300' },
@@ -34,8 +38,8 @@ const Sidebar = () => {
               <span className="text-lg">👤</span>
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-white font-bold text-sm">Alex Rivera</h4>
-              <p className="text-slate-400 text-xs">Project Manager</p>
+              <h4 className="text-white font-bold text-sm">{userName}</h4>
+              <p className="text-slate-400 text-xs">{userRole}</p>
             </div>
           </div>
         </div>

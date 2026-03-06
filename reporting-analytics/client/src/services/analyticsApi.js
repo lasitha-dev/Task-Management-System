@@ -81,6 +81,17 @@ export const analyticsApi = {
       console.error('Error fetching user breakdown:', error.message);
       return { success: false, error: error.message };
     }
+  },
+
+  // Get current user's personal stats
+  fetchMyStats: async () => {
+    try {
+      const response = await api.get('/api/analytics/my-stats');
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      console.error('Error fetching my stats:', error.message);
+      return { success: false, error: error.message };
+    }
   }
 };
 
@@ -126,6 +137,17 @@ export const reportsApi = {
       return { success: true, data: response.data.data };
     } catch (error) {
       console.error('Error deleting report:', error.message);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Get user's personal reports
+  fetchMyReports: async () => {
+    try {
+      const response = await api.get('/api/reports/my-reports');
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      console.error('Error fetching my reports:', error.message);
       return { success: false, error: error.message };
     }
   }

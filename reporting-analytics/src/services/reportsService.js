@@ -6,15 +6,17 @@ const analyticsService = require('./analyticsService');
  * @param {string} title - report title
  * @param {string} authorName - author name
  * @param {string} period - report period (week, month, custom)
+ * @param {string} userId - user ID (optional)
  * @returns {Promise<object>} - created report
  */
-const generateReport = async (title, authorName, period) => {
+const generateReport = async (title, authorName, period, userId = null) => {
     try {
         // Create report with processing status
         const report = new Report({
             title,
             authorName,
             period,
+            userId,
             status: 'processing',
             generatedAt: new Date()
         });
@@ -27,7 +29,7 @@ const generateReport = async (title, authorName, period) => {
             summary: await analyticsService.getSummary(period),
             weeklyData: await analyticsService.getWeeklyData(),
             statusBreakdown: await analyticsService.getStatusBreakdown(),
-            userBreakdown: await analyticsService.getUserBreakdown()
+            userBreakdown: await analyticsService.getUserBreakdown(userId)
         };
 
         // Simulate processing delay (10 seconds)
@@ -97,9 +99,25 @@ const deleteReport = async (id) => {
     }
 };
 
+/**
+ * Get reports for a specific user
+ * @param {string} userId - user ID
+ * @returns {Promise<Array>} - reports for the user sorted by date desc
+ */
+const getUserReports = async (userId) => {
+    try {
+        const reports = await Report.find({ userId }).sort({ generatedAt: -1 });
+        return reports;
+    } catch (error) {
+        console.error('Error getting user reports:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     generateReport,
     getAllReports,
     getReportById,
-    deleteReport
+    deleteReport,
+    getUserReports
 };

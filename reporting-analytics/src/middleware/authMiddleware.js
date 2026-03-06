@@ -28,13 +28,21 @@ const authMiddleware = (req, res, next) => {
 
         // Allow mock token in development mode (for frontend testing)
         if (token === 'mock-token-for-development') {
-            req.user = { id: 'mock-user', role: 'develooper' };
+            req.user = { 
+                userId: 'mock-user-1', 
+                userName: 'Alex Rivera', 
+                role: 'admin' 
+            };
             return next();
         }
 
-        // Verify real JWT tokens
+        // Verify real JWT tokens and extract user info
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret');
-        req.user = decoded;
+        req.user = {
+            userId: decoded.userId || decoded.id || decoded._id,
+            userName: decoded.userName || decoded.name || decoded.email,
+            role: decoded.role || 'user'
+        };
         next();
     } catch (error) {
         res.status(401).json({

@@ -6,7 +6,8 @@ const reportsService = require('../services/reportsService');
 const generateReport = async (req, res, next) => {
     try {
         const { title, authorName, period } = req.body;
-        const report = await reportsService.generateReport(title, authorName, period);
+        const userId = req.user?.userId || null;
+        const report = await reportsService.generateReport(title, authorName, period, userId);
         res.status(201).json({ success: true, data: report });
     } catch (error) {
         next(error);
@@ -51,9 +52,23 @@ const deleteReport = async (req, res, next) => {
     }
 };
 
+/**
+ * Get user's personal reports
+ */
+const getMyReports = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const reports = await reportsService.getUserReports(userId);
+        res.status(200).json({ success: true, data: reports });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     generateReport,
     getAllReports,
     getReportById,
-    deleteReport
+    deleteReport,
+    getMyReports
 };

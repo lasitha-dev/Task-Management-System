@@ -219,6 +219,53 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/analytics/my-stats:
+    get:
+      summary: Get current user's personal analytics
+      operationId: getMyStats
+      tags:
+        - Analytics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Personal analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        example: USER-01
+                      userName:
+                        type: string
+                        example: Alice Johnson
+                      totalTasks:
+                        type: integer
+                        example: 8
+                      completedTasks:
+                        type: integer
+                        example: 6
+                      productivity:
+                        type: number
+                        format: float
+                        example: 75.0
+                      tasks:
+                        type: array
+                        items:
+                          type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/reports:
     get:
       summary: Get all reports
@@ -228,6 +275,34 @@ paths:
       responses:
         '200':
           description: List of reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Report'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/reports/my-reports:
+    get:
+      summary: Get current user's personal reports
+      operationId: getMyReports
+      tags:
+        - Reports
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User's reports retrieved successfully
           content:
             application/json:
               schema:
@@ -482,3 +557,8 @@ components:
                 type: string
                 example: Internal Server Error
 
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT Bearer token authentication

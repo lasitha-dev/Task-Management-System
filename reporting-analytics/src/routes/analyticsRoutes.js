@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 /**
  * GET /api/analytics/summary?period=week|month
@@ -25,5 +26,12 @@ router.get('/status', analyticsController.getStatusBreakdown);
  * Returns: per-user productivity breakdown
  */
 router.get('/users', analyticsController.getUserBreakdown);
+
+/**
+ * GET /api/analytics/my-stats
+ * Returns: current user's personal analytics
+ * Requires: JWT authentication
+ */
+router.get('/my-stats', authMiddleware, analyticsController.getMyStats);
 
 module.exports = router;
