@@ -56,8 +56,10 @@ cron.schedule('*/5 * * * *', async () => {
 // Global Error Handler (must be last)
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-    console.log(`🚀 Reporting & Analytics Service running on port ${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`🚀 Reporting & Analytics Service running on port ${PORT}`);
+    });
+}
 
 module.exports = app;

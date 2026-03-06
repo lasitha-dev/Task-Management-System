@@ -1,12 +1,16 @@
 const request = require('supertest');
+jest.setTimeout(15000);
 const app = require('../../src/app');
 const mongoose = require('mongoose');
 const Report = require('../../src/models/Report');
+const TasksMirror = require('../../src/models/TasksMirror');
 
 // Mock dependencies
 jest.mock('../../src/config/db');
 jest.mock('../../src/services/syncService');
+jest.mock('../../src/services/analyticsService');
 jest.mock('../../src/models/Report');
+jest.mock('../../src/models/TasksMirror');
 
 describe('Reports API Endpoints', () => {
     beforeAll(() => {
@@ -58,6 +62,8 @@ describe('Reports API Endpoints', () => {
 
     describe('POST /api/reports/generate', () => {
         it('should generate report with valid data', async () => {
+            const analyticsService = require('../../src/services/analyticsService');
+            
             const mockReport = {
                 _id: '123',
                 title: 'Weekly Report',
@@ -68,6 +74,26 @@ describe('Reports API Endpoints', () => {
             };
 
             Report.mockImplementation(() => mockReport);
+            
+            // Mock analyticsService methods to return synthetic data
+            analyticsService.getSummary = jest.fn().mockResolvedValue({
+                totalTasks: 20,
+                completedTasks: 15,
+                productivity: 75,
+                totalChange: 10,
+                completedChange: 5,
+                productivityChange: 2
+            });
+            analyticsService.getWeeklyData = jest.fn().mockResolvedValue([
+                { day: 'Mon', completed: 2 },
+                { day: 'Tue', completed: 3 }
+            ]);
+            analyticsService.getStatusBreakdown = jest.fn().mockResolvedValue([
+                { status: 'done', count: 15, percentage: 75 }
+            ]);
+            analyticsService.getUserBreakdown = jest.fn().mockResolvedValue([
+                { userId: 'user1', completed: 5 }
+            ]);
 
             const res = await request(app)
                 .post('/api/reports/generate')

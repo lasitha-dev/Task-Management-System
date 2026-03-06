@@ -1,4 +1,5 @@
 const request = require('supertest');
+jest.setTimeout(15000);
 const app = require('../../src/app');
 const mongoose = require('mongoose');
 

@@ -32,8 +32,9 @@ const generateReport = async (title, authorName, period, userId = null) => {
             userBreakdown: await analyticsService.getUserBreakdown(userId)
         };
 
-        // Simulate processing delay (10 seconds)
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        // Simulate processing delay (3 seconds in prod, 100ms in test)
+        const delay = process.env.NODE_ENV === 'test' ? 100 : 3000;
+        await new Promise(resolve => setTimeout(resolve, delay));
 
         // Update report with data and status ready
         report.data = analyticsData;

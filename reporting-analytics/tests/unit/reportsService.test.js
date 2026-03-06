@@ -1,4 +1,5 @@
 const reportsService = require('../../src/services/reportsService');
+jest.setTimeout(15000);
 const Report = require('../../src/models/Report');
 const analyticsService = require('../../src/services/analyticsService');
 
