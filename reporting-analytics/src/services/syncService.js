@@ -2,56 +2,62 @@ const TasksMirror = require('../models/TasksMirror');
 const { TASK_STATUS, MOCK_USERNAMES, TASK_GENERATION_COUNT } = require('../utils/constants');
 const { getRandomDate } = require('../utils/helpers');
 
-/**
- * Generate fake tasks for mock mode
- * Ensures consistent distribution:
- * - 12 done (60%)
- * - 5 inProgress (25%)
- * - 3 todo (15%)
- * @returns {Array} - array of fake tasks
- */
 const generateMockTasks = () => {
-  const userNames = ['Alice Johnson', 'Bob Smith', 'Carol Williams', 'David Brown', 'Emma Davis'];
-  const tasks = [];
+  const userNames = [
+    'Alice Johnson', 'Bob Smith', 'Carol Williams', 
+    'David Brown', 'Emma Davis'
+  ];
+  
   const today = new Date();
-
-  // Create fixed distribution: 3 todo, 5 inProgress, 12 done
-  const statusDistribution = [
-    ...Array(3).fill('todo'),
-    ...Array(5).fill('inProgress'),
-    ...Array(12).fill('done')
+  const tasks = [];
+  
+  // FIXED: Always exactly 12 done, 5 inProgress, 3 todo
+  const taskConfig = [
+    { id: 'TASK-001', status: 'done', user: 0, daysAgo: 0 },
+    { id: 'TASK-002', status: 'done', user: 1, daysAgo: 0 },
+    { id: 'TASK-003', status: 'done', user: 2, daysAgo: 1 },
+    { id: 'TASK-004', status: 'done', user: 3, daysAgo: 1 },
+    { id: 'TASK-005', status: 'done', user: 4, daysAgo: 2 },
+    { id: 'TASK-006', status: 'done', user: 0, daysAgo: 2 },
+    { id: 'TASK-007', status: 'done', user: 1, daysAgo: 3 },
+    { id: 'TASK-008', status: 'done', user: 2, daysAgo: 3 },
+    { id: 'TASK-009', status: 'done', user: 3, daysAgo: 4 },
+    { id: 'TASK-010', status: 'done', user: 4, daysAgo: 4 },
+    { id: 'TASK-011', status: 'done', user: 0, daysAgo: 5 },
+    { id: 'TASK-012', status: 'done', user: 1, daysAgo: 5 },
+    { id: 'TASK-013', status: 'inProgress', user: 2, daysAgo: null },
+    { id: 'TASK-014', status: 'inProgress', user: 3, daysAgo: null },
+    { id: 'TASK-015', status: 'inProgress', user: 4, daysAgo: null },
+    { id: 'TASK-016', status: 'inProgress', user: 0, daysAgo: null },
+    { id: 'TASK-017', status: 'inProgress', user: 1, daysAgo: null },
+    { id: 'TASK-018', status: 'todo', user: 2, daysAgo: null },
+    { id: 'TASK-019', status: 'todo', user: 3, daysAgo: null },
+    { id: 'TASK-020', status: 'todo', user: 4, daysAgo: null },
   ];
 
-  for (let i = 1; i <= 20; i++) {
-    const status = statusDistribution[i - 1];
-    const assignedUserName = userNames[(i % 5)];
-    
-    const createdDaysAgo = Math.floor(Math.random() * 7);
+  taskConfig.forEach((config, index) => {
     const createdAt = new Date(today);
-    createdAt.setDate(today.getDate() - createdDaysAgo);
-    createdAt.setHours(Math.floor(Math.random() * 20) + 1);
-    createdAt.setMinutes(Math.floor(Math.random() * 59));
+    createdAt.setDate(today.getDate() - 6);
+    createdAt.setHours(8 + index, 0, 0, 0);
 
     let completedAt = null;
-    if (status === 'done') {
-      completedAt = new Date();
-      const daysBack = Math.floor(Math.random() * 6);
-      completedAt.setDate(completedAt.getDate() - daysBack);
-      completedAt.setHours(8 + Math.floor(Math.random() * 10));
-      completedAt.setMinutes(Math.floor(Math.random() * 59));
-      completedAt.setSeconds(0);
+    if (config.status === 'done' && config.daysAgo !== null) {
+      completedAt = new Date(today);
+      completedAt.setDate(today.getDate() - config.daysAgo);
+      completedAt.setHours(10 + index, 30, 0, 0);
     }
 
     tasks.push({
-      taskId: `TASK-${String(i).padStart(3, '0')}`,
-      title: `Task ${i}`,
-      status,
-      assignedUserId: `USER-0${(i % 5) + 1}`,
-      assignedUserName,
+      taskId: config.id,
+      title: `Task ${config.id} - ${config.status}`,
+      status: config.status,
+      assignedUserId: `USER-0${config.user + 1}`,
+      assignedUserName: userNames[config.user],
       createdAt,
       completedAt
     });
-  }
+  });
+
   return tasks;
 };
 
