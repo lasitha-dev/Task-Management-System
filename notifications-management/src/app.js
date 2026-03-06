@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const connectDB = require('./config/db');
 const notificationRoutes = require('./routes/notificationRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
@@ -20,9 +19,6 @@ connectDB().then(() => {
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Routes
 app.use('/api/notifications', notificationRoutes);
