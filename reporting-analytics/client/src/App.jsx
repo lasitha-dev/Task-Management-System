@@ -16,6 +16,7 @@ function App() {
   const [weeklyError, setWeeklyError] = useState(null);
   const [statusData, setStatusData] = useState(null);
   const [reports, setReports] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [showGenerate, setShowGenerate] = useState(false);
   const [showCustomPicker, setShowCustomPicker] = useState(false);
@@ -123,6 +124,20 @@ function App() {
     fetchReports();
   };
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      fetchReports();
+      return;
+    }
+    const filtered = reports.filter(report => 
+      report.title?.toLowerCase().includes(query.toLowerCase()) ||
+      report.authorName?.toLowerCase().includes(query.toLowerCase()) ||
+      report.status?.toLowerCase().includes(query.toLowerCase())
+    );
+    setReports(filtered);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white flex">
       {/* Sidebar */}
@@ -131,7 +146,7 @@ function App() {
       {/* Main Content Area */}
       <div className="flex-1 ml-0 lg:ml-60 flex flex-col">
         {/* Header */}
-        <Header onGenerateReport={() => setShowGenerate(true)} />
+        <Header onSearch={handleSearch} onGenerateReport={() => setShowGenerate(true)} />
 
         {/* Main scrollable content */}
         <div className="flex-1 overflow-auto">

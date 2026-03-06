@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const Header = ({onGenerateReport}) => {
+const Header = ({onGenerateReport, onSearch}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    onSearch(query);
+  };
+
   return (
     <div className="bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -19,6 +27,8 @@ const Header = ({onGenerateReport}) => {
             <input
               type="text"
               placeholder="Search analytics..."
+              value={searchQuery}
+              onChange={handleSearchChange}
               className="bg-transparent outline-none text-white 
               placeholder-gray-500 text-sm w-full"
             />
