@@ -4,18 +4,27 @@ const { getRandomDate } = require('../utils/helpers');
 
 /**
  * Generate fake tasks for mock mode
- * Ensures tasks are 'done' with completedAt dates in current week
+ * Ensures consistent distribution:
+ * - 12 done (60%)
+ * - 5 inProgress (25%)
+ * - 3 todo (15%)
  * @returns {Array} - array of fake tasks
  */
 const generateMockTasks = () => {
-  const statuses = ['todo', 'inProgress', 'done', 'done', 'done', 'done', 'done'];
   const userNames = ['Alice Johnson', 'Bob Smith', 'Carol Williams', 'David Brown', 'Emma Davis'];
   const tasks = [];
   const today = new Date();
 
+  // Create fixed distribution: 3 todo, 5 inProgress, 12 done
+  const statusDistribution = [
+    ...Array(3).fill('todo'),
+    ...Array(5).fill('inProgress'),
+    ...Array(12).fill('done')
+  ];
+
   for (let i = 1; i <= 20; i++) {
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const assignedUserName = userNames[Math.floor(Math.random() * userNames.length)];
+    const status = statusDistribution[i - 1];
+    const assignedUserName = userNames[(i % 5)];
     
     const createdDaysAgo = Math.floor(Math.random() * 7);
     const createdAt = new Date(today);
