@@ -32,7 +32,8 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(name, email, password);
-      navigate('/profile');
+      // Redirect to Task Management Dashboard
+      window.location.href = 'http://127.0.0.1:3001';
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Registration failed');
     } finally {
@@ -46,7 +47,8 @@ export default function RegisterPage() {
     try {
       const idToken = await triggerGoogleLogin();
       const user = await googleLogin(idToken);
-      navigate(user.role === 'Admin' ? '/admin' : '/profile');
+      // Redirect to Task Management Dashboard
+      window.location.href = 'http://127.0.0.1:3001';
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Google Sign-Up failed');
     } finally {
