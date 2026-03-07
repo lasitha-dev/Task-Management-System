@@ -41,6 +41,15 @@ function KanbanPage() {
   const [loadingBoards, setLoadingBoards] = useState(true)
   const currentUserId = 'user_001' // Mock user ID for Alex Morgan
 
+  // Auto-login for development (set JWT token)
+  useEffect(() => {
+    if (!localStorage.getItem('token')) {
+      const devToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMDAxIiwibmFtZSI6IkFsZXggTW9yZ2FuIiwiZW1haWwiOiJhbGV4QG1lcm5jb3JlLmRldiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3Mjg2ODI4NywiZXhwIjoxNzczNDczMDg3fQ.3ivCshfngIswAmn04ShhlLyd6lB_-1bTg8SfKIHpt4U';
+      localStorage.setItem('token', devToken);
+      console.log('✅ Dev token auto-set for authentication');
+    }
+  }, []);
+
   // Fetch boards on mount
   useEffect(() => {
     fetchBoards()
