@@ -26,11 +26,15 @@ export default function KanbanBoard({ boardId, onNewTask, onEdit }) {
   async function fetchTasks() {
     try {
       // Fetch tasks filtered by board
+      console.log('[KanbanBoard] Fetching tasks for board:', boardId)
       const { data } = await api.get('/api/tasks', {
         params: { board: boardId }
       })
+      console.log('[KanbanBoard] Tasks response:', data)
       const taskList = Array.isArray(data) ? data : data.tasks || []
+      console.log('[KanbanBoard] Task list:', taskList)
       setTasks(taskList)
+      setError(null)
 
       // Auto-discover any custom column statuses stored in the DB
       const known = new Set(DEFAULT_COLUMNS)
@@ -50,6 +54,8 @@ export default function KanbanBoard({ boardId, onNewTask, onEdit }) {
         })
       }
     } catch (err) {
+      console.error('[KanbanBoard] Failed to load tasks:', err)
+      console.error('[KanbanBoard] Error response:', err.response?.data)
       setError('Failed to load tasks. Make sure the backend is running.')
     } finally {
       setLoading(false)

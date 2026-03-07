@@ -25,16 +25,22 @@ export default function UserSearchInput({ selected = [], onChange, onSelect, max
   const fetchUsers = useCallback(async (q) => {
     setLoading(true)
     try {
+      console.log('[UserSearch] Fetching users, query:', q)
       const { data } = await api.get('/api/tasks/users/search', { params: { q, limit: 8 } })
+      console.log('[UserSearch] Users response:', data)
       let users = data.users || []
+      console.log('[UserSearch] Users array:', users)
       
       // Filter to only show specific users if filterUsers is provided
       if (filterUsers && Array.isArray(filterUsers) && filterUsers.length > 0) {
         users = users.filter(user => filterUsers.includes(user.id))
+        console.log('[UserSearch] Filtered users:', users)
       }
       
       setResults(users)
-    } catch {
+    } catch (err) {
+      console.error('[UserSearch] Failed to fetch users:', err)
+      console.error('[UserSearch] Error response:', err.response?.data)
       setResults([])
     } finally {
       setLoading(false)

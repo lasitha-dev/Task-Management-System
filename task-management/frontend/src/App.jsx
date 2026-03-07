@@ -252,7 +252,9 @@ function PlaceholderPage({ title, icon }) {
 
 // ─── Root App ─────────────────────────────────────────────────────────────────
 export default function App() {
-  // Check for token in URL hash first (from cross-port redirect)
+  const [isReady, setIsReady] = useState(false)
+  
+  // Check for token in URL hash FIRST (from cross-port redirect)
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && hash.startsWith('#token=')) {
@@ -261,12 +263,23 @@ export default function App() {
       // Clean up URL
       window.history.replaceState(null, '', '/');
     }
+    // Mark as ready after token processing
+    setIsReady(true)
   }, []);
 
   // Get current user from JWT token
   const currentUser = getCurrentUser()
   
-  // Redirect to login if no user
+  // Wait for token processing before checking auth
+  if (!isReady) {
+    return (
+      <div className="dark min-h-screen bg-background-dark flex items-center justify-center">
+        <span className="material-symbols-outlined text-4xl text-blue-500 animate-spin">progress_activity</span>
+      </div>
+    )
+  }
+  
+  // Redirect to login if no user (after token processing)
   if (!currentUser) {
     window.location.href = 'http://127.0.0.1:3000'
     return null
