@@ -8,6 +8,7 @@ import KanbanBoard from './components/KanbanBoard'
 import CreateTaskModal from './components/CreateTaskModal'
 import CreateBoardModal from './components/CreateBoardModal'
 import api from './api/axios'
+import { getCurrentUser } from './utils/auth'
 
 // ─── Toast notification ───────────────────────────────────────────────────────
 function Toast({ message, type, onClose }) {
@@ -39,16 +40,18 @@ function KanbanPage() {
   const [boardModalOpen, setBoardModalOpen] = useState(false)
   const [editingBoard, setEditingBoard] = useState(null)
   const [loadingBoards, setLoadingBoards] = useState(true)
-  const currentUserId = 'user_001' // Mock user ID for Alex Morgan
+  
+  // Get current user from JWT token - use state to allow refresh
+  const [currentUser, setCurrentUser] = useState(getCurrentUser())
+  const currentUserId = currentUser?.id || null
 
-  // Auto-login for development (set JWT token)
+  // Refresh user data on mount and when token changes
   useEffect(() => {
-    if (!localStorage.getItem('token')) {
-      const devToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMDAxIiwibmFtZSI6IkFsZXggTW9yZ2FuIiwiZW1haWwiOiJhbGV4QG1lcm5jb3JlLmRldiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3Mjg2ODI4NywiZXhwIjoxNzczNDczMDg3fQ.3ivCshfngIswAmn04ShhlLyd6lB_-1bTg8SfKIHpt4U';
-      localStorage.setItem('token', devToken);
-      console.log('✅ Dev token auto-set for authentication');
+    const token = localStorage.getItem('token')
+    if (token) {
+      setCurrentUser(getCurrentUser())
     }
-  }, []);
+  }, [])
 
   // Fetch boards on mount
   useEffect(() => {
@@ -249,12 +252,30 @@ function PlaceholderPage({ title, icon }) {
 
 // ─── Root App ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const mockUser = { name: 'Alex Morgan', role: 'DevOps Lead' }
+  // Check for token in URL hash first (from cross-port redirect)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#token=')) {
+      const token = hash.substring(7); // Remove '#token='
+      localStorage.setItem('token', token);
+      // Clean up URL
+      window.history.replaceState(null, '', '/');
+    }
+  }, []);
+
+  // Get current user from JWT token
+  const currentUser = getCurrentUser()
+  
+  // Redirect to login if no user
+  if (!currentUser) {
+    window.location.href = 'http://127.0.0.1:3000'
+    return null
+  }
 
   return (
     <BrowserRouter>
       <div className="dark min-h-screen bg-background-dark text-slate-100">
-        <Sidebar user={mockUser} />
+        <Sidebar user={currentUser} />
         <Routes>
           <Route path="/" element={<KanbanPage />} />
           <Route path="/dashboard" element={<PlaceholderPage title="Dashboard" icon="grid_view" />} />

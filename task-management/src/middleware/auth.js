@@ -1,17 +1,10 @@
 const jwt = require('jsonwebtoken');
-const { getUserById } = require('../utils/mockUsers');
 
 /**
  * Auth Middleware
  * -------------------------------------------------------------------
  * Validates the JWT token in the Authorization header.
- *
- * In development, if no real User Management service is running,
- * any token signed with JWT_SECRET will be accepted.
- * Mock user data is injected into req.user.
- *
- * When User Management service is ready, replace the mock user lookup
- * with an HTTP call: await axios.get(`${USER_SERVICE_URL}/api/users/${decoded.id}`)
+ * Extracts user information from the JWT payload.
  * -------------------------------------------------------------------
  */
 const protect = (req, res, next) => {
@@ -28,14 +21,12 @@ const protect = (req, res, next) => {
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Try to find user in mock data (replace with real service call later)
-        const mockUser = getUserById(decoded.id);
-
-        req.user = mockUser || {
+        // Use user data from JWT token
+        req.user = {
             id: decoded.id,
             name: decoded.name || 'Unknown User',
             email: decoded.email || '',
-            role: decoded.role || 'developer',
+            role: decoded.role || 'user',
         };
 
         next();

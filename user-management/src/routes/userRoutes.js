@@ -8,6 +8,7 @@ const {
   deleteUser,
   getAllUsers,
   googleAuth,
+  searchUsers,
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const {
@@ -24,6 +25,7 @@ router.post('/login', validateLogin, loginUser);
 router.post('/google', googleAuth);
 
 // Protected routes (require valid JWT)
+router.get('/search', protect, searchUsers);
 router.get('/profile', protect, getUserProfile);
 router.put('/:id', protect, validateUpdate, updateUser);
 router.delete('/:id', protect, deleteUser);

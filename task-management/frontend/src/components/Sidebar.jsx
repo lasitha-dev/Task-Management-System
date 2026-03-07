@@ -1,5 +1,5 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 
 const navItems = [
   { icon: 'grid_view', label: 'Dashboard', to: '/dashboard' },
@@ -10,6 +10,13 @@ const navItems = [
 ]
 
 export default function Sidebar({ user }) {
+  const navigate = useNavigate()
+
+  function handleSignOut() {
+    localStorage.removeItem('token')
+    sessionStorage.clear()
+    window.location.href = 'http://127.0.0.1:3000'
+  }
   return (
     <aside className="w-[260px] fixed top-0 left-0 bottom-0 z-50 bg-surface-dark border-r border-surface-highlight flex flex-col justify-between py-6 px-4">
       {/* Top section */}
@@ -31,8 +38,8 @@ export default function Sidebar({ user }) {
             }}
           />
           <div className="flex flex-col min-w-0">
-            <p className="text-white text-sm font-bold truncate">{user?.name || 'Alex Morgan'}</p>
-            <p className="text-slate-400 text-xs font-medium truncate">{user?.role || 'DevOps Lead'}</p>
+            <p className="text-white text-sm font-bold truncate">{user?.name || 'Guest'}</p>
+            <p className="text-slate-400 text-xs font-medium truncate">{user?.role || 'User'}</p>
           </div>
         </div>
 
@@ -69,7 +76,7 @@ export default function Sidebar({ user }) {
         </NavLink>
         <button
           className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-red-400 rounded-lg transition-colors text-sm font-semibold w-full text-left"
-          onClick={() => { /* handle logout */ }}
+          onClick={handleSignOut}
         >
           <span className="material-symbols-outlined text-[22px]">logout</span>
           <span>Sign Out</span>

@@ -20,8 +20,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      // Redirect to Task Management Dashboard
-      window.location.href = 'http://127.0.0.1:3001';
+      const token = localStorage.getItem('token');
+      // Redirect to Task Management Dashboard with token in hash
+      window.location.href = `http://127.0.0.1:3001/#token=${token}`;
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
@@ -35,8 +36,9 @@ export default function LoginPage() {
     try {
       const idToken = await triggerGoogleLogin();
       const user = await googleLogin(idToken);
-      // Redirect to Task Management Dashboard
-      window.location.href = 'http://127.0.0.1:3001';
+      const token = localStorage.getItem('token');
+      // Redirect to Task Management Dashboard with token in hash
+      window.location.href = `http://127.0.0.1:3001/#token=${token}`;
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Google Sign-In failed');
     } finally {

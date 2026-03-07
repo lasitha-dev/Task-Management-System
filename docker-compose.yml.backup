@@ -1,5 +1,27 @@
 services:
   # ============================================
+  # MongoDB Database - DISABLED (Using MongoDB Atlas Cloud)
+  # ============================================
+  # mongodb:
+  #   image: mongo:7.0
+  #   container_name: mern-mongodb
+  #   restart: unless-stopped
+  #   ports:
+  #     - "127.0.0.1:27017:27017"
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: admin
+  #     MONGO_INITDB_ROOT_PASSWORD: admin123
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   networks:
+  #     - mern-network
+  #   healthcheck:
+  #     test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+
+  # ============================================
   # API Gateway Service
   # ============================================
   api-gateway:
@@ -27,7 +49,7 @@ services:
       retries: 3
 
   # ============================================
-  # User Management Service (Using MongoDB Atlas)
+  # User Management Service
   # ============================================
   user-management:
     build:
@@ -40,11 +62,11 @@ services:
     environment:
       - PORT=5001
       - MONGO_URI=mongodb+srv://sathnarakumarasinghe_db_user:Wm32cnshkjWf0gIG@usermanagement.82h7tlu.mongodb.net/user-management-db?appName=UserManagement
-      - JWT_SECRET=4a071af79eaf92a78d3ab48a3f7b0770624e462a5e6c59440ad0630828b1eac9
-      - JWT_EXPIRE=30d
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE=${JWT_EXPIRE}
       - NODE_ENV=production
-      - GOOGLE_CLIENT_ID=995578316094-qdi6aqve8ksss8coga91353b49ea7veh.apps.googleusercontent.com
-      - GOOGLE_CLIENT_SECRET=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
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_CALLBACK_URL=http://localhost:5001/api/users/google/callback
     networks:
       - mern-network
@@ -55,7 +77,7 @@ services:
       retries: 3
 
   # ============================================
-  # Task Management Service (Using MongoDB Atlas)
+  # Task Management Service
   # ============================================
   task-management:
     build:
@@ -67,15 +89,15 @@ services:
       - "127.0.0.1:5002:5002"
     environment:
       - PORT=5002
-      - MONGO_URI=mongodb+srv://User2:Pramod123@cluster0.8e4nq9e.mongodb.net/task-management?appName=Cluster0
-      - JWT_SECRET=4a071af79eaf92a78d3ab48a3f7b0770624e462a5e6c59440ad0630828b1eac9
-      - JWT_EXPIRE=30d
+      - MONGO_URI=mongodb://admin:admin123@mongodb:27017/task-management?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE=${JWT_EXPIRE}
+      - NODE_ENV=producti+srv://User2:Pramod123@cluster0.8e4nq9e.mongodb.net/task-management?appName=Cluster0
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE=${JWT_EXPIRE}
       - NODE_ENV=production
       - USER_SERVICE_URL=http://user-management:5001
       - API_GATEWAY_URL=http://api-gateway:8000
-    networks:
-      - mern-network
-    healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
       interval: 30s
       timeout: 10s
@@ -108,7 +130,7 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=http://127.0.0.1:8000/api/users
-        - VITE_GOOGLE_CLIENT_ID=995578316094-qdi6aqve8ksss8coga91353b49ea7veh.apps.googleusercontent.com
+        - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     container_name: user-frontend
     restart: unless-stopped
     ports:
@@ -124,3 +146,12 @@ services:
 networks:
   mern-network:
     driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes: - DISABLED (Using MongoDB Atlas Cloud)
+# ============================================
+# volumes:
+#   mongodb_data:
+# 

@@ -267,8 +267,10 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onTaskUpdated
       const { data } = await api.patch(`/api/tasks/${taskId}`, { status: newStatus })
       handleTaskChange(data.task)
       toast.success(`Status → ${STATUS_LABELS[newStatus]}`)
-    } catch {
-      toast.error('Failed to update status')
+    } catch (error) {
+      console.error('Status update failed:', error)
+      const message = error.response?.data?.message || 'Failed to update task status'
+      toast.error(message)
     }
   }
 
@@ -276,8 +278,10 @@ export default function TaskDetailModal({ taskId, isOpen, onClose, onTaskUpdated
     try {
       const { data } = await api.patch(`/api/tasks/${taskId}`, { priority: newPriority })
       handleTaskChange(data.task)
-    } catch {
-      toast.error('Failed to update priority')
+    } catch (error) {
+      console.error('Priority update failed:', error)
+      const message = error.response?.data?.message || 'Failed to update priority'
+      toast.error(message)
     }
   }
 

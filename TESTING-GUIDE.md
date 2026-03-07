@@ -2,13 +2,48 @@
 
 ## 🔧 Fixed Issues (March 8, 2026)
 
-### Issue Found
+### Issue 1: Login Redirect Using localhost
 The frontend redirect URLs were using `localhost:3001` which caused IPv6 connection hangs on macOS.
 
-### Solution Applied
-- ✅ Updated `LoginPage.jsx` redirect to use `http://127.0.0.1:3001`
-- ✅ Updated `RegisterPage.jsx` redirect to use `http://127.0.0.1:3001`
-- ✅ Rebuilt and restarted user-frontend container
+**Solution**: Updated `LoginPage.jsx` and `RegisterPage.jsx` to use `http://127.0.0.1:3001`
+
+### Issue 2: Task Frontend API Calls Failing  
+The task-management frontend had `baseURL: '/'` which tried to call APIs on its own domain (127.0.0.1:3001) instead of the API Gateway (127.0.0.1:8000).
+
+**Solution**: 
+- ✅ Updated `axios.js` to use `VITE_API_URL` environment variable
+- ✅ Modified `Dockerfile` to accept and use `VITE_API_URL` build arg
+- ✅ Fixed `docker-compose.yml` to pass correct API Gateway URL
+- ✅ Rebuilt and restarted both frontend containers
+
+### Issue 3: Task Management Showing Mock User "Alex Morgan"
+The task management frontend was displaying a hardcoded mock user instead of the actual logged-in user, and JWT tokens were missing user details.
+
+**Problems**:
+- JWT token only had `{id, role}` without name/email
+- Task frontend used hardcoded "Alex Morgan" mock user
+- Failed to load boards due to incorrect user context
+
+**Solution**:
+- ✅ Updated `generateToken()` to include name and email in JWT payload
+- ✅ Updated all JWT token generation calls in `userService.js`
+- ✅ Created `auth.js` utility to decode JWT on frontend
+- ✅ Removed mock user code from task management frontend
+- ✅ Frontend now reads real user from JWT token
+- ✅ Added auto-redirect to login if no valid token found
+- ✅ Rebuilt both user-management and task-frontend containers
+
+**JWT Token Now Contains:**
+```json
+{
+  "id": "user_id_here",
+  "role": "User",
+  "name": "Your Name",
+  "email": "your@email.com",
+  "iat": 1772910821,
+  "exp": 1775502821  
+}
+```
 
 ---
 

@@ -13,7 +13,7 @@ const registerUser = async ({ name, email, password, role }) => {
   }
 
   const user = await User.create({ name, email, password, role });
-  const token = generateToken(user._id, user.role);
+  const token = generateToken(user._id, user.role, user.name, user.email);
 
   return {
     _id: user._id,
@@ -40,7 +40,7 @@ const loginUser = async (email, password) => {
     throw error;
   }
 
-  const token = generateToken(user._id, user.role);
+  const token = generateToken(user._id, user.role, user.name, user.email);
 
   return {
     _id: user._id,
@@ -139,7 +139,7 @@ const googleAuth = async (idToken) => {
   // Check if user exists by googleId
   let user = await User.findOne({ googleId });
   if (user) {
-    const token = generateToken(user._id, user.role);
+    const token = generateToken(user._id, user.role, user.name, user.email);
     return { _id: user._id, name: user.name, email: user.email, role: user.role, token };
   }
 
@@ -148,7 +148,7 @@ const googleAuth = async (idToken) => {
   if (user) {
     user.googleId = googleId;
     await user.save();
-    const token = generateToken(user._id, user.role);
+    const token = generateToken(user._id, user.role, user.name, user.email);
     return { _id: user._id, name: user.name, email: user.email, role: user.role, token };
   }
 
@@ -159,7 +159,7 @@ const googleAuth = async (idToken) => {
     googleId,
   });
 
-  const token = generateToken(user._id, user.role);
+  const token = generateToken(user._id, user.role, user.name, user.email);
   return { _id: user._id, name: user.name, email: user.email, role: user.role, token };
 };
 

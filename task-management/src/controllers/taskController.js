@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const taskService = require('../services/taskService');
-const { getAllUsers, searchUsers } = require('../utils/mockUsers');
+const { getAllUsers, searchUsers } = require('../services/userService');
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 function handleValidationErrors(req, res) {
@@ -155,16 +155,26 @@ const getTaskStats = async (req, res) => {
 };
 
 // ─── GET /api/tasks/users ────────────────────────────────────────────────────────────────
-const getUsers = (req, res) => {
-    const users = getAllUsers();
-    res.status(200).json({ success: true, users });
+const getUsers = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1] || null;
+        const users = await getAllUsers(token);
+        res.status(200).json({ success: true, users });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 // ─── GET /api/tasks/users/search?q= ───────────────────────────────────────────────────
-const searchUsersHandler = (req, res) => {
-    const { q = '', limit } = req.query;
-    const users = searchUsers(q, limit ? parseInt(limit, 10) : 10);
-    res.status(200).json({ success: true, users });
+const searchUsersHandler = async (req, res) => {
+    try {
+        const { q = '', limit } = req.query;
+        const token = req.headers.authorization?.split(' ')[1] || null;
+        const users = await searchUsers(q, limit ? parseInt(limit, 10) : 10, token);
+        res.status(200).json({ success: true, users });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 // ─── POST /api/tasks/:id/assignees ───────────────────────────────────────────────────

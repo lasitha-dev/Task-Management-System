@@ -82,6 +82,32 @@ const googleAuth = async (req, res, next) => {
   }
 };
 
+// Search/filter users - accessible to all authenticated users
+const searchUsers = async (req, res, next) => {
+  try {
+    const { q = '', limit = 10 } = req.query;
+    const users = await userService.getAllUsers();
+    
+    // Filter users based on search query
+    let filteredUsers = users;
+    if (q && q.trim() !== '') {
+      const query = q.toLowerCase();
+      filteredUsers = users.filter(user =>
+        user.name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query)
+      );
+    }
+    
+    // Limit results
+    const limitNum = parseInt(limit, 10);
+    const limitedUsers = filteredUsers.slice(0, limitNum);
+    
+    res.status(200).json({ success: true, users: limitedUsers });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -90,4 +116,5 @@ module.exports = {
   deleteUser,
   getAllUsers,
   googleAuth,
+  searchUsers,
 };
