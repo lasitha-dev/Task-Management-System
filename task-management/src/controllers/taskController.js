@@ -182,6 +182,9 @@ const addAssignee = async (req, res) => {
         if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
         res.status(200).json({ success: true, message: 'Assignee added.', task });
     } catch (error) {
+        if (error.kind === 'ObjectId' || error.name === 'CastError') {
+            return res.status(400).json({ success: false, message: 'Invalid task ID.' });
+        }
         res.status(error.status || 500).json({ success: false, message: error.message });
     }
 };
@@ -208,6 +211,9 @@ const addComment = async (req, res) => {
         if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
         res.status(201).json({ success: true, message: 'Comment added.', task });
     } catch (error) {
+        if (error.kind === 'ObjectId' || error.name === 'CastError') {
+            return res.status(400).json({ success: false, message: 'Invalid task ID.' });
+        }
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -234,6 +240,9 @@ const logTime = async (req, res) => {
         if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
         res.status(201).json({ success: true, message: 'Time logged.', task });
     } catch (error) {
+        if (error.kind === 'ObjectId' || error.name === 'CastError') {
+            return res.status(400).json({ success: false, message: 'Invalid task ID.' });
+        }
         res.status(500).json({ success: false, message: error.message });
     }
 };

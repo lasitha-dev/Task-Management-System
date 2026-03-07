@@ -17,7 +17,6 @@ const getAllBoards = async (req, res) => {
         
         // Get boards where user is creator or member
         const boards = await Board.find({
-            isArchived: false,
             $or: [
                 { 'createdBy.id': userId },
                 { 'members.id': userId }
@@ -141,13 +140,12 @@ const deleteBoard = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Only board creator can delete it.' });
         }
 
-        // Soft delete
-        board.isArchived = true;
-        await board.save();
+        // Permanently delete from database
+        await Board.findByIdAndDelete(req.params.id);
 
         res.status(200).json({ 
             success: true, 
-            message: 'Board archived successfully.' 
+            message: 'Board deleted successfully.' 
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -195,6 +193,9 @@ const addMember = async (req, res) => {
             board 
         });
     } catch (error) {
+        if (error.kind === 'ObjectId' || error.name === 'CastError') {
+            return res.status(400).json({ success: false, message: 'Invalid board ID.' });
+        }
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -227,6 +228,9 @@ const removeMember = async (req, res) => {
             board 
         });
     } catch (error) {
+        if (error.kind === 'ObjectId' || error.name === 'CastError') {
+            return res.status(400).json({ success: false, message: 'Invalid board ID.' });
+        }
         res.status(500).json({ success: false, message: error.message });
     }
 };

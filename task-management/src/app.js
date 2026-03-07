@@ -29,8 +29,11 @@ app.get('/health', (req, res) => {
 // Global Error Handler
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-    console.log(`Task Management Service running on port ${PORT}`);
-});
+// Only start server if this file is run directly (not during tests)
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Task Management Service running on port ${PORT}`);
+    });
+}
 
 module.exports = app;
