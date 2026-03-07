@@ -15,7 +15,8 @@ export default function Sidebar({ user }) {
   function handleSignOut() {
     localStorage.removeItem('token')
     sessionStorage.clear()
-    window.location.href = 'http://127.0.0.1:3000'
+    // Add logout flag so user-management knows to clear its localStorage
+    window.location.href = 'http://127.0.0.1:3000/login?logout=true'
   }
   return (
     <aside className="w-[260px] fixed top-0 left-0 bottom-0 z-50 bg-surface-dark border-r border-surface-highlight flex flex-col justify-between py-6 px-4">

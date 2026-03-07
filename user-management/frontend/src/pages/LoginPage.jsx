@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import useGoogleAuth from '../hooks/useGoogleAuth';
@@ -10,20 +10,35 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { login, googleLogin } = useAuth();
+  const { login, googleLogin, logout } = useAuth();
   const { triggerGoogleLogin, isGoogleAvailable } = useGoogleAuth();
   const navigate = useNavigate();
+
+  // Clear localStorage if coming from logout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('logout') === 'true') {
+      console.log('[Login] Logout flag detected, clearing localStorage');
+      logout();
+      // Clean up URL
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [logout]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
+      console.log('[Login] Attempting login for:', email);
       const user = await login(email, password);
+      console.log('[Login] Login successful:', user);
       const token = localStorage.getItem('token');
+      console.log('[Login] Token retrieved, redirecting to task dashboard');
       // Redirect to Task Management Dashboard with token in hash
       window.location.href = `http://127.0.0.1:3001/#token=${token}`;
     } catch (err) {
+      console.error('[Login] Login failed:', err);
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
@@ -34,12 +49,16 @@ export default function LoginPage() {
     setError('');
     setGoogleLoading(true);
     try {
+      console.log('[Login] Attempting Google login');
       const idToken = await triggerGoogleLogin();
       const user = await googleLogin(idToken);
+      console.log('[Login] Google login successful:', user);
       const token = localStorage.getItem('token');
+      console.log('[Login] Token retrieved, redirecting to task dashboard');
       // Redirect to Task Management Dashboard with token in hash
       window.location.href = `http://127.0.0.1:3001/#token=${token}`;
     } catch (err) {
+      console.error('[Login] Google login failed:', err);
       setError(err.response?.data?.message || err.message || 'Google Sign-In failed');
     } finally {
       setGoogleLoading(false);
