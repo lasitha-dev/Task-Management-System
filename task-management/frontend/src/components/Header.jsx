@@ -1,0 +1,74 @@
+import React from 'react'
+import BoardSelector from './BoardSelector'
+
+export default function Header({ boards, selectedBoard, onSelectBoard, onCreateBoard, onEditBoard, onDeleteBoard, currentUserId, boardName, sprint, onNewTask, loadingBoards, boardMembers = [] }) {
+  // Get up to 4 members to display
+  const displayMembers = boardMembers.slice(0, 4)
+  const remainingCount = Math.max(0, boardMembers.length - 4)
+
+  return (
+    <header className="h-16 flex items-center justify-between px-8 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-surface-highlight/50 z-40 shrink-0">
+      <div className="flex items-center gap-5">
+        {loadingBoards ? (
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px] animate-spin text-slate-400">progress_activity</span>
+            <span className="text-sm text-slate-400">Loading boards...</span>
+          </div>
+        ) : (
+          <BoardSelector 
+            boards={boards || []}
+            selectedBoard={selectedBoard}
+            onSelectBoard={onSelectBoard}
+            onCreateBoard={onCreateBoard}
+            onEditBoard={onEditBoard}
+            onDeleteBoard={onDeleteBoard}
+            currentUserId={currentUserId}
+          />
+        )}
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {boardName || 'No Board Selected'}
+          </h2>
+          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider border border-primary/20">
+            {sprint || 'Sprint 4'} Active
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-6">
+        {/* Team avatars - dynamic based on board members */}
+        {boardMembers.length > 0 && (
+          <div className="flex items-center -space-x-3">
+            {displayMembers.map((member) => (
+              <img
+                key={member.id}
+                alt={member.name}
+                title={member.name}
+                className="h-8 w-8 rounded-full ring-2 ring-white dark:ring-surface-dark border border-slate-300 dark:border-transparent"
+                src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=144bb8&color=fff`}
+              />
+            ))}
+            {remainingCount > 0 && (
+              <div 
+                className="h-8 w-8 rounded-full bg-surface-highlight flex items-center justify-center ring-2 ring-white dark:ring-surface-dark text-xs font-bold text-white"
+                title={`+${remainingCount} more members`}
+              >
+                +{remainingCount}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* New Task button */}
+        <button
+          onClick={() => onNewTask && onNewTask()}
+          disabled={!selectedBoard}
+          className="bg-primary hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          <span>New Task</span>
+        </button>
+      </div>
+    </header>
+  )
+}
