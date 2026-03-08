@@ -4,6 +4,7 @@
 # TaskMaster - Complete System Startup Script
 # =============================================================================
 # This script starts all microservices with one command
+# Supports both Docker and Development modes
 # =============================================================================
 
 set -e
@@ -17,12 +18,16 @@ echo ""
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
-    echo -e "${RED}❌ Docker is not running. Please start Docker Desktop first.${NC}"
-    exit 1
+    echo -e "${YELLOW}⚠️  Docker is not running.${NC}"
+    echo -e "${BLUE}🔄 Switching to Development Mode...${NC}"
+    echo ""
+    echo -e "${GREEN}Starting services without Docker...${NC}"
+    exec ./dev-start.sh
 fi
 
 echo -e "${GREEN}✅ Docker is running${NC}"

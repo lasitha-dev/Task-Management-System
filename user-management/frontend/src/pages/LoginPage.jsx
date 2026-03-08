@@ -34,9 +34,15 @@ export default function LoginPage() {
       const user = await login(email, password);
       console.log('[Login] Login successful:', user);
       const token = localStorage.getItem('token');
-      console.log('[Login] Token retrieved, redirecting to task dashboard');
-      // Redirect to Task Management Dashboard with token in hash
-      window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+      
+      // Check user role and redirect accordingly
+      if (user.role === 'Admin') {
+        console.log('[Login] Admin user detected, redirecting to admin dashboard');
+        window.location.href = 'http://127.0.0.1:3000/admin';
+      } else {
+        console.log('[Login] Regular user detected, redirecting to task dashboard');
+        window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+      }
     } catch (err) {
       console.error('[Login] Login failed:', err);
       setError(err.response?.data?.message || 'Invalid email or password');
@@ -54,9 +60,15 @@ export default function LoginPage() {
       const user = await googleLogin(idToken);
       console.log('[Login] Google login successful:', user);
       const token = localStorage.getItem('token');
-      console.log('[Login] Token retrieved, redirecting to task dashboard');
-      // Redirect to Task Management Dashboard with token in hash
-      window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+      
+      // Check user role and redirect accordingly
+      if (user.role === 'Admin') {
+        console.log('[Login] Admin user detected, redirecting to admin dashboard');
+        window.location.href = 'http://127.0.0.1:3000/admin';
+      } else {
+        console.log('[Login] Regular user detected, redirecting to task dashboard');
+        window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+      }
     } catch (err) {
       console.error('[Login] Google login failed:', err);
       setError(err.response?.data?.message || err.message || 'Google Sign-In failed');
