@@ -1,5 +1,6 @@
 const Board = require('../models/Board');
 const { validationResult } = require('express-validator');
+const { createBulkNotifications } = require('../services/notificationService');
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 function handleValidationErrors(req, res) {
@@ -68,6 +69,7 @@ const createBoard = async (req, res) => {
     try {
         const { name, description, sprint, members } = req.body;
         const user = req.user || { id: 'system', name: 'System', email: 'system@example.com' };
+        const authToken = req.headers.authorization?.split(' ')[1] || null;
 
         const board = await Board.create({
             name,
@@ -81,6 +83,30 @@ const createBoard = async (req, res) => {
                 avatar: user.avatar || null,
             },
         });
+
+        const recipients = (board.members || []).filter((member) => member.id !== user.id);
+        if (recipients.length > 0) {
+            try {
+                await createBulkNotifications(
+                    recipients.map((member) => ({
+                        type: 'team_update',
+                        title: `Added to team: ${board.name}`,
+                        message: `${user.name} added you to the team ${board.name}.`,
+                        recipientId: member.id,
+                        priority: 'medium',
+                        metadata: {
+                            boardId: board._id.toString(),
+                            boardName: board.name,
+                            createdBy: user.id,
+                            createdByName: user.name,
+                        },
+                    })),
+                    authToken,
+                );
+            } catch (error) {
+                console.error(`Failed to send board creation notifications for board ${board._id}: ${error.message}`);
+            }
+        }
 
         res.status(201).json({ 
             success: true, 

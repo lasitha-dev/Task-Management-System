@@ -1,4 +1,46 @@
 const Task = require('../models/Task');
+const {
+    createNotification,
+    createBulkNotifications,
+} = require('./notificationService');
+
+function buildTaskAssignedNotification(task, assignee, actor) {
+    return {
+        type: 'task_assigned',
+        title: `New task assigned: ${task.title}`,
+        message: `${actor?.name || 'A teammate'} assigned you to \"${task.title}\".`,
+        recipientId: assignee.id,
+        priority: task.priority === 'urgent' ? 'high' : 'medium',
+        metadata: {
+            taskId: task._id.toString(),
+            taskTitle: task.title,
+            assignedBy: actor?.id || null,
+            assignedByName: actor?.name || null,
+            boardId: task.board ? task.board.toString() : null,
+            deadline: task.deadline,
+        },
+    };
+}
+
+async function sendAssignmentNotifications(task, assignees, actor, authToken = null) {
+    if (!Array.isArray(assignees) || assignees.length === 0) {
+        return;
+    }
+
+    const recipients = assignees.filter((assignee) => assignee.id !== actor?.id);
+    if (recipients.length === 0) {
+        return;
+    }
+
+    try {
+        await createBulkNotifications(
+            recipients.map((assignee) => buildTaskAssignedNotification(task, assignee, actor)),
+            authToken,
+        );
+    } catch (error) {
+        console.error(`Failed to send task assignment notifications for task ${task._id}: ${error.message}`);
+    }
+}
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 function makeActivity(user, action, field = null, oldValue = null, newValue = null) {
@@ -15,7 +57,7 @@ function makeActivity(user, action, field = null, oldValue = null, newValue = nu
 /**
  * Create a new task
  */
-async function createTask(data, reporter = null) {
+async function createTask(data, reporter = null, authToken = null) {
     const taskData = { ...data };
 
     // Attach reporter from JWT user if not supplied in body
@@ -34,7 +76,9 @@ async function createTask(data, reporter = null) {
     ];
 
     const task = new Task(taskData);
-    return await task.save();
+    const savedTask = await task.save();
+    await sendAssignmentNotifications(savedTask, savedTask.assignees, reporter, authToken);
+    return savedTask;
 }
 
 /**
@@ -121,7 +165,7 @@ async function deleteTask(id) {
 /**
  * Add an assignee to a task (prevents duplicates)
  */
-async function addAssignee(taskId, assignee, user = null) {
+async function addAssignee(taskId, assignee, user = null, authToken = null) {
     const task = await Task.findById(taskId);
     if (!task) return null;
 
@@ -134,7 +178,15 @@ async function addAssignee(taskId, assignee, user = null) {
 
     task.assignees.push(assignee);
     task.activity.push(makeActivity(user, 'assigned', 'assignees', null, assignee.name));
-    return await task.save();
+    const savedTask = await task.save();
+
+    try {
+        await createNotification(buildTaskAssignedNotification(savedTask, assignee, user), authToken);
+    } catch (error) {
+        console.error(`Failed to send assignment notification for task ${savedTask._id}: ${error.message}`);
+    }
+
+    return savedTask;
 }
 
 /**

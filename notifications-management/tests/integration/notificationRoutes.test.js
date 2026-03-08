@@ -1,5 +1,6 @@
 const request = require('supertest');
 const express = require('express');
+const jwt = require('jsonwebtoken');
 
 /**
  * Integration tests for Notification routes.
@@ -23,6 +24,16 @@ const mockNotifications = [
     },
 ];
 
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'notifications_test_secret';
+
+const testToken = jwt.sign(
+    { id: 'user_001', name: 'Test User', email: 'user_001@test.com', role: 'user' },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+);
+
+const authHeader = `Bearer ${testToken}`;
+
 // Build a standalone Express app with the routes for testing
 function createTestApp() {
     const app = express();
@@ -35,11 +46,9 @@ function createTestApp() {
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         lean: jest.fn().mockResolvedValue(mockNotifications),
-        findById: jest.fn().mockReturnThis(),
-        findByIdAndUpdate: jest.fn().mockReturnThis(),
-        findByIdAndDelete: jest.fn().mockReturnThis(),
         findOne: jest.fn().mockReturnThis(),
         findOneAndUpdate: jest.fn().mockReturnThis(),
+        findOneAndDelete: jest.fn().mockReturnThis(),
         countDocuments: jest.fn().mockResolvedValue(1),
         create: jest.fn(),
         updateMany: jest.fn().mockResolvedValue({ modifiedCount: 1 }),
@@ -56,6 +65,9 @@ function createTestApp() {
     const NotificationService = require('../../src/services/notificationService');
     const NotificationController = require('../../src/controllers/notificationController');
     const {
+        protect,
+    } = require('../../src/middleware/auth');
+    const {
         validateCreateNotification,
         validateObjectId,
         validateMarkAllRead,
@@ -66,6 +78,7 @@ function createTestApp() {
     const controller = new NotificationController(service);
 
     const router = express.Router();
+    router.use(protect);
     router.get('/', controller.getNotifications);
     router.get('/unread-count', controller.getUnreadCount);
     router.patch('/read-all', validateMarkAllRead, controller.markAllAsRead);
@@ -100,7 +113,9 @@ describe('Notification Routes — Integration Tests', () => {
     // -------------------------------------------------------------------------
     describe('GET /api/notifications', () => {
         it('should return 200 with a list of notifications', async () => {
-            const res = await request(app).get('/api/notifications');
+            const res = await request(app)
+                .get('/api/notifications')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(true);
@@ -110,9 +125,18 @@ describe('Notification Routes — Integration Tests', () => {
 
         it('should accept query filters', async () => {
             const res = await request(app)
-                .get('/api/notifications?recipientId=user_001&type=task_assigned&isRead=false');
+                .get('/api/notifications?recipientId=user_001&type=task_assigned&isRead=false')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(200);
+        });
+
+        it('should reject requests for another recipient', async () => {
+            const res = await request(app)
+                .get('/api/notifications?recipientId=user_002')
+                .set('Authorization', authHeader);
+
+            expect(res.status).toBe(403);
         });
     });
 
@@ -122,7 +146,8 @@ describe('Notification Routes — Integration Tests', () => {
     describe('GET /api/notifications/unread-count', () => {
         it('should return 200 with unread count', async () => {
             const res = await request(app)
-                .get('/api/notifications/unread-count?recipientId=user_001');
+                .get('/api/notifications/unread-count?recipientId=user_001')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(200);
             expect(res.body.data.count).toBeDefined();
@@ -149,6 +174,7 @@ describe('Notification Routes — Integration Tests', () => {
 
             const res = await request(app)
                 .post('/api/notifications')
+                .set('Authorization', authHeader)
                 .send(newNotif);
 
             expect(res.status).toBe(201);
@@ -158,6 +184,7 @@ describe('Notification Routes — Integration Tests', () => {
         it('should return 400 for missing required fields', async () => {
             const res = await request(app)
                 .post('/api/notifications')
+                .set('Authorization', authHeader)
                 .send({ type: 'task_assigned' }); // missing title, message, recipientId
 
             expect(res.status).toBe(400);
@@ -169,6 +196,7 @@ describe('Notification Routes — Integration Tests', () => {
         it('should return 400 for invalid notification type', async () => {
             const res = await request(app)
                 .post('/api/notifications')
+                .set('Authorization', authHeader)
                 .send({
                     type: 'invalid_type',
                     title: 'Test',
@@ -189,7 +217,8 @@ describe('Notification Routes — Integration Tests', () => {
             mockModel.lean.mockResolvedValue(mockNotifications[0]);
 
             const res = await request(app)
-                .get('/api/notifications/507f1f77bcf86cd799439011');
+                .get('/api/notifications/507f1f77bcf86cd799439011')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(true);
@@ -197,7 +226,8 @@ describe('Notification Routes — Integration Tests', () => {
 
         it('should return 400 for an invalid ObjectId', async () => {
             const res = await request(app)
-                .get('/api/notifications/invalid-id');
+                .get('/api/notifications/invalid-id')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(400);
             expect(res.body.errors).toBeDefined();
@@ -212,14 +242,16 @@ describe('Notification Routes — Integration Tests', () => {
             mockModel.lean.mockResolvedValue({ ...mockNotifications[0], isRead: true });
 
             const res = await request(app)
-                .patch('/api/notifications/507f1f77bcf86cd799439011/read');
+                .patch('/api/notifications/507f1f77bcf86cd799439011/read')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(200);
         });
 
         it('should return 400 for invalid id', async () => {
             const res = await request(app)
-                .patch('/api/notifications/bad-id/read');
+                .patch('/api/notifications/bad-id/read')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(400);
         });
@@ -232,6 +264,7 @@ describe('Notification Routes — Integration Tests', () => {
         it('should return 200 when marking all as read', async () => {
             const res = await request(app)
                 .patch('/api/notifications/read-all')
+                .set('Authorization', authHeader)
                 .send({ recipientId: 'user_001' });
 
             expect(res.status).toBe(200);
@@ -241,6 +274,7 @@ describe('Notification Routes — Integration Tests', () => {
         it('should return 400 when recipientId is missing', async () => {
             const res = await request(app)
                 .patch('/api/notifications/read-all')
+                .set('Authorization', authHeader)
                 .send({});
 
             expect(res.status).toBe(400);
@@ -255,14 +289,16 @@ describe('Notification Routes — Integration Tests', () => {
             mockModel.lean.mockResolvedValue(mockNotifications[0]);
 
             const res = await request(app)
-                .delete('/api/notifications/507f1f77bcf86cd799439011');
+                .delete('/api/notifications/507f1f77bcf86cd799439011')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(200);
         });
 
         it('should return 400 for invalid id format', async () => {
             const res = await request(app)
-                .delete('/api/notifications/not-valid');
+                .delete('/api/notifications/not-valid')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(400);
         });
@@ -274,7 +310,8 @@ describe('Notification Routes — Integration Tests', () => {
     describe('GET /api/notifications/preferences/:userId', () => {
         it('should return 200 with user preferences', async () => {
             const res = await request(app)
-                .get('/api/notifications/preferences/user_001');
+                .get('/api/notifications/preferences/user_001')
+                .set('Authorization', authHeader);
 
             expect(res.status).toBe(200);
             expect(res.body.data.userId).toBe('user_001');
@@ -287,9 +324,16 @@ describe('Notification Routes — Integration Tests', () => {
 
             const res = await request(app)
                 .put('/api/notifications/preferences/user_001')
+                .set('Authorization', authHeader)
                 .send({ emailEnabled: false });
 
             expect(res.status).toBe(200);
+        });
+
+        it('should require authentication', async () => {
+            const res = await request(app).get('/api/notifications');
+
+            expect(res.status).toBe(401);
         });
     });
 });

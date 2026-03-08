@@ -13,7 +13,9 @@ const PORT = process.env.PORT || 5003;
 
 // Connect to Database and seed mock data
 connectDB().then(() => {
-    seedMockData(Notification);
+    if (process.env.ENABLE_MOCK_NOTIFICATIONS === 'true') {
+        seedMockData(Notification);
+    }
 });
 
 // Middleware

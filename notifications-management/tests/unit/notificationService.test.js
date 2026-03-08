@@ -12,11 +12,9 @@ const createMockModel = (overrides = {}) => ({
     skip: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
     lean: jest.fn(),
-    findById: jest.fn().mockReturnThis(),
-    findByIdAndUpdate: jest.fn().mockReturnThis(),
-    findByIdAndDelete: jest.fn().mockReturnThis(),
     findOne: jest.fn().mockReturnThis(),
     findOneAndUpdate: jest.fn().mockReturnThis(),
+    findOneAndDelete: jest.fn().mockReturnThis(),
     countDocuments: jest.fn(),
     create: jest.fn(),
     updateMany: jest.fn(),
@@ -143,8 +141,16 @@ describe('NotificationService', () => {
 
             const result = await service.getNotificationById('abc123');
 
-            expect(NotificationModel.findById).toHaveBeenCalledWith('abc123');
+            expect(NotificationModel.findOne).toHaveBeenCalledWith({ _id: 'abc123' });
             expect(result).toEqual(mockNotif);
+        });
+
+        it('should scope lookup to the recipient when provided', async () => {
+            NotificationModel.lean.mockResolvedValue({ _id: 'abc123', recipientId: 'user_001' });
+
+            await service.getNotificationById('abc123', 'user_001');
+
+            expect(NotificationModel.findOne).toHaveBeenCalledWith({ _id: 'abc123', recipientId: 'user_001' });
         });
 
         it('should throw 404 if notification not found', async () => {
@@ -183,12 +189,24 @@ describe('NotificationService', () => {
 
             const result = await service.markAsRead('abc');
 
-            expect(NotificationModel.findByIdAndUpdate).toHaveBeenCalledWith(
-                'abc',
+            expect(NotificationModel.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: 'abc' },
                 { isRead: true },
                 { new: true, runValidators: true }
             );
             expect(result.isRead).toBe(true);
+        });
+
+        it('should scope mark-as-read to the recipient when provided', async () => {
+            NotificationModel.lean.mockResolvedValue({ _id: 'abc', isRead: true });
+
+            await service.markAsRead('abc', 'user_001');
+
+            expect(NotificationModel.findOneAndUpdate).toHaveBeenCalledWith(
+                { _id: 'abc', recipientId: 'user_001' },
+                { isRead: true },
+                { new: true, runValidators: true }
+            );
         });
 
         it('should throw 404 if notification not found', async () => {
@@ -227,8 +245,16 @@ describe('NotificationService', () => {
 
             const result = await service.deleteNotification('abc');
 
-            expect(NotificationModel.findByIdAndDelete).toHaveBeenCalledWith('abc');
+            expect(NotificationModel.findOneAndDelete).toHaveBeenCalledWith({ _id: 'abc' });
             expect(result.title).toBe('Deleted');
+        });
+
+        it('should scope delete to the recipient when provided', async () => {
+            NotificationModel.lean.mockResolvedValue({ _id: 'abc', recipientId: 'user_001' });
+
+            await service.deleteNotification('abc', 'user_001');
+
+            expect(NotificationModel.findOneAndDelete).toHaveBeenCalledWith({ _id: 'abc', recipientId: 'user_001' });
         });
 
         it('should throw 404 if notification not found', async () => {

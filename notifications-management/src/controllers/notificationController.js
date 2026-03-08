@@ -1,5 +1,11 @@
 const { RESPONSE_MESSAGES } = require('../utils/constants');
 
+function createForbiddenError() {
+    const error = new Error('Access denied.');
+    error.statusCode = 403;
+    return error;
+}
+
 /**
  * Notification Controller
  * Thin request/response layer that delegates all logic to the service.
@@ -23,9 +29,16 @@ class NotificationController {
     async getNotifications(req, res, next) {
         try {
             const { recipientId, type, isRead, priority, page, limit } = req.query;
+            if (recipientId && recipientId !== req.user.id) {
+                throw createForbiddenError();
+            }
+
             const parsedIsRead = isRead === 'true' ? true : isRead === 'false' ? false : undefined;
             const result = await this.service.getAllNotifications({
-                recipientId, type, isRead: parsedIsRead, priority,
+                recipientId: req.user.id,
+                type,
+                isRead: parsedIsRead,
+                priority,
                 page: Number(page) || 1, limit: Number(limit) || 20,
             });
             res.status(200).json({ success: true, message: RESPONSE_MESSAGES.NOTIFICATION_FETCHED, data: result });
@@ -34,7 +47,7 @@ class NotificationController {
 
     async getNotificationById(req, res, next) {
         try {
-            const notification = await this.service.getNotificationById(req.params.id);
+            const notification = await this.service.getNotificationById(req.params.id, req.user.id);
             res.status(200).json({ success: true, data: notification });
         } catch (err) { next(err); }
     }
@@ -48,7 +61,7 @@ class NotificationController {
 
     async markAsRead(req, res, next) {
         try {
-            const notification = await this.service.markAsRead(req.params.id);
+            const notification = await this.service.markAsRead(req.params.id, req.user.id);
             res.status(200).json({ success: true, message: RESPONSE_MESSAGES.NOTIFICATION_MARKED_READ, data: notification });
         } catch (err) { next(err); }
     }
@@ -56,6 +69,10 @@ class NotificationController {
     async markAllAsRead(req, res, next) {
         try {
             const { recipientId } = req.body;
+            if (recipientId !== req.user.id) {
+                throw createForbiddenError();
+            }
+
             const result = await this.service.markAllAsRead(recipientId);
             res.status(200).json({ success: true, message: RESPONSE_MESSAGES.ALL_MARKED_READ, data: result });
         } catch (err) { next(err); }
@@ -63,7 +80,7 @@ class NotificationController {
 
     async deleteNotification(req, res, next) {
         try {
-            await this.service.deleteNotification(req.params.id);
+            await this.service.deleteNotification(req.params.id, req.user.id);
             res.status(200).json({ success: true, message: RESPONSE_MESSAGES.NOTIFICATION_DELETED });
         } catch (err) { next(err); }
     }
@@ -71,13 +88,21 @@ class NotificationController {
     async getUnreadCount(req, res, next) {
         try {
             const { recipientId } = req.query;
-            const result = await this.service.getUnreadCount(recipientId);
+            if (recipientId && recipientId !== req.user.id) {
+                throw createForbiddenError();
+            }
+
+            const result = await this.service.getUnreadCount(req.user.id);
             res.status(200).json({ success: true, data: result });
         } catch (err) { next(err); }
     }
 
     async getPreferences(req, res, next) {
         try {
+            if (req.params.userId !== req.user.id) {
+                throw createForbiddenError();
+            }
+
             const prefs = await this.service.getPreferences(req.params.userId);
             res.status(200).json({ success: true, message: RESPONSE_MESSAGES.PREFERENCES_FETCHED, data: prefs });
         } catch (err) { next(err); }
@@ -85,6 +110,10 @@ class NotificationController {
 
     async updatePreferences(req, res, next) {
         try {
+            if (req.params.userId !== req.user.id) {
+                throw createForbiddenError();
+            }
+
             const prefs = await this.service.updatePreferences(req.params.userId, req.body);
             res.status(200).json({ success: true, message: RESPONSE_MESSAGES.PREFERENCES_UPDATED, data: prefs });
         } catch (err) { next(err); }

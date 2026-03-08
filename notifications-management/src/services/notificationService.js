@@ -1,5 +1,11 @@
 const { RESPONSE_MESSAGES } = require('../utils/constants');
 
+function createNotFoundError() {
+    const error = new Error(RESPONSE_MESSAGES.NOTIFICATION_NOT_FOUND);
+    error.statusCode = 404;
+    return error;
+}
+
 /**
  * Notification Service
  * Encapsulates all business logic for notification CRUD and preferences.
@@ -42,12 +48,11 @@ class NotificationService {
     /**
      * Retrieve a single notification by its ID.
      */
-    async getNotificationById(id) {
-        const notification = await this.Notification.findById(id).lean();
+    async getNotificationById(id, recipientId = null) {
+        const filter = recipientId ? { _id: id, recipientId } : { _id: id };
+        const notification = await this.Notification.findOne(filter).lean();
         if (!notification) {
-            const error = new Error(RESPONSE_MESSAGES.NOTIFICATION_NOT_FOUND);
-            error.statusCode = 404;
-            throw error;
+            throw createNotFoundError();
         }
         return notification;
     }
@@ -63,17 +68,16 @@ class NotificationService {
     /**
      * Mark a single notification as read.
      */
-    async markAsRead(id) {
-        const notification = await this.Notification.findByIdAndUpdate(
-            id,
+    async markAsRead(id, recipientId = null) {
+        const filter = recipientId ? { _id: id, recipientId } : { _id: id };
+        const notification = await this.Notification.findOneAndUpdate(
+            filter,
             { isRead: true },
             { new: true, runValidators: true }
         ).lean();
 
         if (!notification) {
-            const error = new Error(RESPONSE_MESSAGES.NOTIFICATION_NOT_FOUND);
-            error.statusCode = 404;
-            throw error;
+            throw createNotFoundError();
         }
         return notification;
     }
@@ -92,12 +96,11 @@ class NotificationService {
     /**
      * Delete a notification by ID.
      */
-    async deleteNotification(id) {
-        const notification = await this.Notification.findByIdAndDelete(id).lean();
+    async deleteNotification(id, recipientId = null) {
+        const filter = recipientId ? { _id: id, recipientId } : { _id: id };
+        const notification = await this.Notification.findOneAndDelete(filter).lean();
         if (!notification) {
-            const error = new Error(RESPONSE_MESSAGES.NOTIFICATION_NOT_FOUND);
-            error.statusCode = 404;
-            throw error;
+            throw createNotFoundError();
         }
         return notification;
     }

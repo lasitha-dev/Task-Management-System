@@ -8,209 +8,12 @@ info:
 servers:
   - url: http://localhost:5003
     description: Local development server
-tags:
-  - name: Notifications
-    description: CRUD operations for in-app notifications
-  - name: Preferences
-    description: Per-user notification delivery preferences
-
-paths:
-  /health:
-    get:
-      summary: Health check
-      responses:
-        '200':
-          description: Service is healthy
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: OK
-                  service:
-                    type: string
-                    example: notifications-management
-
-  /api/notifications:
-    get:
-      summary: List notifications
-      description: Retrieve paginated notifications with optional filters.
-      tags: [Notifications]
-      parameters:
-        - name: recipientId
-          in: query
-          schema: { type: string }
-          description: Filter by recipient user ID
-        - name: type
-          in: query
-          schema:
-            type: string
-            enum: [task_assigned, task_updated, deadline_reminder, comment_added, team_update, system_alert]
-        - name: isRead
-          in: query
-          schema: { type: string, enum: ['true', 'false'] }
-        - name: priority
-          in: query
-          schema:
-            type: string
-            enum: [low, medium, high, critical]
-        - name: page
-          in: query
-          schema: { type: integer, default: 1 }
-        - name: limit
-          in: query
-          schema: { type: integer, default: 20 }
-      responses:
-        '200':
-          description: Paginated list of notifications
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotificationListResponse'
-        '500':
-          description: Internal Server Error
-
-    post:
-      summary: Create a notification
-      tags: [Notifications]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateNotificationInput'
-      responses:
-        '201':
-          description: Notification created
-        '400':
-          description: Validation error
-
-  /api/notifications/unread-count:
-    get:
-      summary: Get unread notification count
-      tags: [Notifications]
-      parameters:
-        - name: recipientId
-          in: query
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          description: Unread count
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success: { type: boolean }
-                  data:
-                    type: object
-                    properties:
-                      count: { type: integer, example: 7 }
-
-  /api/notifications/read-all:
-    patch:
-      summary: Mark all notifications as read
-      tags: [Notifications]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [recipientId]
-              properties:
-                recipientId: { type: string }
-      responses:
-        '200':
-          description: All notifications marked as read
-        '400':
-          description: Validation error
-
-  /api/notifications/{id}:
-    get:
-      summary: Get a notification by ID
-      tags: [Notifications]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          description: Notification details
-        '400':
-          description: Invalid ID format
-        '404':
-          description: Notification not found
-    delete:
-      summary: Delete a notification
-      tags: [Notifications]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          description: Notification deleted
-        '400':
-          description: Invalid ID format
-        '404':
-          description: Notification not found
-
-  /api/notifications/{id}/read:
-    patch:
-      summary: Mark a notification as read
-      tags: [Notifications]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          description: Notification marked as read
-        '400':
-          description: Invalid ID format
-        '404':
-          description: Notification not found
-
-  /api/notifications/preferences/{userId}:
-    get:
-      summary: Get user notification preferences
-      tags: [Preferences]
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          description: User preferences
-    put:
-      summary: Update user notification preferences
-      tags: [Preferences]
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema: { type: string }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdatePreferencesInput'
-      responses:
-        '200':
-          description: Preferences updated
-        '400':
-          description: Validation error
-
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     NotificationListResponse:
       type: object
@@ -263,11 +66,258 @@ components:
         priority:
           type: string
           enum: [low, medium, high, critical]
-          default: medium
-        metadata: { type: object }
+        metadata:
+          type: object
 
     UpdatePreferencesInput:
       type: object
       properties:
         emailEnabled: { type: boolean }
         inAppEnabled: { type: boolean }
+tags:
+  - name: Notifications
+    description: CRUD operations for in-app notifications
+  - name: Preferences
+    description: Per-user notification delivery preferences
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  service:
+                    type: string
+                    example: notifications-management
+
+  /api/notifications:
+    get:
+      summary: List notifications
+      description: Retrieve paginated notifications with optional filters.
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recipientId
+          in: query
+          schema: { type: string }
+          description: Filter by recipient user ID
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [task_assigned, task_updated, deadline_reminder, comment_added, team_update, system_alert]
+        - name: isRead
+          in: query
+          schema: { type: string, enum: ['true', 'false'] }
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Paginated list of notifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+        '500':
+          description: Internal Server Error
+        '401':
+          description: Missing or invalid JWT
+        '403':
+          description: recipientId does not match the authenticated user
+
+    post:
+      summary: Create a notification
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotificationInput'
+      responses:
+        '201':
+          description: Notification created
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid JWT
+
+  /api/notifications/unread-count:
+    get:
+      summary: Get unread notification count
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recipientId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      count: { type: integer, example: 7 }
+        '401':
+          description: Missing or invalid JWT
+        '403':
+          description: recipientId does not match the authenticated user
+
+  /api/notifications/read-all:
+    patch:
+      summary: Mark all notifications as read
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipientId]
+              properties:
+                recipientId: { type: string }
+      responses:
+        '200':
+          description: All notifications marked as read
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid JWT
+        '403':
+          description: recipientId does not match the authenticated user
+
+  /api/notifications/{id}:
+    get:
+      summary: Get a notification by ID
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Notification details
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Notification not found
+        '401':
+          description: Missing or invalid JWT
+    delete:
+      summary: Delete a notification
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Notification deleted
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Notification not found
+        '401':
+          description: Missing or invalid JWT
+
+  /api/notifications/{id}/read:
+    patch:
+      summary: Mark a notification as read
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Notification marked as read
+        '400':
+          description: Invalid ID format
+        '404':
+          description: Notification not found
+        '401':
+          description: Missing or invalid JWT
+
+  /api/notifications/preferences/{userId}:
+    get:
+      summary: Get user notification preferences
+      tags: [Preferences]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: User preferences
+        '401':
+          description: Missing or invalid JWT
+        '403':
+          description: userId does not match the authenticated user
+    put:
+      summary: Update user notification preferences
+      tags: [Preferences]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePreferencesInput'
+      responses:
+        '200':
+          description: Preferences updated
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid JWT
+        '403':
+          description: userId does not match the authenticated user

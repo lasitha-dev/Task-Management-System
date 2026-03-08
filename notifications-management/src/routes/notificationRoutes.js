@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/auth');
 
 // --- Dependency Wiring (Dependency Inversion) --------------------------------
 const Notification = require('../models/Notification');
@@ -19,6 +20,8 @@ const {
 } = require('../middleware/validators');
 
 // --- Notification Routes -----------------------------------------------------
+
+router.use(protect);
 
 // GET    /api/notifications              — List all (with filters & pagination)
 router.get('/', controller.getNotifications);
