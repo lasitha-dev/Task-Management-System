@@ -103,6 +103,34 @@ describe('NotificationService', () => {
             expect(result.pagination.limit).toBe(10);
             expect(result.pagination.pages).toBe(5);
         });
+
+        it('should combine multiple filters in one query', async () => {
+            NotificationModel.lean.mockResolvedValue([]);
+            NotificationModel.countDocuments.mockResolvedValue(0);
+
+            await service.getAllNotifications({
+                recipientId: 'user_001',
+                type: 'task_assigned',
+                isRead: true,
+                priority: 'critical',
+            });
+
+            expect(NotificationModel.find).toHaveBeenCalledWith({
+                recipientId: 'user_001',
+                type: 'task_assigned',
+                isRead: true,
+                priority: 'critical',
+            });
+        });
+
+        it('returns zero total pages when there are no notifications', async () => {
+            NotificationModel.lean.mockResolvedValue([]);
+            NotificationModel.countDocuments.mockResolvedValue(0);
+
+            const result = await service.getAllNotifications({ page: 2, limit: 10 });
+
+            expect(result.pagination).toEqual({ total: 0, page: 2, limit: 10, pages: 0 });
+        });
     });
 
     // -------------------------------------------------------------------------
