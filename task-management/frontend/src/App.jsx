@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { buildAppUrl } from '@taskmaster/shared-ui/appLinks'
@@ -57,6 +59,12 @@ function statusTone(status) {
   return 'warning'
 }
 
+function getStatusBarClass(status) {
+  if (status === 'done') return 'bg-emerald-500'
+  if (status === 'in_progress') return 'bg-[#144bb8]'
+  return 'bg-amber-500'
+}
+
 function PriorityBadge({ priority }) {
   const styles = {
     urgent: 'bg-red-500/10 text-red-400',
@@ -114,6 +122,76 @@ function DashboardPage() {
     }
   }, [])
 
+  let recentTasksContent
+  if (loading) {
+    recentTasksContent = (
+      <div className="space-y-3">
+        {[1, 2, 3].map((item) => <div key={item} className="h-20 rounded-xl bg-[#202634] animate-pulse" />)}
+      </div>
+    )
+  } else if (tasks.length === 0) {
+    recentTasksContent = <AppEmptyState icon="inbox" title="No tasks yet" description="Create a board and add your first task to start tracking work." />
+  } else {
+    recentTasksContent = (
+      <div className="space-y-3">
+        {tasks.map((task) => (
+          <div key={task._id} className="rounded-xl border border-[#2d3544] bg-[#161b26] px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <p className="text-sm font-semibold text-white truncate">{task.title}</p>
+                <PriorityBadge priority={task.priority} />
+              </div>
+              <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
+                <span>{formatStatusLabel(task.status)}</span>
+                <span className="text-slate-600">•</span>
+                <span>{formatDisplayDate(task.deadline)}</span>
+                {task.project ? (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <span>{task.project}</span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+            <div className="text-xs text-slate-400">
+              {(task.assignees || []).length} assignee{(task.assignees || []).length === 1 ? '' : 's'}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  let boardOverviewContent
+  if (loading) {
+    boardOverviewContent = (
+      <div className="space-y-3">
+        {[1, 2, 3].map((item) => <div key={item} className="h-16 rounded-xl bg-[#202634] animate-pulse" />)}
+      </div>
+    )
+  } else if (boards.length === 0) {
+    boardOverviewContent = <AppEmptyState icon="dashboard_customize" title="No boards yet" description="Boards you create or join will appear here." />
+  } else {
+    boardOverviewContent = (
+      <div className="space-y-3">
+        {boards.slice(0, 4).map((board) => (
+          <div key={board._id} className="rounded-xl border border-[#2d3544] bg-[#161b26] px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-white">{board.name}</p>
+                <p className="text-xs text-slate-400 mt-1">{board.description || 'No description yet'}</p>
+              </div>
+              <span className="tm-pill tm-pill-accent">{board.sprint || 'Sprint 1'}</span>
+            </div>
+            <div className="mt-3 text-xs text-slate-400">
+              {(board.members || []).length} member{(board.members || []).length === 1 ? '' : 's'}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <WorkspacePageLayout
       header={
@@ -123,7 +201,7 @@ function DashboardPage() {
           actions={
             <a href={buildAppUrl('notifications')} className="tm-button-secondary">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
-              Open Notifications
+              <span>Open Notifications</span>
             </a>
           }
         />
@@ -145,40 +223,7 @@ function DashboardPage() {
             </div>
             <a href="/" className="text-sm font-semibold text-[#144bb8] hover:text-blue-300 transition-colors">Open Board</a>
           </div>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((item) => <div key={item} className="h-20 rounded-xl bg-[#202634] animate-pulse" />)}
-            </div>
-          ) : tasks.length === 0 ? (
-            <AppEmptyState icon="inbox" title="No tasks yet" description="Create a board and add your first task to start tracking work." />
-          ) : (
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <div key={task._id} className="rounded-xl border border-[#2d3544] bg-[#161b26] px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <p className="text-sm font-semibold text-white truncate">{task.title}</p>
-                      <PriorityBadge priority={task.priority} />
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
-                      <span>{formatStatusLabel(task.status)}</span>
-                      <span className="text-slate-600">•</span>
-                      <span>{formatDisplayDate(task.deadline)}</span>
-                      {task.project ? (
-                        <>
-                          <span className="text-slate-600">•</span>
-                          <span>{task.project}</span>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    {(task.assignees || []).length} assignee{(task.assignees || []).length === 1 ? '' : 's'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {recentTasksContent}
         </AppSectionCard>
 
         <AppSectionCard className="p-6">
@@ -186,30 +231,7 @@ function DashboardPage() {
             <h3 className="text-lg font-bold text-white">Boards Overview</h3>
             <p className="text-sm text-slate-400 mt-1">Active boards and sprint ownership.</p>
           </div>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((item) => <div key={item} className="h-16 rounded-xl bg-[#202634] animate-pulse" />)}
-            </div>
-          ) : boards.length === 0 ? (
-            <AppEmptyState icon="dashboard_customize" title="No boards yet" description="Boards you create or join will appear here." />
-          ) : (
-            <div className="space-y-3">
-              {boards.slice(0, 4).map((board) => (
-                <div key={board._id} className="rounded-xl border border-[#2d3544] bg-[#161b26] px-4 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{board.name}</p>
-                      <p className="text-xs text-slate-400 mt-1">{board.description || 'No description yet'}</p>
-                    </div>
-                    <span className="tm-pill tm-pill-accent">{board.sprint || 'Sprint 1'}</span>
-                  </div>
-                  <div className="mt-3 text-xs text-slate-400">
-                    {(board.members || []).length} member{(board.members || []).length === 1 ? '' : 's'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {boardOverviewContent}
         </AppSectionCard>
       </div>
     </WorkspacePageLayout>
@@ -269,6 +291,39 @@ function TeamSpacePage() {
 
   const members = Array.from(membersById.values())
 
+  let directoryContent
+  if (loading) {
+    directoryContent = (
+      <div className="p-6 space-y-3">
+        {[1, 2, 3, 4].map((item) => <div key={item} className="h-16 rounded-xl bg-[#202634] animate-pulse" />)}
+      </div>
+    )
+  } else if (members.length === 0) {
+    directoryContent = <AppEmptyState icon="group_off" title="No team members found" description="Add collaborators to a board to see them here." />
+  } else {
+    directoryContent = (
+      <div className="divide-y divide-[#2d3544]">
+        {members.map((member, index) => (
+          <div key={member.id || member.email || index} className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 bg-[#1c212c]">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="h-11 w-11 rounded-full bg-[#144bb8] flex items-center justify-center text-white font-bold text-sm">
+                {member.name?.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'U'}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{member.name || 'Unknown User'}</p>
+                <p className="text-xs text-slate-400 truncate">{member.email || 'No email available'}</p>
+              </div>
+            </div>
+            <div className="min-w-0 text-right">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Boards</p>
+              <p className="text-sm text-slate-300 truncate max-w-[320px]">{member.boards.length > 0 ? member.boards.join(', ') : 'Not assigned yet'}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <WorkspacePageLayout
       header={<AppPageHeader title="Team Space" subtitle="A shared directory of workspace members and where they collaborate." />}
@@ -284,33 +339,7 @@ function TeamSpacePage() {
           <h3 className="text-lg font-bold text-white">Workspace Directory</h3>
           <p className="text-sm text-slate-400 mt-1">People from your task workspace and linked user service.</p>
         </div>
-        {loading ? (
-          <div className="p-6 space-y-3">
-            {[1, 2, 3, 4].map((item) => <div key={item} className="h-16 rounded-xl bg-[#202634] animate-pulse" />)}
-          </div>
-        ) : members.length === 0 ? (
-          <AppEmptyState icon="group_off" title="No team members found" description="Add collaborators to a board to see them here." />
-        ) : (
-          <div className="divide-y divide-[#2d3544]">
-            {members.map((member, index) => (
-              <div key={member.id || member.email || index} className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 bg-[#1c212c]">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="h-11 w-11 rounded-full bg-[#144bb8] flex items-center justify-center text-white font-bold text-sm">
-                    {member.name?.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'U'}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{member.name || 'Unknown User'}</p>
-                    <p className="text-xs text-slate-400 truncate">{member.email || 'No email available'}</p>
-                  </div>
-                </div>
-                <div className="min-w-0 text-right">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Boards</p>
-                  <p className="text-sm text-slate-300 truncate max-w-[320px]">{member.boards.length > 0 ? member.boards.join(', ') : 'Not assigned yet'}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {directoryContent}
       </AppSectionCard>
     </WorkspacePageLayout>
   )
@@ -358,6 +387,31 @@ function AnalyticsPage() {
     ? Math.round(tasks.reduce((total, task) => total + (Number(task.progress) || 0), 0) / tasks.length)
     : 0
 
+  let urgentQueueContent
+  if (loading) {
+    urgentQueueContent = (
+      <div className="space-y-3">
+        {[1, 2, 3].map((item) => <div key={item} className="h-14 rounded-xl bg-[#202634] animate-pulse" />)}
+      </div>
+    )
+  } else if (urgentTasks.length === 0) {
+    urgentQueueContent = <AppEmptyState icon="check_circle" title="No urgent tasks" description="The urgent queue is clear right now." />
+  } else {
+    urgentQueueContent = (
+      <div className="space-y-3">
+        {urgentTasks.map((task) => (
+          <div key={task._id} className="rounded-xl border border-[#2d3544] bg-[#161b26] px-4 py-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-white">{task.title}</p>
+              <p className="text-xs text-slate-400 mt-1">{formatStatusLabel(task.status)} • {formatDisplayDate(task.deadline)}</p>
+            </div>
+            <PriorityBadge priority={task.priority} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <WorkspacePageLayout
       header={<AppPageHeader title="Analytics" subtitle="Track throughput, delivery pace, and the urgent work putting pressure on the team." />}
@@ -388,7 +442,7 @@ function AnalyticsPage() {
                       <span className="text-slate-400">{count}</span>
                     </div>
                     <div className="h-2 rounded-full bg-[#161b26] overflow-hidden">
-                      <div className={`h-full rounded-full ${status === 'done' ? 'bg-emerald-500' : status === 'in_progress' ? 'bg-[#144bb8]' : 'bg-amber-500'}`} style={{ width }} />
+                      <div className={`h-full rounded-full ${getStatusBarClass(status)}`} style={{ width }} />
                     </div>
                   </div>
                 )
@@ -399,25 +453,7 @@ function AnalyticsPage() {
 
         <AppSectionCard className="p-6">
           <h3 className="text-lg font-bold text-white mb-4">Urgent Queue</h3>
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((item) => <div key={item} className="h-14 rounded-xl bg-[#202634] animate-pulse" />)}
-            </div>
-          ) : urgentTasks.length === 0 ? (
-            <AppEmptyState icon="check_circle" title="No urgent tasks" description="The urgent queue is clear right now." />
-          ) : (
-            <div className="space-y-3">
-              {urgentTasks.map((task) => (
-                <div key={task._id} className="rounded-xl border border-[#2d3544] bg-[#161b26] px-4 py-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{task.title}</p>
-                    <p className="text-xs text-slate-400 mt-1">{formatStatusLabel(task.status)} • {formatDisplayDate(task.deadline)}</p>
-                  </div>
-                  <PriorityBadge priority={task.priority} />
-                </div>
-              ))}
-            </div>
-          )}
+          {urgentQueueContent}
         </AppSectionCard>
       </div>
     </WorkspacePageLayout>
@@ -484,6 +520,7 @@ function KanbanPage() {
         setSelectedBoard(null)
       }
     } catch (err) {
+      console.error('Failed to load boards', err)
       showToast('Failed to load boards', 'error')
     } finally {
       setLoadingBoards(false)
@@ -620,7 +657,7 @@ function KanbanPage() {
                 className="tm-button-primary"
               >
                 <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                Create Your First Board
+                <span>Create Your First Board</span>
               </button>
             )}
           />

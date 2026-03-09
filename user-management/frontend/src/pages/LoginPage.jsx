@@ -131,9 +131,9 @@ export default function LoginPage() {
                 </div>
               </label>
 
-              <label className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-300 text-sm font-medium">Password</span>
+                  <label htmlFor="login-password" className="text-slate-300 text-sm font-medium">Password</label>
                   <Link to="#" className="text-[#144bb8] text-xs font-semibold hover:underline">Forgot password?</Link>
                 </div>
                 <div className="relative">
@@ -141,6 +141,7 @@ export default function LoginPage() {
                     <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '20px' }}>lock</span>
                   </div>
                   <input
+                    id="login-password"
                     style={{ paddingLeft: '44px', paddingRight: '44px', backgroundColor: '#111621' }}
                     className="w-full rounded-lg border border-slate-600 h-12 text-white text-sm placeholder:text-slate-400 focus:border-[#144bb8] focus:ring-1 focus:ring-[#144bb8] focus:outline-none transition-all"
                     placeholder="Enter your password"
@@ -160,7 +161,7 @@ export default function LoginPage() {
                     </span>
                   </button>
                 </div>
-              </label>
+              </div>
 
               <button
                 className="mt-2 w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-4 bg-[#144bb8] hover:bg-[#113d96] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
