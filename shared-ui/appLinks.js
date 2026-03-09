@@ -52,5 +52,5 @@ export function buildAppUrl(app, path = '/', options = {}) {
 }
 
 export function redirectToApp(app, path = '/', options = {}) {
-  window.location.href = buildAppUrl(app, path, options);
+  globalThis.location.href = buildAppUrl(app, path, options);
 }

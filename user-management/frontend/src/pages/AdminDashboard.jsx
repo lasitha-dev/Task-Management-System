@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildAppUrl } from '@taskmaster/shared-ui/appLinks';
+import { AppPageHeader } from '@taskmaster/shared-ui/components';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axiosConfig';
 
@@ -237,21 +238,19 @@ export default function AdminDashboard() {
         <div className="flex-1 overflow-y-auto bg-[#111621] p-4 md:p-8">
           <div className="max-w-7xl mx-auto flex flex-col gap-8">
           {/* Page Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-black text-white tracking-tight">User Monitoring</h2>
-              <p className="text-slate-400 text-base mt-1">
-                Manage access, roles, and track activity across the microservices ecosystem.
-              </p>
-            </div>
-            <button
-              onClick={openModal}
-              className="bg-[#144bb8] hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-[#144bb8]/25"
-            >
-              <span className="material-symbols-outlined text-lg">add</span>
-              Add New User
-            </button>
-          </div>
+          <AppPageHeader
+            title="User Monitoring"
+            subtitle="Manage access, roles, and track activity across the microservices ecosystem."
+            actions={(
+              <button
+                onClick={openModal}
+                className="bg-[#144bb8] hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-[#144bb8]/25"
+              >
+                <span className="material-symbols-outlined text-lg">add</span>
+                Add New User
+              </button>
+            )}
+          />
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

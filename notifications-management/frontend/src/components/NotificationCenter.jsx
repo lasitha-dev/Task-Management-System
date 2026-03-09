@@ -2,6 +2,14 @@ import PropTypes from 'prop-types';
 import { useEffect, useMemo, useState } from 'react';
 import { buildAppUrl as buildCrossAppUrl } from '@taskmaster/shared-ui/appLinks';
 import {
+  AppPageHeader,
+  AppSidebarBody,
+  AppSidebarBrand,
+  AppSidebarProfile,
+  AppSidebarSectionLabel,
+  AppSidebarShell,
+} from '@taskmaster/shared-ui/components';
+import {
   deleteNotification,
   getNotifications,
   getPreferences,
@@ -320,49 +328,41 @@ export default function NotificationCenter({ currentUser = null }) {
       />
 
       <div className="app-layout">
-        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-          <div className="sidebar-header">
-            <div className="sidebar-logo">
-              <div className="logo-icon">
-                <span className="material-icons-outlined">task_alt</span>
-              </div>
-              <div>
-                <div className="logo-text">TaskMaster</div>
-                <div className="sidebar-subtitle">Notifications Center</div>
-              </div>
+        <AppSidebarShell className={`sidebar ${sidebarOpen ? 'open' : ''}`} footer={
+          <a className="user-card" href={buildCrossAppUrl('user', '/login', { includeToken: false, query: { logout: 'true' } })}>
+            <span className="material-icons-outlined logout-icon">logout</span>
+            <span>Sign Out</span>
+          </a>
+        }>
+          <AppSidebarBrand subtitle="Notifications Center" />
+          <AppSidebarBody className="sidebar-nav">
+            <AppSidebarProfile
+              name={currentUserName}
+              subtitle={currentUserRole}
+              avatarText={currentUserInitials}
+            />
+            <AppSidebarSectionLabel>Main</AppSidebarSectionLabel>
+            <div>
+              {renderNavItem('dashboard', 'Dashboard', buildCrossAppUrl('task', '/dashboard'))}
+              {renderNavItem('check_circle', 'Task Board', buildCrossAppUrl('task', '/'))}
+              {renderNavItem('notifications', 'Notifications', null, true)}
+              {renderNavItem('group', 'Team Space', buildCrossAppUrl('task', '/team'))}
             </div>
-          </div>
-          <nav className="sidebar-nav">
-            <div className="nav-section-label">Main</div>
-            {renderNavItem('dashboard', 'Dashboard', buildCrossAppUrl('task', '/dashboard'))}
-            {renderNavItem('check_circle', 'Task Board', buildCrossAppUrl('task', '/'))}
-            {renderNavItem('notifications', 'Notifications', null, true)}
-            {renderNavItem('group', 'Team Space', buildCrossAppUrl('task', '/team'))}
-            <div className="nav-section-label">Insights</div>
-            {renderNavItem('analytics', 'Analytics', buildCrossAppUrl('task', '/analytics'))}
-            {renderNavItem('settings', 'Settings', buildCrossAppUrl('user', '/admin', { includeToken: false }))}
-          </nav>
-          <div className="sidebar-footer">
-            <a className="user-card" href={buildCrossAppUrl('user', '/login', { includeToken: false, query: { logout: 'true' } })}>
-              <div className="user-avatar">{currentUserInitials}</div>
-              <div className="user-info">
-                <div className="user-name">{currentUserName}</div>
-                <div className="user-role">{currentUserRole}</div>
-              </div>
-              <span className="material-icons-outlined logout-icon">logout</span>
-            </a>
-          </div>
-        </aside>
+            <AppSidebarSectionLabel>Insights</AppSidebarSectionLabel>
+            <div>
+              {renderNavItem('analytics', 'Analytics', buildCrossAppUrl('task', '/analytics'))}
+              {renderNavItem('settings', 'Settings', buildCrossAppUrl('user', '/admin', { includeToken: false }))}
+            </div>
+          </AppSidebarBody>
+        </AppSidebarShell>
 
         <main className="main-content">
-          <header className="page-header">
-            <div className="page-header-top">
-              <h1 className="page-title">
-                Notifications Center
-                {' '}
-                <span className="unread-badge">{unreadCount}</span>
-              </h1>
-              <div className="header-actions">
+          <AppPageHeader
+            title="Notifications Center"
+            subtitle="View and manage recent alerts across your microservices architecture."
+            badge={<span className="unread-badge">{unreadCount}</span>}
+            actions={(
+              <>
                 <button className="btn btn-ghost" onClick={() => setPrefsOpen(true)}>
                   <span className="material-icons-outlined" aria-hidden="true">tune</span>
                   <span>Preferences</span>
@@ -371,12 +371,9 @@ export default function NotificationCenter({ currentUser = null }) {
                   <span className="material-icons-outlined" aria-hidden="true">done_all</span>
                   <span>Mark All Read</span>
                 </button>
-              </div>
-            </div>
-            <p className="page-description">
-              View and manage recent alerts across your microservices architecture.
-            </p>
-          </header>
+              </>
+            )}
+          />
 
           <div className="filter-bar">
             {FILTERS.map((filter) => (
