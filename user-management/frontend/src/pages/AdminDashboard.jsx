@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildAppUrl } from '@taskmaster/shared-ui/appLinks';
-import { AppPageHeader } from '@taskmaster/shared-ui/components';
+import { AppPageHeader, AppStatCard } from '@taskmaster/shared-ui/components';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axiosConfig';
 
@@ -254,47 +254,9 @@ export default function AdminDashboard() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Total Users */}
-            <div className="bg-[#1c212c] p-5 rounded-xl border border-[#2d3544] shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-slate-400 text-sm font-medium">Total Users</h3>
-                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                  <span className="material-symbols-outlined">group</span>
-                </div>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-white">{totalUsers.toLocaleString()}</span>
-                <span className="text-xs text-emerald-500 font-medium">+12% this month</span>
-              </div>
-            </div>
-
-            {/* Active Now */}
-            <div className="bg-[#1c212c] p-5 rounded-xl border border-[#2d3544] shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-slate-400 text-sm font-medium">Active Now</h3>
-                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
-                  <span className="material-symbols-outlined">wifi</span>
-                </div>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-white">{adminCount}</span>
-                <span className="text-xs text-slate-500">Users online</span>
-              </div>
-            </div>
-
-            {/* Pending Approvals */}
-            <div className="bg-[#1c212c] p-5 rounded-xl border border-[#2d3544] shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-slate-400 text-sm font-medium">Pending Approvals</h3>
-                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
-                  <span className="material-symbols-outlined">pending</span>
-                </div>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-white">{regularCount}</span>
-                <span className="text-xs text-amber-500 font-medium">Needs attention</span>
-              </div>
-            </div>
+            <AppStatCard label="Total Users" value={totalUsers.toLocaleString()} meta="+12% this month" icon="group" tone="accent" />
+            <AppStatCard label="Active Now" value={adminCount} meta="Users online" icon="wifi" tone="success" />
+            <AppStatCard label="Pending Approvals" value={regularCount} meta="Needs attention" icon="pending" tone="warning" />
           </div>
 
           {error && (

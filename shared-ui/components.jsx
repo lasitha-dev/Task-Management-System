@@ -73,3 +73,50 @@ export function AppPageHeader({ title, subtitle, actions, badge }) {
     </div>
   );
 }
+
+export function AppStatCard({ label, value, meta, icon, tone = 'accent' }) {
+  const toneStyles = {
+    accent: 'bg-[#144bb8]/10 text-[#144bb8]',
+    success: 'bg-emerald-500/10 text-emerald-500',
+    warning: 'bg-amber-500/10 text-amber-500',
+    danger: 'bg-red-500/10 text-red-400',
+  };
+
+  return (
+    <div className="bg-[#1c212c] p-5 rounded-xl border border-[#2d3544] shadow-sm">
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <h3 className="text-slate-400 text-sm font-medium">{label}</h3>
+        {icon ? (
+          <div className={`p-2 rounded-lg ${toneStyles[tone] || toneStyles.accent}`}>
+            <span className="material-symbols-outlined">{icon}</span>
+          </div>
+        ) : null}
+      </div>
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <span className="text-2xl font-bold text-white">{value}</span>
+        {meta ? <span className="text-xs text-slate-400 font-medium">{meta}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+export function AppSectionCard({ children, className = '' }) {
+  return (
+    <section className={joinClassNames('bg-[#1c212c] rounded-xl border border-[#2d3544] shadow-sm', className)}>
+      {children}
+    </section>
+  );
+}
+
+export function AppEmptyState({ icon, title, description, action }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-16 px-6 text-slate-400 gap-4">
+      <span className="material-symbols-outlined text-6xl text-slate-500">{icon}</span>
+      <div>
+        <p className="text-xl font-semibold text-white">{title}</p>
+        <p className="text-sm mt-2 max-w-md">{description}</p>
+      </div>
+      {action ? <div>{action}</div> : null}
+    </div>
+  );
+}
