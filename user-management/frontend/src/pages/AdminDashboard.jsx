@@ -34,6 +34,12 @@ function getInitials(name) {
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const notificationsUrl = (() => {
+    const token = globalThis.localStorage.getItem('token');
+    return token
+      ? `http://127.0.0.1:3002/#token=${encodeURIComponent(token)}`
+      : 'http://127.0.0.1:3002/';
+  })();
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -175,7 +181,7 @@ export default function AdminDashboard() {
               <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">view_kanban</span>
               <span className="text-sm font-medium">Kanban Board</span>
             </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
+            <a href={notificationsUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
               <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">notifications</span>
               <span className="text-sm font-medium">Notifications</span>
               <span className="ml-auto bg-[#144bb8] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>

@@ -94,6 +94,18 @@ function getInitials(name = '') {
     .join('') || 'NA';
 }
 
+function buildAppUrl(port, path = '/') {
+  const token = globalThis.localStorage.getItem('token');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const baseUrl = `http://127.0.0.1:${port}${normalizedPath}`;
+
+  if (!token) {
+    return baseUrl;
+  }
+
+  return `${baseUrl}#token=${encodeURIComponent(token)}`;
+}
+
 export default function NotificationCenter({ currentUser = null }) {
   const [notifications, setNotifications] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
@@ -278,13 +290,22 @@ export default function NotificationCenter({ currentUser = null }) {
     }
   }
 
-  function renderNavItem(icon, label, isActive = false) {
+  function renderNavItem(icon, label, href, isActive = false) {
+    if (isActive) {
+      return (
+        <div className="nav-item active" aria-current="page">
+          <span className="material-icons-outlined" aria-hidden="true">{icon}</span>
+          <span>{label}</span>
+          {label === 'Notifications' ? <span className="nav-badge">{unreadCount}</span> : null}
+        </div>
+      );
+    }
+
     return (
-      <button type="button" className={`nav-item ${isActive ? 'active' : ''}`}>
+      <a href={href} className="nav-item" onClick={closeSidebar}>
         <span className="material-icons-outlined" aria-hidden="true">{icon}</span>
         <span>{label}</span>
-        {label === 'Notifications' ? <span className="nav-badge">{unreadCount}</span> : null}
-      </button>
+      </a>
     );
   }
 
@@ -322,13 +343,13 @@ export default function NotificationCenter({ currentUser = null }) {
           </div>
           <nav className="sidebar-nav">
             <div className="nav-section-label">Main</div>
-            {renderNavItem('dashboard', 'Dashboard')}
-            {renderNavItem('check_circle', 'Task Board')}
-            {renderNavItem('notifications', 'Notifications', true)}
-            {renderNavItem('group', 'Team Space')}
+            {renderNavItem('dashboard', 'Dashboard', buildAppUrl(3001, '/dashboard'))}
+            {renderNavItem('check_circle', 'Task Board', buildAppUrl(3001, '/'))}
+            {renderNavItem('notifications', 'Notifications', null, true)}
+            {renderNavItem('group', 'Team Space', buildAppUrl(3001, '/team'))}
             <div className="nav-section-label">Insights</div>
-            {renderNavItem('analytics', 'Analytics')}
-            {renderNavItem('settings', 'Settings')}
+            {renderNavItem('analytics', 'Analytics', buildAppUrl(3001, '/analytics'))}
+            {renderNavItem('settings', 'Settings', buildAppUrl(3001, '/settings'))}
           </nav>
           <div className="sidebar-footer">
             <div className="user-card">

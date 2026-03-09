@@ -8,12 +8,14 @@
     "docker:start": "docker-compose up --build -d",
     "docker:stop": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "install:all": "npm run install:api && npm run install:user && npm run install:task && npm run install:user-frontend && npm run install:task-frontend",
+    "install:all": "npm run install:api && npm run install:user && npm run install:task && npm run install:notifications && npm run install:user-frontend && npm run install:task-frontend && npm run install:notifications-frontend",
     "install:api": "cd api-gateway && npm install",
     "install:user": "cd user-management && npm install",
     "install:task": "cd task-management && npm install",
+    "install:notifications": "cd notifications-management && npm install",
     "install:user-frontend": "cd user-management/frontend && npm install",
-    "install:task-frontend": "cd task-management/frontend && npm install"
+    "install:task-frontend": "cd task-management/frontend && npm install",
+    "install:notifications-frontend": "cd notifications-management/frontend && npm install"
   },
   "keywords": [
     "microservices",

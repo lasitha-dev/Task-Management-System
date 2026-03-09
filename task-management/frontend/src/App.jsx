@@ -250,6 +250,25 @@ function PlaceholderPage({ title, icon }) {
   )
 }
 
+function NotificationsRedirect() {
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const targetUrl = token
+      ? `http://127.0.0.1:3002/#token=${encodeURIComponent(token)}`
+      : 'http://127.0.0.1:3002/'
+
+    globalThis.location.replace(targetUrl)
+  }, [])
+
+  return (
+    <main className="flex flex-col items-center justify-center h-screen" style={{ marginLeft: 260 }}>
+      <span className="material-symbols-outlined text-6xl text-blue-400 mb-4 animate-spin">progress_activity</span>
+      <h2 className="text-2xl font-bold text-slate-200">Opening notifications</h2>
+      <p className="text-slate-400 text-sm mt-2">Redirecting to the notifications center.</p>
+    </main>
+  )
+}
+
 // ─── Root App ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [isReady, setIsReady] = useState(false)
@@ -292,7 +311,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<KanbanPage />} />
           <Route path="/dashboard" element={<PlaceholderPage title="Dashboard" icon="grid_view" />} />
-          <Route path="/notifications" element={<PlaceholderPage title="Notifications" icon="notifications" />} />
+          <Route path="/notifications" element={<NotificationsRedirect />} />
           <Route path="/team" element={<PlaceholderPage title="Team Space" icon="diversity_3" />} />
           <Route path="/analytics" element={<PlaceholderPage title="Analytics" icon="insights" />} />
           <Route path="/settings" element={<PlaceholderPage title="Settings" icon="settings" />} />

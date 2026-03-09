@@ -40,6 +40,7 @@ if [ ! -f .env ]; then
 # JWT Configuration (MUST BE THE SAME ACROSS ALL SERVICES)
 JWT_SECRET=4a071af79eaf92a78d3ab48a3f7b0770624e462a5e6c59440ad0630828b1eac9
 JWT_EXPIRE=30d
+INTERNAL_SERVICE_TOKEN=taskmaster_internal_notifications_token_2026
 
 # MongoDB Configuration
 MONGO_ROOT_USERNAME=admin
@@ -116,6 +117,7 @@ echo "📱 Access the applications:"
 echo ""
 echo "   🔐 User Management:      http://localhost:3000"
 echo "   📋 Task Management:       http://localhost:3001"
+echo "   🔔 Notifications:        http://localhost:3002"
 echo "   🚪 API Gateway:           http://localhost:8000"
 echo ""
 echo "📊 View logs:"
