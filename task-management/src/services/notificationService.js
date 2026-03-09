@@ -1,15 +1,20 @@
 const axios = require('axios');
 
 const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://api-gateway:8000';
+const INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || '';
 
 function buildHeaders(authToken) {
     const headers = {
         'Content-Type': 'application/json',
-        'x-notification-source': 'task-management',
+        'x-service-name': 'task-management',
     };
 
     if (authToken) {
         headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    if (INTERNAL_SERVICE_TOKEN) {
+        headers['x-internal-service-token'] = INTERNAL_SERVICE_TOKEN;
     }
 
     return headers;
@@ -17,7 +22,7 @@ function buildHeaders(authToken) {
 
 async function createNotification(notification, authToken = null) {
     const response = await axios.post(
-        `${API_GATEWAY_URL}/api/notifications`,
+        `${API_GATEWAY_URL}/api/notifications/internal`,
         notification,
         {
             timeout: 5000,

@@ -1,5 +1,3 @@
-export const DEV_USER_ID = import.meta.env.VITE_DEV_USER_ID || 'user_001';
-
 export const TYPE_META = {
   task_assigned: { icon: 'assignment_ind', iconClass: 'task', label: 'Task Assigned', group: 'task' },
   task_updated: { icon: 'update', iconClass: 'task', label: 'Task Updated', group: 'task' },

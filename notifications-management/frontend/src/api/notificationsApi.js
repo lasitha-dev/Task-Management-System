@@ -1,11 +1,23 @@
+import { getStoredToken } from '../utils/auth';
+
 const API_BASE = import.meta.env.VITE_API_URL || '/api/notifications';
 
 async function request(path = '', options = {}) {
+  const token = getStoredToken();
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (options.headers) {
+    Object.assign(headers, options.headers);
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
+    headers,
     ...options,
   });
 

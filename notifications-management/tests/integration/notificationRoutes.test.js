@@ -25,6 +25,7 @@ const mockNotifications = [
 ];
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'notifications_test_secret';
+process.env.INTERNAL_SERVICE_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'internal-test-token';
 
 const testToken = jwt.sign(
     { id: 'user_001', name: 'Test User', email: 'user_001@test.com', role: 'user' },
@@ -33,6 +34,10 @@ const testToken = jwt.sign(
 );
 
 const authHeader = `Bearer ${testToken}`;
+const internalHeaders = {
+    'x-service-name': 'task-management',
+    'x-internal-service-token': process.env.INTERNAL_SERVICE_TOKEN,
+};
 
 // Build a standalone Express app with the routes for testing
 function createTestApp() {
@@ -66,6 +71,7 @@ function createTestApp() {
     const NotificationController = require('../../src/controllers/notificationController');
     const {
         protect,
+        protectInternalService,
     } = require('../../src/middleware/auth');
     const {
         validateCreateNotification,
@@ -78,6 +84,7 @@ function createTestApp() {
     const controller = new NotificationController(service);
 
     const router = express.Router();
+    router.post('/internal', protectInternalService, validateCreateNotification, controller.createNotification);
     router.use(protect);
     router.get('/', controller.getNotifications);
     router.get('/unread-count', controller.getUnreadCount);
@@ -85,7 +92,6 @@ function createTestApp() {
     router.get('/preferences/:userId', controller.getPreferences);
     router.put('/preferences/:userId', validateUpdatePreferences, controller.updatePreferences);
     router.get('/:id', validateObjectId, controller.getNotificationById);
-    router.post('/', validateCreateNotification, controller.createNotification);
     router.patch('/:id/read', validateObjectId, controller.markAsRead);
     router.delete('/:id', validateObjectId, controller.deleteNotification);
 
@@ -158,7 +164,7 @@ describe('Notification Routes — Integration Tests', () => {
     // POST /api/notifications
     // -------------------------------------------------------------------------
     describe('POST /api/notifications', () => {
-        it('should return 201 when creating a valid notification', async () => {
+        it('should return 201 when creating a valid notification through the internal route', async () => {
             const newNotif = {
                 type: 'task_assigned',
                 title: 'Test Task',
@@ -173,8 +179,8 @@ describe('Notification Routes — Integration Tests', () => {
             });
 
             const res = await request(app)
-                .post('/api/notifications')
-                .set('Authorization', authHeader)
+                .post('/api/notifications/internal')
+                .set(internalHeaders)
                 .send(newNotif);
 
             expect(res.status).toBe(201);
@@ -183,8 +189,8 @@ describe('Notification Routes — Integration Tests', () => {
 
         it('should return 400 for missing required fields', async () => {
             const res = await request(app)
-                .post('/api/notifications')
-                .set('Authorization', authHeader)
+                .post('/api/notifications/internal')
+                .set(internalHeaders)
                 .send({ type: 'task_assigned' }); // missing title, message, recipientId
 
             expect(res.status).toBe(400);
@@ -195,8 +201,8 @@ describe('Notification Routes — Integration Tests', () => {
 
         it('should return 400 for invalid notification type', async () => {
             const res = await request(app)
-                .post('/api/notifications')
-                .set('Authorization', authHeader)
+                .post('/api/notifications/internal')
+                .set(internalHeaders)
                 .send({
                     type: 'invalid_type',
                     title: 'Test',
@@ -206,6 +212,19 @@ describe('Notification Routes — Integration Tests', () => {
 
             expect(res.status).toBe(400);
             expect(res.body.errors).toBeDefined();
+        });
+
+        it('should reject notification creation without internal service credentials', async () => {
+            const res = await request(app)
+                .post('/api/notifications/internal')
+                .send({
+                    type: 'task_assigned',
+                    title: 'Test',
+                    message: 'Msg',
+                    recipientId: 'user_001',
+                });
+
+            expect(res.status).toBe(403);
         });
     });
 

@@ -144,25 +144,6 @@ paths:
         '403':
           description: recipientId does not match the authenticated user
 
-    post:
-      summary: Create a notification
-      tags: [Notifications]
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateNotificationInput'
-      responses:
-        '201':
-          description: Notification created
-        '400':
-          description: Validation error
-        '401':
-          description: Missing or invalid JWT
-
   /api/notifications/unread-count:
     get:
       summary: Get unread notification count
@@ -321,3 +302,30 @@ paths:
           description: Missing or invalid JWT
         '403':
           description: userId does not match the authenticated user
+
+  /api/notifications/internal:
+    post:
+      summary: Create a notification from another microservice
+      tags: [Notifications]
+      parameters:
+        - name: x-service-name
+          in: header
+          required: true
+          schema: { type: string }
+        - name: x-internal-service-token
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNotificationInput'
+      responses:
+        '201':
+          description: Notification created
+        '400':
+          description: Validation error
+        '403':
+          description: Invalid internal service credentials

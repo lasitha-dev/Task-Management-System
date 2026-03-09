@@ -33,6 +33,8 @@ const notifications = [
 ];
 
 describe('NotificationCenter', () => {
+  const currentUser = { id: 'user_001', name: 'Jane Doe', role: 'developer' };
+
   beforeEach(() => {
     notificationsApi.getNotifications.mockResolvedValue({ data: { notifications } });
     notificationsApi.getPreferences.mockResolvedValue({
@@ -51,7 +53,7 @@ describe('NotificationCenter', () => {
   });
 
   it('loads notifications and filters by type and status', async () => {
-    render(<NotificationCenter />);
+    render(<NotificationCenter currentUser={currentUser} />);
 
     expect(await screen.findByText('Task assigned')).toBeInTheDocument();
     expect(screen.getByText('System alert')).toBeInTheDocument();
@@ -67,7 +69,7 @@ describe('NotificationCenter', () => {
   });
 
   it('marks notifications as read, deletes them, and saves preferences', async () => {
-    render(<NotificationCenter />);
+    render(<NotificationCenter currentUser={currentUser} />);
 
     expect(await screen.findByText('Task assigned')).toBeInTheDocument();
 
@@ -86,16 +88,24 @@ describe('NotificationCenter', () => {
     fireEvent.click(screen.getByText('Save Changes'));
 
     await waitFor(() => {
-      expect(notificationsApi.updatePreferences).toHaveBeenCalled();
+      expect(notificationsApi.updatePreferences).toHaveBeenCalledWith('user_001', expect.any(Object));
     });
   });
 
   it('shows an error state when the API load fails', async () => {
     notificationsApi.getNotifications.mockRejectedValueOnce(new Error('offline'));
 
-    render(<NotificationCenter />);
+    render(<NotificationCenter currentUser={currentUser} />);
 
     expect(await screen.findByText('Connection Error')).toBeInTheDocument();
     expect(screen.getByText(/could not reach the notifications api/i)).toBeInTheDocument();
+  });
+
+  it('shows an auth-required message when there is no current user', async () => {
+    render(<NotificationCenter currentUser={null} />);
+
+    expect(await screen.findByText('Connection Error')).toBeInTheDocument();
+    expect(screen.getByText(/need to sign in through the user-management flow/i)).toBeInTheDocument();
+    expect(notificationsApi.getNotifications).not.toHaveBeenCalled();
   });
 });

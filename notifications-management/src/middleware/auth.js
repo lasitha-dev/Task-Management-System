@@ -31,4 +31,27 @@ function protect(req, res, next) {
     }
 }
 
-module.exports = { protect };
+function protectInternalService(req, res, next) {
+    const configuredToken = process.env.INTERNAL_SERVICE_TOKEN;
+    const providedToken = req.headers['x-internal-service-token'];
+    const serviceName = req.headers['x-service-name'];
+
+    if (!configuredToken) {
+        return res.status(500).json({
+            success: false,
+            message: 'Internal service authentication is not configured.',
+        });
+    }
+
+    if (!serviceName || !providedToken || providedToken !== configuredToken) {
+        return res.status(403).json({
+            success: false,
+            message: 'Invalid internal service credentials.',
+        });
+    }
+
+    req.internalService = { name: serviceName };
+    next();
+}
+
+module.exports = { protect, protectInternalService };

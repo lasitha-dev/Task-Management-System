@@ -1,3 +1,4 @@
+import { getStoredToken } from '../utils/auth';
 import {
   deleteNotification,
   getNotifications,
@@ -7,9 +8,14 @@ import {
   updatePreferences,
 } from './notificationsApi';
 
+vi.mock('../utils/auth', () => ({
+  getStoredToken: vi.fn(),
+}));
+
 describe('notificationsApi', () => {
   beforeEach(() => {
     globalThis.fetch = vi.fn();
+    getStoredToken.mockReturnValue('token-123');
   });
 
   afterEach(() => {
@@ -25,7 +31,12 @@ describe('notificationsApi', () => {
 
     await getNotifications('user_001', 25);
 
-    expect(fetch).toHaveBeenCalledWith('/api/notifications?recipientId=user_001&limit=25', expect.any(Object));
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/notifications?recipientId=user_001&limit=25',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer token-123' }),
+      })
+    );
   });
 
   it('throws the API message for JSON failures', async () => {
@@ -79,7 +90,12 @@ describe('notificationsApi', () => {
     expect(fetch).toHaveBeenNthCalledWith(
       3,
       '/api/notifications/preferences/user_001',
-      expect.objectContaining({ headers: expect.objectContaining({ 'Content-Type': 'application/json' }) })
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer token-123',
+        }),
+      })
     );
   });
 });

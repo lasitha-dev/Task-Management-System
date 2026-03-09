@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, protectInternalService } = require('../middleware/auth');
 
 // --- Dependency Wiring (Dependency Inversion) --------------------------------
 const Notification = require('../models/Notification');
@@ -21,6 +21,9 @@ const {
 
 // --- Notification Routes -----------------------------------------------------
 
+// POST   /api/notifications/internal      — Internal-only notification creation
+router.post('/internal', protectInternalService, validateCreateNotification, controller.createNotification);
+
 router.use(protect);
 
 // GET    /api/notifications              — List all (with filters & pagination)
@@ -40,9 +43,6 @@ router.put('/preferences/:userId', validateUpdatePreferences, controller.updateP
 
 // GET    /api/notifications/:id           — Get single notification
 router.get('/:id', validateObjectId, controller.getNotificationById);
-
-// POST   /api/notifications               — Create a notification
-router.post('/', validateCreateNotification, controller.createNotification);
 
 // PATCH  /api/notifications/:id/read      — Mark single as read
 router.patch('/:id/read', validateObjectId, controller.markAsRead);

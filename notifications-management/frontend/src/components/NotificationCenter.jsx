@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import { useEffect, useMemo, useState } from 'react';
 import {
   deleteNotification,
@@ -7,7 +8,7 @@ import {
   markNotificationRead,
   updatePreferences,
 } from '../api/notificationsApi';
-import { DEV_USER_ID, FILTERS, STATUS_FILTERS, TYPE_META } from '../constants/notificationMeta';
+import { FILTERS, STATUS_FILTERS, TYPE_META } from '../constants/notificationMeta';
 import NotificationCard from './NotificationCard';
 import PreferencesPanel from './PreferencesPanel';
 
@@ -74,7 +75,26 @@ function Toasts({ items }) {
   );
 }
 
-export default function NotificationCenter() {
+Toasts.propTypes = {
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      message: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+};
+
+function getInitials(name = '') {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'NA';
+}
+
+export default function NotificationCenter({ currentUser = null }) {
   const [notifications, setNotifications] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeStatus, setActiveStatus] = useState('all');
@@ -85,6 +105,11 @@ export default function NotificationCenter() {
   const [error, setError] = useState('');
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [toasts, setToasts] = useState([]);
+
+  const currentUserId = currentUser?.id || null;
+  const currentUserName = currentUser?.name || 'Guest User';
+  const currentUserRole = currentUser?.role || 'Authentication required';
+  const currentUserInitials = getInitials(currentUserName);
 
   const unreadCount = useMemo(() => notifications.filter((item) => !item.isRead).length, [notifications]);
   const counts = useMemo(() => buildCounts(notifications), [notifications]);
@@ -110,10 +135,18 @@ export default function NotificationCenter() {
       setLoading(true);
       setError('');
 
+      if (!currentUserId) {
+        setNotifications([]);
+        setPreferences(emptyPreferences);
+        setError('You need to sign in through the user-management flow before opening the notifications center.');
+        setLoading(false);
+        return;
+      }
+
       try {
         const [notificationResponse, preferencesResponse] = await Promise.all([
-          getNotifications(DEV_USER_ID, 50),
-          getPreferences(DEV_USER_ID),
+          getNotifications(currentUserId, 50),
+          getPreferences(currentUserId),
         ]);
 
         if (cancelled) {
@@ -122,7 +155,7 @@ export default function NotificationCenter() {
 
         setNotifications(notificationResponse.data.notifications || []);
         setPreferences(normalizePreferences(preferencesResponse.data));
-      } catch (loadError) {
+      } catch {
         if (!cancelled) {
           setError('Could not reach the notifications API. Make sure the notifications service and gateway are running.');
         }
@@ -138,18 +171,18 @@ export default function NotificationCenter() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => {
     if (!toasts.length) {
       return undefined;
     }
 
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       setToasts((current) => current.slice(1));
     }, 3000);
 
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [toasts]);
 
   function pushToast(message, type = 'success') {
@@ -168,7 +201,11 @@ export default function NotificationCenter() {
 
   async function handleMarkAllRead() {
     try {
-      await markAllNotificationsRead(DEV_USER_ID);
+      if (!currentUserId) {
+        return;
+      }
+
+      await markAllNotificationsRead(currentUserId);
       setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
       pushToast('All notifications marked as read');
     } catch {
@@ -210,12 +247,16 @@ export default function NotificationCenter() {
   async function handleSavePreferences() {
     setSavingPrefs(true);
     try {
+      if (!currentUserId) {
+        throw new Error('Authentication required');
+      }
+
       const payload = {
         emailEnabled: preferences.emailEnabled,
         inAppEnabled: preferences.inAppEnabled,
         preferences: preferences.preferences,
       };
-      const response = await updatePreferences(DEV_USER_ID, payload);
+      const response = await updatePreferences(currentUserId, payload);
       setPreferences(normalizePreferences(response.data));
       pushToast('Preferences saved');
       setPrefsOpen(false);
@@ -224,6 +265,27 @@ export default function NotificationCenter() {
     } finally {
       setSavingPrefs(false);
     }
+  }
+
+  function closeSidebar() {
+    setSidebarOpen(false);
+  }
+
+  function handleOverlayKeyDown(event) {
+    if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      closeSidebar();
+    }
+  }
+
+  function renderNavItem(icon, label, isActive = false) {
+    return (
+      <button type="button" className={`nav-item ${isActive ? 'active' : ''}`}>
+        <span className="material-icons-outlined" aria-hidden="true">{icon}</span>
+        <span>{label}</span>
+        {label === 'Notifications' ? <span className="nav-badge">{unreadCount}</span> : null}
+      </button>
+    );
   }
 
   return (
@@ -239,7 +301,13 @@ export default function NotificationCenter() {
         </div>
       </div>
 
-      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <button
+        type="button"
+        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={closeSidebar}
+        onKeyDown={handleOverlayKeyDown}
+        aria-label="Close menu"
+      />
 
       <div className="app-layout">
         <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -248,45 +316,26 @@ export default function NotificationCenter() {
               <div className="logo-icon">T</div>
               <div>
                 <div className="logo-text">TaskMaster</div>
-                <div className="sidebar-subtitle">Admin Workspace</div>
+                <div className="sidebar-subtitle">Notifications Workspace</div>
               </div>
             </div>
           </div>
           <nav className="sidebar-nav">
             <div className="nav-section-label">Main</div>
-            <a href="#" className="nav-item">
-              <span className="material-icons-outlined">dashboard</span>
-              Dashboard
-            </a>
-            <a href="#" className="nav-item">
-              <span className="material-icons-outlined">check_circle</span>
-              Task Board
-            </a>
-            <a href="#" className="nav-item active">
-              <span className="material-icons-outlined">notifications</span>
-              Notifications
-              <span className="nav-badge">{unreadCount}</span>
-            </a>
-            <a href="#" className="nav-item">
-              <span className="material-icons-outlined">group</span>
-              Team Space
-            </a>
+            {renderNavItem('dashboard', 'Dashboard')}
+            {renderNavItem('check_circle', 'Task Board')}
+            {renderNavItem('notifications', 'Notifications', true)}
+            {renderNavItem('group', 'Team Space')}
             <div className="nav-section-label">Insights</div>
-            <a href="#" className="nav-item">
-              <span className="material-icons-outlined">analytics</span>
-              Analytics
-            </a>
-            <a href="#" className="nav-item">
-              <span className="material-icons-outlined">settings</span>
-              Settings
-            </a>
+            {renderNavItem('analytics', 'Analytics')}
+            {renderNavItem('settings', 'Settings')}
           </nav>
           <div className="sidebar-footer">
             <div className="user-card">
-              <div className="user-avatar">JD</div>
+              <div className="user-avatar">{currentUserInitials}</div>
               <div className="user-info">
-                <div className="user-name">Jane Doe</div>
-                <div className="user-role">Pro Plan</div>
+                <div className="user-name">{currentUserName}</div>
+                <div className="user-role">{currentUserRole}</div>
               </div>
               <span className="material-icons-outlined logout-icon">logout</span>
             </div>
@@ -298,16 +347,17 @@ export default function NotificationCenter() {
             <div className="page-header-top">
               <h1 className="page-title">
                 Notifications Center
+                {' '}
                 <span className="unread-badge">{unreadCount}</span>
               </h1>
               <div className="header-actions">
                 <button className="btn btn-ghost" onClick={() => setPrefsOpen(true)}>
-                  <span className="material-icons-outlined">tune</span>
-                  Preferences
+                  <span className="material-icons-outlined" aria-hidden="true">tune</span>
+                  <span>Preferences</span>
                 </button>
                 <button className="btn btn-primary" onClick={handleMarkAllRead}>
-                  <span className="material-icons-outlined">done_all</span>
-                  Mark All Read
+                  <span className="material-icons-outlined" aria-hidden="true">done_all</span>
+                  <span>Mark All Read</span>
                 </button>
               </div>
             </div>
@@ -390,3 +440,12 @@ export default function NotificationCenter() {
     </>
   );
 }
+
+NotificationCenter.propTypes = {
+  currentUser: PropTypes.shape({
+    id: PropTypes.string,
+    name: PropTypes.string,
+    email: PropTypes.string,
+    role: PropTypes.string,
+  }),
+};
