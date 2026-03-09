@@ -116,8 +116,8 @@ services:
   # ============================================
   task-frontend:
     build:
-      context: ./task-management/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./task-management/frontend/Dockerfile
       args:
         - VITE_API_URL=http://127.0.0.1:8000
     container_name: task-frontend
@@ -134,8 +134,8 @@ services:
   # ============================================
   notifications-frontend:
     build:
-      context: ./notifications-management/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./notifications-management/frontend/Dockerfile
       args:
         - VITE_API_URL=http://127.0.0.1:8000/api/notifications
     container_name: notifications-frontend
@@ -153,8 +153,8 @@ services:
   # ============================================
   user-frontend:
     build:
-      context: ./user-management/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./user-management/frontend/Dockerfile
       args:
         - VITE_API_URL=http://127.0.0.1:8000/api/users
         - VITE_GOOGLE_CLIENT_ID=995578316094-qdi6aqve8ksss8coga91353b49ea7veh.apps.googleusercontent.com

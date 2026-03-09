@@ -4,6 +4,14 @@ function joinClassNames(...values) {
   return values.filter(Boolean).join(' ');
 }
 
+function normalizeTabItem(item) {
+  if (typeof item === 'string') {
+    return { key: item, label: item };
+  }
+
+  return item;
+}
+
 export function AppSidebarShell({ children, footer, className = '' }) {
   return (
     <aside className={joinClassNames('tm-sidebar-shell', className)}>
@@ -70,6 +78,79 @@ export function AppPageHeader({ title, subtitle, actions, badge }) {
         {subtitle ? <p className="tm-page-subtitle">{subtitle}</p> : null}
       </div>
       {actions ? <div className="tm-page-header-actions">{actions}</div> : null}
+    </div>
+  );
+}
+
+export function AppControlBar({ children, className = '' }) {
+  return <div className={joinClassNames('tm-control-bar', className)}>{children}</div>;
+}
+
+export function AppSearchField({
+  value,
+  onChange,
+  placeholder = 'Search',
+  ariaLabel = 'Search',
+  className = '',
+  inputClassName = '',
+}) {
+  return (
+    <div className={joinClassNames('tm-search-field', className)}>
+      <span className="material-symbols-outlined tm-search-icon" aria-hidden="true">search</span>
+      <input
+        type="text"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        aria-label={ariaLabel}
+        className={joinClassNames('tm-search-input', inputClassName)}
+      />
+    </div>
+  );
+}
+
+export function AppSegmentedTabs({
+  items,
+  value,
+  onChange,
+  className = '',
+  size = 'default',
+  fullWidth = false,
+}) {
+  return (
+    <div
+      className={joinClassNames(
+        'tm-segmented-tabs',
+        size === 'compact' ? 'tm-segmented-tabs-compact' : '',
+        fullWidth ? 'tm-segmented-tabs-full' : '',
+        className
+      )}
+    >
+      {items.map((item) => {
+        const normalizedItem = normalizeTabItem(item);
+        const isActive = normalizedItem.key === value;
+        const hasBadge = normalizedItem.badge === 0 || Boolean(normalizedItem.badge);
+
+        return (
+          <button
+            key={normalizedItem.key}
+            type="button"
+            onClick={() => onChange(normalizedItem.key)}
+            className={joinClassNames('tm-segmented-tab', isActive ? 'tm-segmented-tab-active' : '')}
+            aria-pressed={isActive}
+          >
+            {normalizedItem.icon ? (
+              <span className="material-symbols-outlined tm-segmented-tab-icon" aria-hidden="true">
+                {normalizedItem.icon}
+              </span>
+            ) : null}
+            <span>{normalizedItem.label}</span>
+            {hasBadge ? (
+              <span className="tm-segmented-tab-badge">{normalizedItem.badge}</span>
+            ) : null}
+          </button>
+        );
+      })}
     </div>
   );
 }

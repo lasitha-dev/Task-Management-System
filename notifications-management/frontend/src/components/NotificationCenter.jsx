@@ -2,11 +2,14 @@ import PropTypes from 'prop-types';
 import { useEffect, useMemo, useState } from 'react';
 import { buildAppUrl as buildCrossAppUrl } from '@taskmaster/shared-ui/appLinks';
 import {
+  AppControlBar,
   AppPageHeader,
+  AppSearchField,
+  AppSectionCard,
+  AppSegmentedTabs,
   AppSidebarBody,
   AppSidebarBrand,
   AppSidebarProfile,
-  AppSidebarSectionLabel,
   AppSidebarShell,
 } from '@taskmaster/shared-ui/components';
 import {
@@ -107,6 +110,7 @@ export default function NotificationCenter({ currentUser = null }) {
   const [notifications, setNotifications] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [activeStatus, setActiveStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [preferences, setPreferences] = useState(emptyPreferences);
@@ -127,15 +131,30 @@ export default function NotificationCenter({ currentUser = null }) {
     () =>
       notifications.filter((notification) => {
         const meta = TYPE_META[notification.type];
+        const searchValue = searchQuery.trim().toLowerCase();
         const matchesFilter = activeFilter === 'all' || (meta && meta.group === activeFilter);
         const matchesStatus =
           activeStatus === 'all' ||
           (activeStatus === 'unread' && !notification.isRead) ||
           (activeStatus === 'read' && notification.isRead);
-        return matchesFilter && matchesStatus;
+
+        if (!searchValue) {
+          return matchesFilter && matchesStatus;
+        }
+
+        const matchesSearch = [notification.title, notification.message, meta?.label, notification.priority]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(searchValue));
+
+        return matchesFilter && matchesStatus && matchesSearch;
       }),
-    [activeFilter, activeStatus, notifications]
+    [activeFilter, activeStatus, notifications, searchQuery]
   );
+
+  const filterTabs = FILTERS.map((filter) => ({
+    ...filter,
+    badge: counts[filter.key] ?? 0,
+  }));
 
   useEffect(() => {
     let cancelled = false;
@@ -288,19 +307,20 @@ export default function NotificationCenter({ currentUser = null }) {
   }
 
   function renderNavItem(icon, label, href, isActive = false) {
+    const itemClass = `tm-sidebar-nav-item${isActive ? ' is-active' : ''}`;
+
     if (isActive) {
       return (
-        <div className="nav-item active" aria-current="page">
-          <span className="material-icons-outlined" aria-hidden="true">{icon}</span>
+        <div className={itemClass} aria-current="page">
+          <span className="material-symbols-outlined tm-sidebar-nav-item-icon" aria-hidden="true">{icon}</span>
           <span>{label}</span>
-          {label === 'Notifications' ? <span className="nav-badge">{unreadCount}</span> : null}
         </div>
       );
     }
 
     return (
-      <a href={href} className="nav-item" onClick={closeSidebar}>
-        <span className="material-icons-outlined" aria-hidden="true">{icon}</span>
+      <a href={href} className={itemClass} onClick={closeSidebar}>
+        <span className="material-symbols-outlined tm-sidebar-nav-item-icon" aria-hidden="true">{icon}</span>
         <span>{label}</span>
       </a>
     );
@@ -329,30 +349,28 @@ export default function NotificationCenter({ currentUser = null }) {
 
       <div className="app-layout">
         <AppSidebarShell className={`sidebar ${sidebarOpen ? 'open' : ''}`} footer={
-          <a className="user-card" href={buildCrossAppUrl('user', '/login', { includeToken: false, query: { logout: 'true' } })}>
-            <span className="material-icons-outlined logout-icon">logout</span>
-            <span>Sign Out</span>
+          <a
+            className="tm-sidebar-action"
+            href={buildCrossAppUrl('user', '/login', { includeToken: false, query: { logout: 'true' } })}
+          >
+            <span className="material-symbols-outlined tm-sidebar-action-icon">logout</span>
+            <span>Logout</span>
           </a>
         }>
-          <AppSidebarBrand subtitle="Notifications Center" />
-          <AppSidebarBody className="sidebar-nav">
+          <AppSidebarBrand />
+          <AppSidebarBody>
             <AppSidebarProfile
               name={currentUserName}
               subtitle={currentUserRole}
-              avatarText={currentUserInitials}
+              avatarName={currentUserName}
             />
-            <AppSidebarSectionLabel>Main</AppSidebarSectionLabel>
-            <div>
-              {renderNavItem('dashboard', 'Dashboard', buildCrossAppUrl('task', '/dashboard'))}
-              {renderNavItem('check_circle', 'Task Board', buildCrossAppUrl('task', '/'))}
+            <nav className="tm-sidebar-nav-list">
+              {renderNavItem('grid_view', 'Dashboard', buildCrossAppUrl('task', '/dashboard'))}
+              {renderNavItem('layers', 'Task Board', buildCrossAppUrl('task', '/'))}
               {renderNavItem('notifications', 'Notifications', null, true)}
-              {renderNavItem('group', 'Team Space', buildCrossAppUrl('task', '/team'))}
-            </div>
-            <AppSidebarSectionLabel>Insights</AppSidebarSectionLabel>
-            <div>
-              {renderNavItem('analytics', 'Analytics', buildCrossAppUrl('task', '/analytics'))}
-              {renderNavItem('settings', 'Settings', buildCrossAppUrl('user', '/admin', { includeToken: false }))}
-            </div>
+              {renderNavItem('diversity_3', 'Team Space', buildCrossAppUrl('task', '/team'))}
+              {renderNavItem('insights', 'Analytics', buildCrossAppUrl('task', '/analytics'))}
+            </nav>
           </AppSidebarBody>
         </AppSidebarShell>
 
@@ -375,33 +393,31 @@ export default function NotificationCenter({ currentUser = null }) {
             )}
           />
 
-          <div className="filter-bar">
-            {FILTERS.map((filter) => (
-              <button
-                key={filter.key}
-                className={`filter-tab ${activeFilter === filter.key ? 'active' : ''}`}
-                onClick={() => setActiveFilter(filter.key)}
-              >
-                {filter.icon ? (
-                  <span className="material-icons-outlined filter-tab-icon">{filter.icon}</span>
-                ) : null}
-                {filter.label}
-                <span className="tab-count">({counts[filter.key] ?? 0})</span>
-              </button>
-            ))}
-          </div>
+          <AppSectionCard className="p-4">
+            <AppControlBar className="mb-4">
+              <AppSearchField
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search notifications, priorities, or categories..."
+                ariaLabel="Search notifications"
+              />
+              <AppSegmentedTabs
+                items={STATUS_FILTERS}
+                value={activeStatus}
+                onChange={setActiveStatus}
+                size="compact"
+                fullWidth
+                className="md:w-auto"
+              />
+            </AppControlBar>
 
-          <div className="status-tabs">
-            {STATUS_FILTERS.map((status) => (
-              <button
-                key={status.key}
-                className={`status-tab ${activeStatus === status.key ? 'active' : ''}`}
-                onClick={() => setActiveStatus(status.key)}
-              >
-                {status.label}
-              </button>
-            ))}
-          </div>
+            <AppSegmentedTabs
+              items={filterTabs}
+              value={activeFilter}
+              onChange={setActiveFilter}
+              fullWidth
+            />
+          </AppSectionCard>
 
           <div className="notification-list">
             {loading ? <LoadingSkeleton /> : null}

@@ -6,9 +6,7 @@ import { buildAppUrl } from '@taskmaster/shared-ui/appLinks'
 import {
   AppSidebarBody,
   AppSidebarBrand,
-  AppSidebarDivider,
   AppSidebarProfile,
-  AppSidebarSectionLabel,
   AppSidebarShell,
 } from '@taskmaster/shared-ui/components'
 
@@ -69,33 +67,6 @@ export default function Sidebar({ user }) {
             </NavLink>
           ))}
         </nav>
-
-        <AppSidebarDivider />
-        <AppSidebarSectionLabel>Workspace</AppSidebarSectionLabel>
-
-        <div className="flex flex-col gap-1">
-          <a
-            href={buildAppUrl('notifications')}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors text-sm font-medium"
-          >
-            <span className="material-symbols-outlined text-[20px]">notifications</span>
-            <span>Notifications Center</span>
-          </a>
-          <a
-            href={buildAppUrl('user', '/admin', { includeToken: false })}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors text-sm font-medium"
-          >
-            <span className="material-symbols-outlined text-[20px]">group</span>
-            <span>User Monitoring</span>
-          </a>
-          <a
-            href={buildAppUrl('user', '/profile', { includeToken: false })}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors text-sm font-medium"
-          >
-            <span className="material-symbols-outlined text-[20px]">person</span>
-            <span>Profile</span>
-          </a>
-        </div>
       </AppSidebarBody>
     </AppSidebarShell>
   )

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { redirectToApp } from '@taskmaster/shared-ui/appLinks';
 import { useAuth } from '../context/AuthContext';
 import useGoogleAuth from '../hooks/useGoogleAuth';
@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { login, googleLogin, logout } = useAuth();
+  const navigate = useNavigate();
   const { triggerGoogleLogin, isGoogleAvailable } = useGoogleAuth();
 
   // Clear localStorage if coming from logout
@@ -37,7 +38,7 @@ export default function LoginPage() {
       // Check user role and redirect accordingly
       if (user.role === 'Admin') {
         console.log('[Login] Admin user detected, redirecting to admin dashboard');
-        redirectToApp('user', '/admin', { includeToken: false });
+        navigate('/admin');
       } else {
         console.log('[Login] Regular user detected, redirecting to task dashboard');
         redirectToApp('task');
@@ -62,7 +63,7 @@ export default function LoginPage() {
       // Check user role and redirect accordingly
       if (user.role === 'Admin') {
         console.log('[Login] Admin user detected, redirecting to admin dashboard');
-        redirectToApp('user', '/admin', { includeToken: false });
+        navigate('/admin');
       } else {
         console.log('[Login] Regular user detected, redirecting to task dashboard');
         redirectToApp('task');

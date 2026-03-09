@@ -1,12 +1,13 @@
 /* eslint-disable react/prop-types */
 
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { buildAppUrl } from '@taskmaster/shared-ui/appLinks'
 import { AppEmptyState, AppPageHeader, AppSectionCard, AppStatCard } from '@taskmaster/shared-ui/components'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import Sidebar from './components/Sidebar'
+import NotificationsWorkspace from './components/NotificationsWorkspace'
 import Header from './components/Header'
 import KanbanBoard from './components/KanbanBoard'
 import CreateTaskModal from './components/CreateTaskModal'
@@ -199,10 +200,10 @@ function DashboardPage() {
           title="Workspace Dashboard"
           subtitle="See the health of your boards, tasks, and team activity at a glance."
           actions={
-            <a href={buildAppUrl('notifications')} className="tm-button-secondary">
+            <Link to="/notifications" className="tm-button-secondary">
               <span className="material-symbols-outlined text-[18px]">notifications</span>
               <span>Open Notifications</span>
-            </a>
+            </Link>
           }
         />
       }
@@ -690,20 +691,6 @@ function KanbanPage() {
   )
 }
 
-function NotificationsRedirect() {
-  useEffect(() => {
-    globalThis.location.replace(buildAppUrl('notifications'))
-  }, [])
-
-  return (
-    <main className="flex flex-col items-center justify-center h-screen bg-[#111621]" style={{ marginLeft: 256 }}>
-      <span className="material-symbols-outlined text-6xl text-blue-400 mb-4 animate-spin">progress_activity</span>
-      <h2 className="text-2xl font-bold text-white">Opening notifications</h2>
-      <p className="text-slate-400 text-sm mt-2">Redirecting to the notifications center.</p>
-    </main>
-  )
-}
-
 // ─── Root App ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [isReady, setIsReady] = useState(false)
@@ -714,8 +701,8 @@ export default function App() {
     if (hash?.startsWith('#token=')) {
       const token = hash.substring(7); // Remove '#token='
       localStorage.setItem('token', token);
-      // Clean up URL
-      globalThis.history.replaceState(null, '', '/');
+      // Clean up URL — preserve the original pathname so React Router matches correctly
+      globalThis.history.replaceState(null, '', globalThis.location.pathname + globalThis.location.search);
     }
     // Mark as ready after token processing
     setIsReady(true)
@@ -746,7 +733,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<KanbanPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/notifications" element={<NotificationsRedirect />} />
+          <Route path="/notifications" element={<NotificationsWorkspace currentUser={currentUser} />} />
           <Route path="/team" element={<TeamSpacePage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/settings" element={<SettingsRedirect />} />

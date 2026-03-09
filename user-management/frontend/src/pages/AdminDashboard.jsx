@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildAppUrl } from '@taskmaster/shared-ui/appLinks';
-import { AppPageHeader, AppStatCard } from '@taskmaster/shared-ui/components';
+import {
+  AppControlBar,
+  AppPageHeader,
+  AppSearchField,
+  AppSectionCard,
+  AppSegmentedTabs,
+  AppSidebarBody,
+  AppSidebarBrand,
+  AppSidebarProfile,
+  AppSidebarSectionLabel,
+  AppSidebarShell,
+  AppStatCard,
+} from '@taskmaster/shared-ui/components';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axiosConfig';
 
@@ -36,11 +48,7 @@ function getInitials(name) {
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const dashboardUrl = buildAppUrl('user', '/admin', { includeToken: false });
-  const taskBoardUrl = buildAppUrl('task');
-  const notificationsUrl = buildAppUrl('notifications');
-  const analyticsUrl = buildAppUrl('task', '/analytics');
-  const profileUrl = buildAppUrl('user', '/profile', { includeToken: false });
+  const settingsUrl = buildAppUrl('user', '/profile', { includeToken: false });
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,13 +138,28 @@ export default function AdminDashboard() {
   const regularCount = totalUsers - adminCount;
 
   const filters = ['All', 'Active', 'Inactive', 'Admin'];
+  const filteredUsers = users
+    .filter((u) => {
+      if (activeFilter === 'Admin') return u.role === 'Admin';
+      if (activeFilter === 'Active') return true;
+      if (activeFilter === 'Inactive') return false;
+      return true;
+    })
+    .filter((u) => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        u.name?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q)
+      );
+    });
 
   function renderRoleBadge(role) {
     if (role === 'Admin') {
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 px-2.5 py-0.5 text-xs font-medium text-purple-400 border border-purple-500/20">
           <span aria-hidden="true" className="size-1.5 rounded-full bg-purple-500" />
-          Admin
+          <span>Admin</span>
         </span>
       );
     }
@@ -145,7 +168,7 @@ export default function AdminDashboard() {
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-400 border border-blue-500/20">
           <span aria-hidden="true" className="size-1.5 rounded-full bg-blue-500" />
-          Manager
+          <span>Manager</span>
         </span>
       );
     }
@@ -153,7 +176,7 @@ export default function AdminDashboard() {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-400 border border-green-500/20">
         <span aria-hidden="true" className="size-1.5 rounded-full bg-green-500" />
-        User
+        <span>User</span>
       </span>
     );
   }
@@ -208,7 +231,7 @@ export default function AdminDashboard() {
         <td className="px-6 py-4 whitespace-nowrap">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400 border border-emerald-500/20">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-emerald-500" />
-            Active
+            <span>Active</span>
           </span>
         </td>
 
@@ -225,88 +248,12 @@ export default function AdminDashboard() {
     ));
   }
 
-  const filteredUsers = users
-    .filter((u) => {
-      if (activeFilter === 'Admin') return u.role === 'Admin';
-      if (activeFilter === 'Active') return true;
-      if (activeFilter === 'Inactive') return false;
-      return true;
-    })
-    .filter((u) => {
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        u.name?.toLowerCase().includes(q) ||
-        u.email?.toLowerCase().includes(q)
-      );
-    });
-
   return (
-    <div className="flex h-screen overflow-hidden bg-[#111621]">
+    <div className="min-h-screen bg-[#111621]">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#161b26] border-r border-[#2d3544] flex-col hidden lg:flex">
-        {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-[#2d3544]">
-          <div className="flex items-center gap-3">
-            <div className="size-8 rounded bg-[#144bb8] flex items-center justify-center text-white">
-              <span className="material-symbols-outlined text-xl">task_alt</span>
-            </div>
-            <h1 className="text-white text-lg font-bold tracking-tight">TaskMaster</h1>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-6">
-          {/* User Avatar Section */}
-          <div className="flex items-center gap-3 px-2">
-            <div className="size-10 rounded-full bg-[#144bb8] flex items-center justify-center text-white font-bold text-sm border border-[#2d3544]">
-              {user?.name?.charAt(0) || 'A'}
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-white">{user?.name || 'Admin User'}</span>
-              <span className="text-xs text-slate-400">{user?.email || 'admin@taskmaster.com'}</span>
-            </div>
-          </div>
-
-          {/* Main Nav */}
-          <nav className="flex flex-col gap-1">
-            <a href={dashboardUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
-              <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">dashboard</span>
-              <span className="text-sm font-medium">Dashboard</span>
-            </a>
-            <a href={taskBoardUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
-              <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">view_kanban</span>
-              <span className="text-sm font-medium">Kanban Board</span>
-            </a>
-            <a href={notificationsUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
-              <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">notifications</span>
-              <span className="text-sm font-medium">Notifications</span>
-              <span className="ml-auto bg-[#144bb8] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
-            </a>
-            <a href={analyticsUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
-              <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">pie_chart</span>
-              <span className="text-sm font-medium">Analytics</span>
-            </a>
-          </nav>
-
-          {/* Administration Section */}
-          <div className="h-px bg-[#2d3544] my-1"></div>
-          <nav className="flex flex-col gap-1">
-            <div className="px-3 py-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Administration</span>
-            </div>
-              <a href={dashboardUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#144bb8]/10 text-[#144bb8] transition-colors">
-                <span className="material-symbols-outlined">group</span>
-                <span className="text-sm font-medium">User Monitoring</span>
-              </a>
-              <a href={profileUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
-                <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">settings</span>
-                <span className="text-sm font-medium">Settings</span>
-              </a>
-            </nav>
-        </div>
-
-        {/* Logout */}
-        <div className="p-4 border-t border-[#2d3544]">
+      <AppSidebarShell
+        className="hidden lg:flex fixed top-0 left-0 bottom-0 z-50"
+        footer={
           <button
             onClick={handleLogout}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1c212c] border border-[#2d3544] hover:border-slate-500 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-all"
@@ -314,11 +261,38 @@ export default function AdminDashboard() {
             <span className="material-symbols-outlined text-lg">logout</span>
             <span>Logout</span>
           </button>
-        </div>
-      </aside>
+        }
+      >
+        <AppSidebarBrand />
+        <AppSidebarBody>
+          <AppSidebarProfile
+            name={user?.name || 'Admin User'}
+            subtitle={user?.role || 'Admin'}
+            avatarName={user?.name || 'Admin'}
+          />
+
+          <AppSidebarSectionLabel>Administration</AppSidebarSectionLabel>
+          <nav className="flex flex-col gap-1">
+            <a
+              href="#"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#144bb8]/10 text-[#144bb8] transition-colors text-sm font-medium"
+            >
+              <span className="material-symbols-outlined text-[20px]">group</span>
+              <span>User Monitoring</span>
+            </a>
+            <a
+              href={settingsUrl}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors text-sm font-medium"
+            >
+              <span className="material-symbols-outlined text-[20px]">settings</span>
+              <span>Settings</span>
+            </a>
+          </nav>
+        </AppSidebarBody>
+      </AppSidebarShell>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="lg:ml-[256px] flex flex-col min-h-screen">
         {/* Mobile Header */}
         <header className="h-16 flex lg:hidden items-center justify-between px-4 bg-[#161b26] border-b border-[#2d3544]">
           <div className="flex items-center gap-3">
@@ -330,7 +304,7 @@ export default function AdminDashboard() {
           <div className="size-8 rounded-full bg-slate-700"></div>
         </header>
 
-        <div className="flex-1 overflow-y-auto bg-[#111621] p-4 md:p-8">
+        <div className="flex-1 bg-[#111621] p-4 md:p-8">
           <div className="max-w-7xl mx-auto flex flex-col gap-8">
           {/* Page Header */}
           <AppPageHeader
@@ -360,42 +334,26 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Search Bar + Filter Tabs */}
-          <div className="bg-[#1c212c] p-4 rounded-t-xl border border-[#2d3544] border-b-0 flex flex-col md:flex-row gap-4 justify-between items-center">
-            {/* Search */}
-            <div className="relative w-full md:w-96">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="material-symbols-outlined text-slate-400 text-xl">search</span>
-              </div>
-              <input
-                type="text"
-                placeholder="Search by name, email, or ID..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2.5 bg-[#161b26] border border-[#2d3544] rounded-lg leading-5 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#144bb8] focus:border-[#144bb8] sm:text-sm transition-shadow"
-              />
+          <AppSectionCard className="overflow-hidden">
+            <div className="border-b border-[#2d3544] p-4">
+              <AppControlBar>
+                <AppSearchField
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, email, or ID..."
+                  ariaLabel="Search users"
+                />
+                <AppSegmentedTabs
+                  items={filters}
+                  value={activeFilter}
+                  onChange={setActiveFilter}
+                  fullWidth
+                  className="md:w-auto"
+                />
+              </AppControlBar>
             </div>
-
-            {/* Filter Tabs */}
-            <div className="flex p-1 bg-[#161b26] rounded-lg w-full md:w-auto">
-              {filters.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setActiveFilter(f)}
-                  className={`flex-1 md:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                    activeFilter === f
-                      ? 'bg-[#144bb8] text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Table */}
-          <div className="bg-[#1c212c] rounded-b-xl border border-[#2d3544] overflow-hidden shadow-sm -mt-8">
             <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -455,7 +413,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
-          </div>
+          </AppSectionCard>
           </div>
         </div>
       </div>
