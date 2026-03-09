@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { buildAppUrl } from '@taskmaster/shared-ui/appLinks';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axiosConfig';
 
@@ -34,12 +35,11 @@ function getInitials(name) {
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const notificationsUrl = (() => {
-    const token = globalThis.localStorage.getItem('token');
-    return token
-      ? `http://127.0.0.1:3002/#token=${encodeURIComponent(token)}`
-      : 'http://127.0.0.1:3002/';
-  })();
+  const dashboardUrl = buildAppUrl('user', '/admin', { includeToken: false });
+  const taskBoardUrl = buildAppUrl('task');
+  const notificationsUrl = buildAppUrl('notifications');
+  const analyticsUrl = buildAppUrl('task', '/analytics');
+  const profileUrl = buildAppUrl('user', '/profile', { includeToken: false });
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -173,11 +173,11 @@ export default function AdminDashboard() {
 
           {/* Main Nav */}
           <nav className="flex flex-col gap-1">
-            <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
+            <a href={dashboardUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
               <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">dashboard</span>
               <span className="text-sm font-medium">Dashboard</span>
             </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
+            <a href={taskBoardUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
               <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">view_kanban</span>
               <span className="text-sm font-medium">Kanban Board</span>
             </a>
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
               <span className="text-sm font-medium">Notifications</span>
               <span className="ml-auto bg-[#144bb8] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
             </a>
-            <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
+            <a href={analyticsUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
               <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">pie_chart</span>
               <span className="text-sm font-medium">Analytics</span>
             </a>
@@ -198,11 +198,11 @@ export default function AdminDashboard() {
             <div className="px-3 py-2">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Administration</span>
             </div>
-              <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#144bb8]/10 text-[#144bb8] transition-colors">
+              <a href={dashboardUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#144bb8]/10 text-[#144bb8] transition-colors">
                 <span className="material-symbols-outlined">group</span>
                 <span className="text-sm font-medium">User Monitoring</span>
               </a>
-              <a href="#" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
+              <a href={profileUrl} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors group">
                 <span className="material-symbols-outlined group-hover:text-[#144bb8] transition-colors">settings</span>
                 <span className="text-sm font-medium">Settings</span>
               </a>

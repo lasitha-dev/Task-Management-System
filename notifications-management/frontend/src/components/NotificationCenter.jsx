@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useEffect, useMemo, useState } from 'react';
+import { buildAppUrl as buildCrossAppUrl } from '@taskmaster/shared-ui/appLinks';
 import {
   deleteNotification,
   getNotifications,
@@ -92,18 +93,6 @@ function getInitials(name = '') {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() || '')
     .join('') || 'NA';
-}
-
-function buildAppUrl(port, path = '/') {
-  const token = globalThis.localStorage.getItem('token');
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const baseUrl = `http://127.0.0.1:${port}${normalizedPath}`;
-
-  if (!token) {
-    return baseUrl;
-  }
-
-  return `${baseUrl}#token=${encodeURIComponent(token)}`;
 }
 
 export default function NotificationCenter({ currentUser = null }) {
@@ -334,32 +323,34 @@ export default function NotificationCenter({ currentUser = null }) {
         <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-header">
             <div className="sidebar-logo">
-              <div className="logo-icon">T</div>
+              <div className="logo-icon">
+                <span className="material-icons-outlined">task_alt</span>
+              </div>
               <div>
                 <div className="logo-text">TaskMaster</div>
-                <div className="sidebar-subtitle">Notifications Workspace</div>
+                <div className="sidebar-subtitle">Notifications Center</div>
               </div>
             </div>
           </div>
           <nav className="sidebar-nav">
             <div className="nav-section-label">Main</div>
-            {renderNavItem('dashboard', 'Dashboard', buildAppUrl(3001, '/dashboard'))}
-            {renderNavItem('check_circle', 'Task Board', buildAppUrl(3001, '/'))}
+            {renderNavItem('dashboard', 'Dashboard', buildCrossAppUrl('task', '/dashboard'))}
+            {renderNavItem('check_circle', 'Task Board', buildCrossAppUrl('task', '/'))}
             {renderNavItem('notifications', 'Notifications', null, true)}
-            {renderNavItem('group', 'Team Space', buildAppUrl(3001, '/team'))}
+            {renderNavItem('group', 'Team Space', buildCrossAppUrl('task', '/team'))}
             <div className="nav-section-label">Insights</div>
-            {renderNavItem('analytics', 'Analytics', buildAppUrl(3001, '/analytics'))}
-            {renderNavItem('settings', 'Settings', buildAppUrl(3001, '/settings'))}
+            {renderNavItem('analytics', 'Analytics', buildCrossAppUrl('task', '/analytics'))}
+            {renderNavItem('settings', 'Settings', buildCrossAppUrl('user', '/admin', { includeToken: false }))}
           </nav>
           <div className="sidebar-footer">
-            <div className="user-card">
+            <a className="user-card" href={buildCrossAppUrl('user', '/login', { includeToken: false, query: { logout: 'true' } })}>
               <div className="user-avatar">{currentUserInitials}</div>
               <div className="user-info">
                 <div className="user-name">{currentUserName}</div>
                 <div className="user-role">{currentUserRole}</div>
               </div>
               <span className="material-icons-outlined logout-icon">logout</span>
-            </div>
+            </a>
           </div>
         </aside>
 

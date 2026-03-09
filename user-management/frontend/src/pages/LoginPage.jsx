@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { redirectToApp } from '@taskmaster/shared-ui/appLinks';
 import { useAuth } from '../context/AuthContext';
 import useGoogleAuth from '../hooks/useGoogleAuth';
 
@@ -12,16 +13,15 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { login, googleLogin, logout } = useAuth();
   const { triggerGoogleLogin, isGoogleAvailable } = useGoogleAuth();
-  const navigate = useNavigate();
 
   // Clear localStorage if coming from logout
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     if (params.get('logout') === 'true') {
       console.log('[Login] Logout flag detected, clearing localStorage');
       logout();
       // Clean up URL
-      window.history.replaceState({}, '', '/login');
+      globalThis.history.replaceState({}, '', '/login');
     }
   }, [logout]);
 
@@ -33,15 +33,14 @@ export default function LoginPage() {
       console.log('[Login] Attempting login for:', email);
       const user = await login(email, password);
       console.log('[Login] Login successful:', user);
-      const token = localStorage.getItem('token');
       
       // Check user role and redirect accordingly
       if (user.role === 'Admin') {
         console.log('[Login] Admin user detected, redirecting to admin dashboard');
-        window.location.href = 'http://127.0.0.1:3000/admin';
+        redirectToApp('user', '/admin', { includeToken: false });
       } else {
         console.log('[Login] Regular user detected, redirecting to task dashboard');
-        window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+        redirectToApp('task');
       }
     } catch (err) {
       console.error('[Login] Login failed:', err);
@@ -59,15 +58,14 @@ export default function LoginPage() {
       const idToken = await triggerGoogleLogin();
       const user = await googleLogin(idToken);
       console.log('[Login] Google login successful:', user);
-      const token = localStorage.getItem('token');
       
       // Check user role and redirect accordingly
       if (user.role === 'Admin') {
         console.log('[Login] Admin user detected, redirecting to admin dashboard');
-        window.location.href = 'http://127.0.0.1:3000/admin';
+        redirectToApp('user', '/admin', { includeToken: false });
       } else {
         console.log('[Login] Regular user detected, redirecting to task dashboard');
-        window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+        redirectToApp('task');
       }
     } catch (err) {
       console.error('[Login] Google login failed:', err);

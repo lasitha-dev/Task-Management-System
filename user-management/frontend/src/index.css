@@ -1,3 +1,5 @@
+@import "@taskmaster/shared-ui/theme.css";
+
 @import "tailwindcss";
 
 @layer base {

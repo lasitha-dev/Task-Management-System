@@ -1,0 +1,11 @@
+{
+  "name": "@taskmaster/shared-ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./appLinks.js",
+    "./appLinks": "./appLinks.js",
+    "./theme.css": "./theme.css"
+  }
+}

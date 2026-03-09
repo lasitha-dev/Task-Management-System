@@ -1,23 +1,25 @@
+@import "@taskmaster/shared-ui/theme.css";
+
 :root {
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #111827;
-  --bg-card: #1a2236;
-  --bg-card-hover: #1f2a42;
-  --bg-sidebar: #0f1525;
-  --bg-input: #1a2236;
-  --text-primary: #f0f4fc;
-  --text-secondary: #8b95b0;
-  --text-muted: #5a6480;
-  --accent-blue: #3b82f6;
-  --accent-blue-hover: #2563eb;
-  --accent-blue-glow: rgba(59, 130, 246, 0.15);
+  --bg-primary: var(--tm-bg-app);
+  --bg-secondary: var(--tm-bg-input);
+  --bg-card: var(--tm-bg-surface);
+  --bg-card-hover: var(--tm-bg-surface-alt);
+  --bg-sidebar: var(--tm-bg-sidebar);
+  --bg-input: var(--tm-bg-input);
+  --text-primary: var(--tm-text-primary);
+  --text-secondary: var(--tm-text-secondary);
+  --text-muted: var(--tm-text-muted);
+  --accent-blue: var(--tm-accent);
+  --accent-blue-hover: var(--tm-accent-hover);
+  --accent-blue-glow: var(--tm-accent-soft);
   --accent-green: #10b981;
   --accent-red: #ef4444;
   --accent-orange: #f59e0b;
   --accent-purple: #8b5cf6;
   --accent-cyan: #06b6d4;
-  --border-color: #1e293b;
-  --border-hover: #334155;
+  --border-color: var(--tm-border);
+  --border-hover: var(--tm-border-strong);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -97,13 +99,15 @@ button {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  background: var(--accent-blue);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
   color: #fff;
+}
+
+.logo-icon .material-icons-outlined {
+  font-size: 20px;
 }
 
 .logo-text {
@@ -301,7 +305,7 @@ button {
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
-  padding: 32px 48px;
+  padding: 32px;
 }
 
 .page-header {
@@ -318,9 +322,9 @@ button {
 }
 
 .page-title {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+  font-size: 3rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -388,7 +392,7 @@ button {
   gap: 6px;
   margin-bottom: 20px;
   padding: 4px;
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   overflow-x: auto;
@@ -473,6 +477,7 @@ button {
   transition: all var(--transition);
   position: relative;
   animation: fadeInUp 0.3s ease;
+  box-shadow: var(--tm-shadow-card);
 }
 
 @keyframes fadeInUp {

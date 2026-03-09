@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { buildAppUrl } from '@taskmaster/shared-ui/appLinks'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import Sidebar from './components/Sidebar'
@@ -242,9 +243,9 @@ function KanbanPage() {
 // ─── Placeholder pages ────────────────────────────────────────────────────────
 function PlaceholderPage({ title, icon }) {
   return (
-    <main className="flex flex-col items-center justify-center h-screen" style={{ marginLeft: 260 }}>
-      <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-surface-highlight mb-4">{icon}</span>
-      <h2 className="text-2xl font-bold text-slate-400 dark:text-slate-500">{title}</h2>
+    <main className="flex flex-col items-center justify-center h-screen bg-[#111621]" style={{ marginLeft: 256 }}>
+      <span className="material-symbols-outlined text-6xl text-slate-400 mb-4">{icon}</span>
+      <h2 className="text-2xl font-bold text-white">{title}</h2>
       <p className="text-slate-400 text-sm mt-2">Coming soon</p>
     </main>
   )
@@ -252,18 +253,13 @@ function PlaceholderPage({ title, icon }) {
 
 function NotificationsRedirect() {
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const targetUrl = token
-      ? `http://127.0.0.1:3002/#token=${encodeURIComponent(token)}`
-      : 'http://127.0.0.1:3002/'
-
-    globalThis.location.replace(targetUrl)
+    globalThis.location.replace(buildAppUrl('notifications'))
   }, [])
 
   return (
-    <main className="flex flex-col items-center justify-center h-screen" style={{ marginLeft: 260 }}>
+    <main className="flex flex-col items-center justify-center h-screen bg-[#111621]" style={{ marginLeft: 256 }}>
       <span className="material-symbols-outlined text-6xl text-blue-400 mb-4 animate-spin">progress_activity</span>
-      <h2 className="text-2xl font-bold text-slate-200">Opening notifications</h2>
+      <h2 className="text-2xl font-bold text-white">Opening notifications</h2>
       <p className="text-slate-400 text-sm mt-2">Redirecting to the notifications center.</p>
     </main>
   )
@@ -275,12 +271,12 @@ export default function App() {
   
   // Check for token in URL hash FIRST (from cross-port redirect)
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.startsWith('#token=')) {
+    const hash = globalThis.location.hash;
+    if (hash?.startsWith('#token=')) {
       const token = hash.substring(7); // Remove '#token='
       localStorage.setItem('token', token);
       // Clean up URL
-      window.history.replaceState(null, '', '/');
+      globalThis.history.replaceState(null, '', '/');
     }
     // Mark as ready after token processing
     setIsReady(true)
@@ -300,13 +296,13 @@ export default function App() {
   
   // Redirect to login if no user (after token processing)
   if (!currentUser) {
-    window.location.href = 'http://127.0.0.1:3000'
+    globalThis.location.href = buildAppUrl('user', '/login', { includeToken: false })
     return null
   }
 
   return (
     <BrowserRouter>
-      <div className="dark min-h-screen bg-background-dark text-slate-100">
+      <div className="min-h-screen bg-[#111621] text-slate-100">
         <Sidebar user={currentUser} />
         <Routes>
           <Route path="/" element={<KanbanPage />} />
