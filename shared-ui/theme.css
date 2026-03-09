@@ -310,6 +310,13 @@ body {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.tm-button-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 10px;
+  gap: 6px;
+}
+
 .tm-control-bar {
   display: flex;
   flex-wrap: wrap;

@@ -411,14 +411,14 @@ export default function NotificationsWorkspace({ currentUser }) {
           <AppPageHeader
             title="Notifications Center"
             subtitle="View and manage recent alerts across your microservices architecture."
-            badge={<span className="tm-pill-accent rounded-full px-3 py-1 text-xs font-semibold">{unreadCount}</span>}
+            badge={<span className="tm-pill tm-pill-accent">{unreadCount}</span>}
             actions={(
               <>
-                <button type="button" className="tm-button-secondary" onClick={() => setPrefsOpen(true)}>
+                <button type="button" className="tm-button-secondary tm-button-sm" onClick={() => setPrefsOpen(true)}>
                   <span className="material-symbols-outlined text-[18px]">tune</span>
                   <span>Preferences</span>
                 </button>
-                <button type="button" className="tm-button-primary" onClick={handleMarkAllRead}>
+                <button type="button" className="tm-button-primary tm-button-sm" onClick={handleMarkAllRead}>
                   <span className="material-symbols-outlined text-[18px]">done_all</span>
                   <span>Mark All Read</span>
                 </button>
@@ -426,7 +426,7 @@ export default function NotificationsWorkspace({ currentUser }) {
             )}
           />
 
-          <AppSectionCard className="p-4">
+          <AppSectionCard className="p-5">
             <AppControlBar className="mb-4">
               <AppSearchField
                 value={searchQuery}
@@ -438,10 +438,10 @@ export default function NotificationsWorkspace({ currentUser }) {
             </AppControlBar>
 
             <div className="mb-3">
-              <AppSegmentedTabs items={STATUS_FILTERS} value={activeStatus} onChange={setActiveStatus} fullWidth />
+              <AppSegmentedTabs items={STATUS_FILTERS} value={activeStatus} onChange={setActiveStatus} />
             </div>
-            <div className="mb-6">
-              <AppSegmentedTabs items={filterTabs} value={activeFilter} onChange={setActiveFilter} fullWidth />
+            <div className="mb-5">
+              <AppSegmentedTabs items={filterTabs} value={activeFilter} onChange={setActiveFilter} size="compact" />
             </div>
 
             {error ? (

@@ -27,6 +27,14 @@ function buildQueryString(query = {}) {
   return serialized ? `?${serialized}` : '';
 }
 
+function getBaseOrigin(port) {
+  if (typeof window === 'undefined') {
+    return `http://127.0.0.1:${port}`;
+  }
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:${port}`;
+}
+
 export function buildAppUrl(app, path = '/', options = {}) {
   const port = APP_PORTS[app];
 
@@ -41,7 +49,7 @@ export function buildAppUrl(app, path = '/', options = {}) {
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   const queryString = buildQueryString(query);
-  const baseUrl = `http://127.0.0.1:${port}${normalizedPath}${queryString}`;
+  const baseUrl = `${getBaseOrigin(port)}${normalizedPath}${queryString}`;
 
   if (!includeToken) {
     return baseUrl;
