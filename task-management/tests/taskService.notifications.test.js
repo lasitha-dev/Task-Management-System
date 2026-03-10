@@ -48,6 +48,7 @@ describe('taskService notification hooks', () => {
             expect.arrayContaining([
                 expect.objectContaining({ recipientId: 'user-002', type: 'task_assigned' }),
                 expect.objectContaining({ recipientId: 'user-003', type: 'task_assigned' }),
+                expect.objectContaining({ recipientId: 'user-001', type: 'task_assigned' }),
             ]),
             'token-123'
         );
@@ -81,8 +82,13 @@ describe('taskService notification hooks', () => {
             'token-123'
         );
 
+        expect(createNotification).toHaveBeenCalledTimes(2);
         expect(createNotification).toHaveBeenCalledWith(
             expect.objectContaining({ recipientId: 'user-002', type: 'task_assigned' }),
+            'token-123'
+        );
+        expect(createNotification).toHaveBeenCalledWith(
+            expect.objectContaining({ recipientId: 'user-001', type: 'task_assigned' }),
             'token-123'
         );
     });

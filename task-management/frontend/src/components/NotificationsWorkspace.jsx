@@ -19,23 +19,6 @@ const TYPE_META = {
   system_alert: { icon: 'dns', iconClass: 'from-cyan-500 to-emerald-500', label: 'System Alert', group: 'system' },
 }
 
-const TYPE_LABELS = {
-  task_assigned: 'Task Assignments',
-  task_updated: 'Task Status Changes',
-  deadline_reminder: 'Deadline Reminders',
-  comment_added: 'Comments & Mentions',
-  team_update: 'Team Updates',
-  system_alert: 'System Alerts',
-}
-
-const FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'task', label: 'Tasks', icon: 'assignment' },
-  { key: 'system', label: 'System', icon: 'dns' },
-  { key: 'team', label: 'Team', icon: 'group' },
-  { key: 'comment', label: 'Comments', icon: 'chat' },
-]
-
 const STATUS_FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'unread', label: 'Unread' },
@@ -61,19 +44,6 @@ function normalizePreferences(payload) {
     inAppEnabled: payload.inAppEnabled ?? true,
     preferences: Object.fromEntries(entries),
   }
-}
-
-function buildCounts(notifications) {
-  const counts = { all: notifications.length, task: 0, system: 0, team: 0, comment: 0 }
-
-  notifications.forEach((notification) => {
-    const meta = TYPE_META[notification.type]
-    if (meta && counts[meta.group] !== undefined) {
-      counts[meta.group] += 1
-    }
-  })
-
-  return counts
 }
 
 function timeAgo(dateStr) {
@@ -180,9 +150,7 @@ function PreferenceToggle({ label, hint, checked, onChange }) {
   )
 }
 
-function PreferencesPanel({ isOpen, preferences, saving, onClose, onSave, onToggleGlobal, onToggleType }) {
-  const typePreferences = preferences.preferences || {}
-
+function PreferencesPanel({ isOpen, preferences, saving, onClose, onSave, onToggleGlobal }) {
   return (
     <>
       {isOpen ? <button type="button" className="fixed inset-0 z-[90] bg-black/50" onClick={onClose} aria-label="Close preferences" /> : null}
@@ -203,26 +171,6 @@ function PreferencesPanel({ isOpen, preferences, saving, onClose, onSave, onTogg
                 checked={Boolean(preferences.emailEnabled)}
                 onChange={() => onToggleGlobal('emailEnabled')}
               />
-              <PreferenceToggle
-                label="In-App Notifications"
-                hint="Show alerts inside the workspace"
-                checked={Boolean(preferences.inAppEnabled)}
-                onChange={() => onToggleGlobal('inAppEnabled')}
-              />
-            </div>
-          </section>
-          <section>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">By Notification Type</div>
-            <div className="space-y-4">
-              {Object.entries(TYPE_LABELS).map(([type, label]) => (
-                <PreferenceToggle
-                  key={type}
-                  label={label}
-                  hint="Enable this category"
-                  checked={typePreferences[type]?.enabled ?? true}
-                  onChange={() => onToggleType(type)}
-                />
-              ))}
             </div>
           </section>
         </div>
@@ -240,7 +188,6 @@ function PreferencesPanel({ isOpen, preferences, saving, onClose, onSave, onTogg
 
 export default function NotificationsWorkspace({ currentUser }) {
   const [notifications, setNotifications] = useState([])
-  const [activeFilter, setActiveFilter] = useState('all')
   const [activeStatus, setActiveStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [prefsOpen, setPrefsOpen] = useState(false)
@@ -250,36 +197,29 @@ export default function NotificationsWorkspace({ currentUser }) {
   const [savingPrefs, setSavingPrefs] = useState(false)
 
   const unreadCount = useMemo(() => notifications.filter((item) => !item.isRead).length, [notifications])
-  const counts = useMemo(() => buildCounts(notifications), [notifications])
 
   const filteredNotifications = useMemo(
     () =>
       notifications.filter((notification) => {
         const meta = TYPE_META[notification.type]
         const searchValue = searchQuery.trim().toLowerCase()
-        const matchesFilter = activeFilter === 'all' || (meta && meta.group === activeFilter)
         const matchesStatus =
           activeStatus === 'all' ||
           (activeStatus === 'unread' && !notification.isRead) ||
           (activeStatus === 'read' && notification.isRead)
 
         if (!searchValue) {
-          return matchesFilter && matchesStatus
+          return matchesStatus
         }
 
         const matchesSearch = [notification.title, notification.message, meta?.label, notification.priority]
           .filter(Boolean)
           .some((field) => String(field).toLowerCase().includes(searchValue))
 
-        return matchesFilter && matchesStatus && matchesSearch
+        return matchesStatus && matchesSearch
       }),
-    [activeFilter, activeStatus, notifications, searchQuery]
+    [activeStatus, notifications, searchQuery]
   )
-
-  const filterTabs = FILTERS.map((filter) => ({
-    ...filter,
-    badge: counts[filter.key] ?? 0,
-  }))
 
   useEffect(() => {
     let cancelled = false
@@ -306,7 +246,7 @@ export default function NotificationsWorkspace({ currentUser }) {
           return
         }
 
-        setNotifications(notificationResponse.data?.notifications || [])
+        setNotifications(notificationResponse.data?.data?.notifications || [])
         setPreferences(normalizePreferences(preferencesResponse.data))
       } catch {
         if (!cancelled) {
@@ -367,20 +307,6 @@ export default function NotificationsWorkspace({ currentUser }) {
     }))
   }
 
-  function toggleTypePreference(type) {
-    setPreferences((current) => ({
-      ...current,
-      preferences: {
-        ...current.preferences,
-        [type]: {
-          enabled: !(current.preferences[type]?.enabled ?? true),
-          email: current.preferences[type]?.email ?? true,
-          inApp: current.preferences[type]?.inApp ?? true,
-        },
-      },
-    }))
-  }
-
   async function handleSavePreferences() {
     setSavingPrefs(true)
     try {
@@ -437,11 +363,8 @@ export default function NotificationsWorkspace({ currentUser }) {
               />
             </AppControlBar>
 
-            <div className="mb-3">
-              <AppSegmentedTabs items={STATUS_FILTERS} value={activeStatus} onChange={setActiveStatus} />
-            </div>
             <div className="mb-5">
-              <AppSegmentedTabs items={filterTabs} value={activeFilter} onChange={setActiveFilter} size="compact" />
+              <AppSegmentedTabs items={STATUS_FILTERS} value={activeStatus} onChange={setActiveStatus} />
             </div>
 
             {error ? (
@@ -481,7 +404,6 @@ export default function NotificationsWorkspace({ currentUser }) {
         onClose={() => setPrefsOpen(false)}
         onSave={handleSavePreferences}
         onToggleGlobal={toggleGlobalPreference}
-        onToggleType={toggleTypePreference}
       />
     </>
   )

@@ -110,6 +110,40 @@ async function runDeadlineReminderCycle(authToken = null, now = new Date()) {
     return { scannedTasks: tasks.length, notificationsSent };
 }
 
+async function triggerDeadlineReminderForTask(task, authToken = null, now = new Date()) {
+    if (!task.deadline || !Array.isArray(task.assignees) || task.assignees.length === 0) {
+        return;
+    }
+
+    const reminderType = resolveReminderType(task.deadline, now);
+    if (!reminderType) {
+        return;
+    }
+
+    task.notificationDispatches = task.notificationDispatches || [];
+
+    for (const assignee of task.assignees) {
+        const key = buildReminderKey(task, assignee.id, reminderType);
+        if (hasDispatch(task, key)) {
+            continue;
+        }
+
+        try {
+            await createNotification(buildReminderNotification(task, assignee, reminderType), authToken);
+            task.notificationDispatches.push({
+                key,
+                type: reminderType,
+                recipientId: assignee.id,
+                sentAt: new Date(),
+            });
+        } catch (error) {
+            console.error(`Failed to send deadline reminder for task ${task._id}: ${error.message}`);
+        }
+    }
+
+    await task.save();
+}
+
 function startDeadlineReminderScheduler(authTokenProvider = () => null) {
     if (schedulerHandle) {
         return schedulerHandle;
@@ -138,6 +172,7 @@ module.exports = {
     REMINDER_TYPES,
     resolveReminderType,
     runDeadlineReminderCycle,
+    triggerDeadlineReminderForTask,
     startDeadlineReminderScheduler,
     stopDeadlineReminderScheduler,
 };

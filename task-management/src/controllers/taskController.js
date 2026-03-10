@@ -94,7 +94,8 @@ const updateTask = async (req, res) => {
     if (validationError) return;
 
     try {
-        const task = await taskService.updateTask(req.params.id, req.body, req.user);
+        const authToken = req.headers.authorization?.split(' ')[1] || null;
+        const task = await taskService.updateTask(req.params.id, req.body, req.user, authToken);
 
         if (!task) {
             return res.status(404).json({ success: false, message: 'Task not found.' });
@@ -113,7 +114,8 @@ const updateTask = async (req, res) => {
 // Used by drag-and-drop to update status only (or any partial update)
 const patchTask = async (req, res) => {
     try {
-        const task = await taskService.patchTask(req.params.id, req.body, req.user);
+        const authToken = req.headers.authorization?.split(' ')[1] || null;
+        const task = await taskService.patchTask(req.params.id, req.body, req.user, authToken);
 
         if (!task) {
             return res.status(404).json({ success: false, message: 'Task not found.' });
