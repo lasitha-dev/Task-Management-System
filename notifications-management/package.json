@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node src/app.js",
         "dev": "nodemon src/app.js",
-        "test": "jest --coverage"
+        "test": "jest --coverage --forceExit"
     },
     "jest": {
         "testMatch": [
@@ -19,7 +19,8 @@
         "express": "^4.21.2",
         "express-validator": "^7.2.1",
         "jsonwebtoken": "^9.0.2",
-        "mongoose": "^8.10.1"
+        "mongoose": "^8.10.1",
+        "nodemailer": "^6.10.1"
     },
     "devDependencies": {
         "jest": "^29.7.0",

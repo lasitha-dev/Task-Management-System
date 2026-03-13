@@ -18,7 +18,7 @@ const navItems = [
   { icon: 'insights', label: 'Analytics', to: '/analytics' },
 ]
 
-export default function Sidebar({ user }) {
+export default function Sidebar({ user, unreadCount = 0 }) {
   function handleSignOut() {
     localStorage.removeItem('token')
     sessionStorage.clear()
@@ -63,7 +63,12 @@ export default function Sidebar({ user }) {
               }
             >
               <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {item.label === 'Notifications' && unreadCount > 0 ? (
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-none text-white">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>

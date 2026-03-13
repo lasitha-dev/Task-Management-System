@@ -277,7 +277,7 @@ function TeamSpacePage() {
 
   const membersById = new Map()
   boards.forEach((board) => {
-    ;(board.members || []).forEach((member) => {
+    ; (board.members || []).forEach((member) => {
       const existing = membersById.get(member.id) || { ...member, boards: [] }
       existing.boards = [...existing.boards, board.name]
       membersById.set(member.id, existing)
@@ -476,20 +476,20 @@ function SettingsRedirect() {
 }
 
 // ─── Main Kanban page ─────────────────────────────────────────────────────────
-function KanbanPage() {
-  const [modalOpen, setModalOpen]     = useState(false)
-  const [editingTask, setEditingTask]   = useState(null)
+function KanbanPage({ onNotificationChange }) {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState(null)
   const [defaultStatus, setDefaultStatus] = useState('todo')
-  const [toast, setToast]             = useState(null)
-  const [refreshKey, setRefreshKey]   = useState(0)
-  
+  const [toast, setToast] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
   // Board management
   const [boards, setBoards] = useState([])
   const [selectedBoard, setSelectedBoard] = useState(null)
   const [boardModalOpen, setBoardModalOpen] = useState(false)
   const [editingBoard, setEditingBoard] = useState(null)
   const [loadingBoards, setLoadingBoards] = useState(true)
-  
+
   // Get current user from JWT token - use state to allow refresh
   const [currentUser, setCurrentUser] = useState(getCurrentUser())
   const currentUserId = currentUser?.id || null
@@ -512,7 +512,7 @@ function KanbanPage() {
       const { data } = await api.get('/api/boards')
       const boardList = data.boards || []
       setBoards(boardList)
-      
+
       // Auto-select first board if available
       if (boardList.length > 0 && !selectedBoard) {
         setSelectedBoard(boardList[0]._id)
@@ -561,17 +561,17 @@ function KanbanPage() {
     if (!globalThis.confirm(`Are you sure you want to delete "${board.name}"? This action cannot be undone.`)) {
       return
     }
-    
+
     try {
       await api.delete(`/api/boards/${board._id}`)
       const updatedBoards = boards.filter(b => b._id !== board._id)
       setBoards(updatedBoards)
-      
+
       // If deleted board was selected, select first available board or null
       if (selectedBoard === board._id) {
         setSelectedBoard(updatedBoards.length > 0 ? updatedBoards[0]._id : null)
       }
-      
+
       showToast('Board deleted successfully')
       setRefreshKey((k) => k + 1)
     } catch (err) {
@@ -603,7 +603,7 @@ function KanbanPage() {
     try {
       // Add board to task data
       const taskData = { ...formData, board: selectedBoard }
-      
+
       if (editingTask) {
         await api.put(`/api/tasks/${editingTask._id}`, taskData)
         showToast('Task updated successfully')
@@ -612,6 +612,12 @@ function KanbanPage() {
         showToast('Task created successfully')
       }
       setRefreshKey((k) => k + 1)
+
+      // Refresh the sidebar notification badge after a short delay
+      // so the backend has time to create any triggered notifications
+      if (onNotificationChange) {
+        setTimeout(onNotificationChange, 1500)
+      }
     } catch (err) {
       showToast(err?.response?.data?.message || 'Something went wrong', 'error')
       throw err // keep modal open
@@ -641,11 +647,11 @@ function KanbanPage() {
       />
       <div className="flex-1 overflow-x-auto overflow-y-hidden p-8 bg-slate-50 dark:bg-background-dark custom-scrollbar">
         {selectedBoard ? (
-          <KanbanBoard 
-            key={`${refreshKey}-${selectedBoard}`} 
+          <KanbanBoard
+            key={`${refreshKey}-${selectedBoard}`}
             boardId={selectedBoard}
-            onNewTask={openCreate} 
-            onEdit={openEdit} 
+            onNewTask={openCreate}
+            onEdit={openEdit}
           />
         ) : (
           <AppEmptyState
@@ -694,7 +700,8 @@ function KanbanPage() {
 // ─── Root App ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [isReady, setIsReady] = useState(false)
-  
+  const [unreadCount, setUnreadCount] = useState(0)
+
   // Check for token in URL hash FIRST (from cross-port redirect)
   useEffect(() => {
     const hash = globalThis.location.hash;
@@ -710,7 +717,26 @@ export default function App() {
 
   // Get current user from JWT token
   const currentUser = getCurrentUser()
-  
+
+  // Fetch unread notification count; called on mount and after read/delete actions
+  async function refreshUnreadCount() {
+    try {
+      const response = await api.get('/api/notifications/unread-count')
+      setUnreadCount(response.data?.data?.count ?? 0)
+    } catch {
+      // Non-critical — badge simply stays at previous value
+    }
+  }
+
+  // Poll for unread count every 60 seconds once the app is ready and the user is authenticated
+  useEffect(() => {
+    if (!isReady || !currentUser) return
+    refreshUnreadCount()
+    const timer = setInterval(refreshUnreadCount, 60_000)
+    return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady, currentUser?.id])
+
   // Wait for token processing before checking auth
   if (!isReady) {
     return (
@@ -719,7 +745,7 @@ export default function App() {
       </div>
     )
   }
-  
+
   // Redirect to login if no user (after token processing)
   if (!currentUser) {
     globalThis.location.href = buildAppUrl('user', '/login', { includeToken: false })
@@ -729,11 +755,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-[#111621] text-slate-100">
-        <Sidebar user={currentUser} />
+        <Sidebar user={currentUser} unreadCount={unreadCount} />
         <Routes>
-          <Route path="/" element={<KanbanPage />} />
+          <Route path="/" element={<KanbanPage onNotificationChange={refreshUnreadCount} />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/notifications" element={<NotificationsWorkspace currentUser={currentUser} />} />
+          <Route path="/notifications" element={<NotificationsWorkspace currentUser={currentUser} onCountRefresh={refreshUnreadCount} />} />
           <Route path="/team" element={<TeamSpacePage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/settings" element={<SettingsRedirect />} />

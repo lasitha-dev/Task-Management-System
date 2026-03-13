@@ -1,3 +1,9 @@
+// Mock emailService so tests never hit SMTP
+jest.mock('../../src/services/emailService', () => ({
+    sendNotificationEmail: jest.fn().mockResolvedValue(undefined),
+}));
+
+const { sendNotificationEmail } = require('../../src/services/emailService');
 const NotificationService = require('../../src/services/notificationService');
 
 /**
@@ -32,7 +38,10 @@ describe('NotificationService', () => {
         service = new NotificationService(NotificationModel, PreferenceModel);
     });
 
-    afterEach(() => jest.clearAllMocks());
+    afterEach(() => {
+        jest.clearAllMocks();
+        sendNotificationEmail.mockReset();
+    });
 
     // -------------------------------------------------------------------------
     // getAllNotifications
@@ -167,15 +176,130 @@ describe('NotificationService', () => {
     // createNotification
     // -------------------------------------------------------------------------
     describe('createNotification', () => {
+        beforeEach(() => jest.clearAllMocks());
+
         it('should create and return a new notification', async () => {
             const input = { type: 'task_assigned', title: 'New', message: 'Msg', recipientId: 'u1' };
             const created = { ...input, _id: 'new123', toObject: () => ({ ...input, _id: 'new123' }) };
             NotificationModel.create.mockResolvedValue(created);
+            PreferenceModel.lean.mockResolvedValue(null); // no prefs → email defaults to enabled
 
             const result = await service.createNotification(input);
 
             expect(NotificationModel.create).toHaveBeenCalledWith(input);
             expect(result._id).toBe('new123');
+        });
+
+        it('should trigger an email when emailEnabled is true and no per-type override', async () => {
+            const input = {
+                type: 'task_assigned',
+                title: 'New task',
+                message: 'You were assigned',
+                recipientId: 'u1',
+                metadata: { recipientEmail: 'user@example.com' },
+            };
+            const plain = { ...input, _id: 'n1' };
+            NotificationModel.create.mockResolvedValue({ ...plain, toObject: () => plain });
+            PreferenceModel.lean.mockResolvedValue({ userId: 'u1', emailEnabled: true, preferences: {} });
+
+            await service.createNotification(input);
+
+            expect(sendNotificationEmail).toHaveBeenCalledWith(
+                expect.objectContaining({ metadata: expect.objectContaining({ recipientEmail: 'user@example.com' }) })
+            );
+        });
+
+        it('should use prefs.userEmail as the recipient address (preferred over metadata)', async () => {
+            const input = {
+                type: 'task_assigned',
+                title: 'New task',
+                message: 'You were assigned',
+                recipientId: 'u1',
+                metadata: {},
+            };
+            const plain = { ...input, _id: 'n1' };
+            NotificationModel.create.mockResolvedValue({ ...plain, toObject: () => plain });
+            PreferenceModel.lean.mockResolvedValue({ userId: 'u1', userEmail: 'stored@example.com', emailEnabled: true, preferences: {} });
+
+            await service.createNotification(input);
+
+            expect(sendNotificationEmail).toHaveBeenCalledWith(
+                expect.objectContaining({ metadata: expect.objectContaining({ recipientEmail: 'stored@example.com' }) })
+            );
+        });
+
+        it('should NOT send an email when neither prefs.userEmail nor metadata.recipientEmail is available', async () => {
+            const input = {
+                type: 'task_assigned',
+                title: 'New task',
+                message: 'You were assigned',
+                recipientId: 'u1',
+                metadata: {},
+            };
+            const plain = { ...input, _id: 'nX' };
+            NotificationModel.create.mockResolvedValue({ ...plain, toObject: () => plain });
+            PreferenceModel.lean.mockResolvedValue({ userId: 'u1', emailEnabled: true, preferences: {} });
+
+            await service.createNotification(input);
+
+            expect(sendNotificationEmail).not.toHaveBeenCalled();
+        });
+
+        it('should NOT send an email when global emailEnabled is false', async () => {
+            const input = {
+                type: 'task_assigned',
+                title: 'New task',
+                message: 'You were assigned',
+                recipientId: 'u1',
+                metadata: { recipientEmail: 'user@example.com' },
+            };
+            const plain = { ...input, _id: 'n2' };
+            NotificationModel.create.mockResolvedValue({ ...plain, toObject: () => plain });
+            PreferenceModel.lean.mockResolvedValue({ userId: 'u1', emailEnabled: false, preferences: {} });
+
+            await service.createNotification(input);
+
+            expect(sendNotificationEmail).not.toHaveBeenCalled();
+        });
+
+        it('should NOT send an email when per-type email flag is false', async () => {
+            const input = {
+                type: 'task_assigned',
+                title: 'New task',
+                message: 'You were assigned',
+                recipientId: 'u1',
+                metadata: { recipientEmail: 'user@example.com' },
+            };
+            const plain = { ...input, _id: 'n3' };
+            NotificationModel.create.mockResolvedValue({ ...plain, toObject: () => plain });
+            PreferenceModel.lean.mockResolvedValue({
+                userId: 'u1',
+                emailEnabled: true,
+                preferences: { task_assigned: { enabled: true, email: false, inApp: true } },
+            });
+
+            await service.createNotification(input);
+
+            expect(sendNotificationEmail).not.toHaveBeenCalled();
+        });
+
+        it('should default to sending email when no preference record exists', async () => {
+            const input = {
+                type: 'deadline_reminder',
+                title: 'Deadline',
+                message: 'Task is due',
+                recipientId: 'u2',
+                metadata: { recipientEmail: 'other@example.com' },
+            };
+            const plain = { ...input, _id: 'n4' };
+            NotificationModel.create.mockResolvedValue({ ...plain, toObject: () => plain });
+            PreferenceModel.lean.mockResolvedValue(null);
+
+            await service.createNotification(input);
+
+            expect(sendNotificationEmail).toHaveBeenCalledWith(
+                expect.objectContaining({ metadata: expect.objectContaining({ recipientEmail: 'other@example.com' }) })
+            );
         });
     });
 
@@ -295,24 +419,45 @@ describe('NotificationService', () => {
     // getPreferences
     // -------------------------------------------------------------------------
     describe('getPreferences', () => {
-        it('should return existing preferences', async () => {
+        it('should upsert and return preferences', async () => {
             const prefs = { userId: 'u1', emailEnabled: true };
             PreferenceModel.lean.mockResolvedValue(prefs);
 
             const result = await service.getPreferences('u1');
 
-            expect(PreferenceModel.findOne).toHaveBeenCalledWith({ userId: 'u1' });
+            expect(PreferenceModel.findOneAndUpdate).toHaveBeenCalledWith(
+                { userId: 'u1' },
+                { $setOnInsert: { userId: 'u1' } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
             expect(result).toEqual(prefs);
         });
 
-        it('should create default preferences if none exist', async () => {
-            PreferenceModel.lean.mockResolvedValue(null);
-            const defaults = { userId: 'u2', emailEnabled: true, toObject: () => ({ userId: 'u2', emailEnabled: true }) };
-            PreferenceModel.create.mockResolvedValue(defaults);
+        it('should persist userEmail when provided', async () => {
+            const prefs = { userId: 'u1', userEmail: 'user@example.com', emailEnabled: true };
+            PreferenceModel.lean.mockResolvedValue(prefs);
+
+            const result = await service.getPreferences('u1', 'user@example.com');
+
+            expect(PreferenceModel.findOneAndUpdate).toHaveBeenCalledWith(
+                { userId: 'u1' },
+                { $setOnInsert: { userId: 'u1' }, $set: { userEmail: 'user@example.com' } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+            expect(result.userEmail).toBe('user@example.com');
+        });
+
+        it('should upsert and create default preferences if none exist', async () => {
+            const defaults = { userId: 'u2', emailEnabled: true };
+            PreferenceModel.lean.mockResolvedValue(defaults);
 
             const result = await service.getPreferences('u2');
 
-            expect(PreferenceModel.create).toHaveBeenCalledWith({ userId: 'u2' });
+            expect(PreferenceModel.findOneAndUpdate).toHaveBeenCalledWith(
+                { userId: 'u2' },
+                { $setOnInsert: { userId: 'u2' } },
+                { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
             expect(result.userId).toBe('u2');
         });
     });
@@ -333,6 +478,20 @@ describe('NotificationService', () => {
                 { new: true, upsert: true, runValidators: true }
             );
             expect(result.emailEnabled).toBe(false);
+        });
+
+        it('should include userEmail in update when provided', async () => {
+            const updated = { userId: 'u1', emailEnabled: true, userEmail: 'new@example.com' };
+            PreferenceModel.lean.mockResolvedValue(updated);
+
+            const result = await service.updatePreferences('u1', { emailEnabled: true }, 'new@example.com');
+
+            expect(PreferenceModel.findOneAndUpdate).toHaveBeenCalledWith(
+                { userId: 'u1' },
+                { emailEnabled: true, userId: 'u1', userEmail: 'new@example.com' },
+                { new: true, upsert: true, runValidators: true }
+            );
+            expect(result.userEmail).toBe('new@example.com');
         });
     });
 });

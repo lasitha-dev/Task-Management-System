@@ -54,6 +54,45 @@ describe('taskService notification hooks', () => {
         );
     });
 
+    it('includes recipientEmail in the notification metadata for assignees', async () => {
+        const savedTask = {
+            _id: 'task-002',
+            title: 'Build email feature',
+            priority: 'medium',
+            board: null,
+            deadline: null,
+            assignees: [
+                { id: 'user-002', name: 'Teammate One', email: 'teammate1@test.com' },
+            ],
+        };
+        const save = jest.fn().mockResolvedValue(savedTask);
+        Task.mockImplementation((data) => ({ ...data, _id: 'task-002', save }));
+
+        await taskService.createTask(
+            {
+                title: 'Build email feature',
+                assignees: savedTask.assignees,
+                activity: [],
+            },
+            { id: 'user-001', name: 'Creator', email: 'creator@test.com' },
+            'token-xyz'
+        );
+
+        expect(createBulkNotifications).toHaveBeenCalledWith(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    recipientId: 'user-002',
+                    metadata: expect.objectContaining({ recipientEmail: 'teammate1@test.com' }),
+                }),
+                expect.objectContaining({
+                    recipientId: 'user-001',
+                    metadata: expect.objectContaining({ recipientEmail: 'creator@test.com' }),
+                }),
+            ]),
+            'token-xyz'
+        );
+    });
+
     it('sends a notification when an assignee is added later', async () => {
         const task = {
             _id: 'task-001',

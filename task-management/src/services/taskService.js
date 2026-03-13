@@ -18,8 +18,7 @@ function buildTaskAssignedNotification(task, assignee, actor) {
             assignedBy: actor?.id || null,
             assignedByName: actor?.name || null,
             boardId: task.board ? task.board.toString() : null,
-            deadline: task.deadline,
-        },
+            deadline: task.deadline,            recipientEmail: assignee.email || null,        },
     };
 }
 function buildActorAssignedNotification(task, assignees, actor) {
@@ -37,6 +36,7 @@ function buildActorAssignedNotification(task, assignees, actor) {
             assignedByName: actor.name,
             boardId: task.board ? task.board.toString() : null,
             deadline: task.deadline,
+            recipientEmail: actor.email || null,
         },
     };
 }

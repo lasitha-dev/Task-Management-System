@@ -103,6 +103,9 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN}
       - ENABLE_MOCK_NOTIFICATIONS=false
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM:-TaskMaster <noreply@taskmaster.app>}
     networks:
       - mern-network
     healthcheck:

@@ -186,7 +186,7 @@ function PreferencesPanel({ isOpen, preferences, saving, onClose, onSave, onTogg
   )
 }
 
-export default function NotificationsWorkspace({ currentUser }) {
+export default function NotificationsWorkspace({ currentUser, onCountRefresh }) {
   const [notifications, setNotifications] = useState([])
   const [activeStatus, setActiveStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -271,6 +271,7 @@ export default function NotificationsWorkspace({ currentUser }) {
       await api.patch(`/api/notifications/${id}/read`)
       setNotifications((current) => current.map((item) => (item._id === id ? { ...item, isRead: true } : item)))
       toast.success('Notification marked as read')
+      onCountRefresh?.()
     } catch {
       toast.error('Failed to mark as read')
     }
@@ -285,6 +286,7 @@ export default function NotificationsWorkspace({ currentUser }) {
       await api.patch('/api/notifications/read-all', { recipientId: currentUser.id })
       setNotifications((current) => current.map((item) => ({ ...item, isRead: true })))
       toast.success('All notifications marked as read')
+      onCountRefresh?.()
     } catch {
       toast.error('Failed to mark all as read')
     }
@@ -295,6 +297,7 @@ export default function NotificationsWorkspace({ currentUser }) {
       await api.delete(`/api/notifications/${id}`)
       setNotifications((current) => current.filter((item) => item._id !== id))
       toast.success('Notification deleted')
+      onCountRefresh?.()
     } catch {
       toast.error('Failed to delete notification')
     }

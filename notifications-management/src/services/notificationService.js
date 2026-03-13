@@ -1,4 +1,5 @@
 const { RESPONSE_MESSAGES } = require('../utils/constants');
+const { sendNotificationEmail } = require('./emailService');
 
 function createNotFoundError() {
     const error = new Error(RESPONSE_MESSAGES.NOTIFICATION_NOT_FOUND);
@@ -58,11 +59,49 @@ class NotificationService {
     }
 
     /**
-     * Create a new notification.
+     * Create a new notification and dispatch an email if the recipient's
+     * preferences allow it (best-effort — email errors never block creation).
      */
     async createNotification(data) {
         const notification = await this.Notification.create(data);
-        return notification.toObject();
+        const plain = notification.toObject();
+        await this._maybeSendEmail(plain);
+        return plain;
+    }
+
+    /**
+     * Checks user preferences and dispatches an email for the notification
+     * when both the global emailEnabled flag and the per-type email flag are
+     * enabled.  All errors are caught — this method never throws.
+     * @param {object} notification — Plain notification object
+     */
+    async _maybeSendEmail(notification) {
+        try {
+            const prefs = await this.Preference.findOne({ userId: notification.recipientId }).lean();
+            // When no preferences exist, default to sending the email
+            const emailEnabled = prefs ? prefs.emailEnabled : true;
+            if (!emailEnabled) return;
+
+            // Per-type email preference (stored in a Map/object keyed by type)
+            if (prefs?.preferences) {
+                const typePrefs = prefs.preferences instanceof Map
+                    ? prefs.preferences.get(notification.type)
+                    : prefs.preferences[notification.type];
+                if (typePrefs && typePrefs.email === false) return;
+            }
+
+            // Resolve recipient email: stored user email (from JWT) takes priority over metadata
+            const recipientEmail = prefs?.userEmail || notification?.metadata?.recipientEmail;
+            if (!recipientEmail) return;
+
+            const enriched = {
+                ...notification,
+                metadata: { ...(notification.metadata || {}), recipientEmail },
+            };
+            await sendNotificationEmail(enriched);
+        } catch (error) {
+            console.error(`[NotificationService] _maybySendEmail failed for notification ${notification._id}: ${error.message}`);
+        }
     }
 
     /**
@@ -115,23 +154,38 @@ class NotificationService {
 
     /**
      * Retrieve notification preferences for a user. Creates defaults if none exist.
+     * Persists the user's email (from their JWT) so it is available for email dispatch.
+     * @param {string} userId
+     * @param {string|null} userEmail — email decoded from the caller's JWT
      */
-    async getPreferences(userId) {
-        let prefs = await this.Preference.findOne({ userId }).lean();
-        if (!prefs) {
-            prefs = await this.Preference.create({ userId });
-            prefs = prefs.toObject();
+    async getPreferences(userId, userEmail = null) {
+        const update = { $setOnInsert: { userId } };
+        if (userEmail) {
+            update.$set = { userEmail };
         }
+        const prefs = await this.Preference.findOneAndUpdate(
+            { userId },
+            update,
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        ).lean();
         return prefs;
     }
 
     /**
      * Update notification preferences for a user (upsert).
+     * Also persists the user's email when provided.
+     * @param {string} userId
+     * @param {object} data — preference fields from the request body
+     * @param {string|null} userEmail — email decoded from the caller's JWT
      */
-    async updatePreferences(userId, data) {
+    async updatePreferences(userId, data, userEmail = null) {
+        const updateData = { ...data, userId };
+        if (userEmail) {
+            updateData.userEmail = userEmail;
+        }
         const prefs = await this.Preference.findOneAndUpdate(
             { userId },
-            { ...data, userId },
+            updateData,
             { new: true, upsert: true, runValidators: true }
         ).lean();
         return prefs;

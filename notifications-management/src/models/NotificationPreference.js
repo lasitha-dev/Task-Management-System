@@ -26,6 +26,10 @@ const notificationPreferenceSchema = new mongoose.Schema(
             unique: true,
             index: true,
         },
+        userEmail: {
+            type: String,
+            default: null,
+        },
         emailEnabled: {
             type: Boolean,
             default: true,

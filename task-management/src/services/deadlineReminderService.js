@@ -62,6 +62,7 @@ function buildReminderNotification(task, assignee, reminderType) {
             boardId: task.board ? task.board.toString() : null,
             deadline: deadlineIso,
             reminderType,
+            recipientEmail: assignee.email || null,
         },
     };
 }

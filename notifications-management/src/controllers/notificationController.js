@@ -103,7 +103,7 @@ class NotificationController {
                 throw createForbiddenError();
             }
 
-            const prefs = await this.service.getPreferences(req.params.userId);
+            const prefs = await this.service.getPreferences(req.params.userId, req.user.email || null);
             res.status(200).json({ success: true, message: RESPONSE_MESSAGES.PREFERENCES_FETCHED, data: prefs });
         } catch (err) { next(err); }
     }
@@ -114,7 +114,7 @@ class NotificationController {
                 throw createForbiddenError();
             }
 
-            const prefs = await this.service.updatePreferences(req.params.userId, req.body);
+            const prefs = await this.service.updatePreferences(req.params.userId, req.body, req.user.email || null);
             res.status(200).json({ success: true, message: RESPONSE_MESSAGES.PREFERENCES_UPDATED, data: prefs });
         } catch (err) { next(err); }
     }

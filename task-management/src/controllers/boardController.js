@@ -99,6 +99,7 @@ const createBoard = async (req, res) => {
                             boardName: board.name,
                             createdBy: user.id,
                             createdByName: user.name,
+                            recipientEmail: member.email || null,
                         },
                     })),
                     authToken,
