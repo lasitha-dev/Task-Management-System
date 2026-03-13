@@ -1,5 +1,14 @@
+/* eslint-disable react/prop-types */
+
 import React from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import { buildAppUrl } from '@taskmaster/shared-ui/appLinks'
+import {
+  AppSidebarBody,
+  AppSidebarBrand,
+  AppSidebarProfile,
+  AppSidebarShell,
+} from '@taskmaster/shared-ui/components'
 
 const navItems = [
   { icon: 'grid_view', label: 'Dashboard', to: '/dashboard' },
@@ -9,80 +18,61 @@ const navItems = [
   { icon: 'insights', label: 'Analytics', to: '/analytics' },
 ]
 
-export default function Sidebar({ user }) {
-  const navigate = useNavigate()
-
+export default function Sidebar({ user, unreadCount = 0 }) {
   function handleSignOut() {
     localStorage.removeItem('token')
     sessionStorage.clear()
-    // Add logout flag so user-management knows to clear its localStorage
-    window.location.href = 'http://127.0.0.1:3000/login?logout=true'
+    globalThis.location.href = buildAppUrl('user', '/login', {
+      includeToken: false,
+      query: { logout: 'true' },
+    })
   }
   return (
-    <aside className="w-[260px] fixed top-0 left-0 bottom-0 z-50 bg-surface-dark border-r border-surface-highlight flex flex-col justify-between py-6 px-4">
-      {/* Top section */}
-      <div className="flex flex-col gap-8">
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="material-symbols-outlined text-white text-xl">account_tree</span>
-          </div>
-          <h1 className="font-extrabold text-lg tracking-tight text-white uppercase">MERN Core</h1>
-        </div>
+    <AppSidebarShell
+      className="fixed top-0 left-0 bottom-0 z-50"
+      footer={
+        <button
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1c212c] border border-[#2d3544] hover:border-slate-500 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-all"
+          onClick={handleSignOut}
+        >
+          <span className="material-symbols-outlined text-lg">logout</span>
+          <span>Logout</span>
+        </button>
+      }
+    >
+      <AppSidebarBrand />
+      <AppSidebarBody>
+        <AppSidebarProfile
+          name={user?.name || 'Guest User'}
+          subtitle={user?.role || 'Team workspace'}
+          avatarName={user?.name || 'User'}
+        />
 
-        {/* User profile */}
-        <div className="flex items-center gap-3 p-3 bg-surface-highlight/30 rounded-xl border border-surface-highlight/50">
-          <div
-            className="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10 ring-2 ring-primary/40 flex-shrink-0"
-            style={{
-              backgroundImage: `url("https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=144bb8&color=fff")`,
-            }}
-          />
-          <div className="flex flex-col min-w-0">
-            <p className="text-white text-sm font-bold truncate">{user?.name || 'Guest'}</p>
-            <p className="text-slate-400 text-xs font-medium truncate">{user?.role || 'User'}</p>
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex flex-col gap-1.5">
+        <nav className="flex flex-col gap-1">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-semibold ${
+                `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
                   isActive
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'text-slate-400 hover:text-white hover:bg-surface-highlight/50'
+                    ? 'bg-[#144bb8]/10 text-[#144bb8]'
+                    : 'text-slate-400 hover:bg-[#1c212c] hover:text-white'
                 }`
               }
             >
-              <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              <span className="flex-1">{item.label}</span>
+              {item.label === 'Notifications' && unreadCount > 0 ? (
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-none text-white">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>
-      </div>
-
-      {/* Bottom section */}
-      <div className="flex flex-col gap-1 border-t border-surface-highlight/50 pt-6">
-        <NavLink
-          to="/settings"
-          className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white rounded-lg transition-colors text-sm font-semibold"
-        >
-          <span className="material-symbols-outlined text-[22px]">settings</span>
-          <span>Settings</span>
-        </NavLink>
-        <button
-          className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-red-400 rounded-lg transition-colors text-sm font-semibold w-full text-left"
-          onClick={handleSignOut}
-        >
-          <span className="material-symbols-outlined text-[22px]">logout</span>
-          <span>Sign Out</span>
-        </button>
-      </div>
-    </aside>
+      </AppSidebarBody>
+    </AppSidebarShell>
   )
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { redirectToApp } from '@taskmaster/shared-ui/appLinks';
 import { useAuth } from '../context/AuthContext';
 import useGoogleAuth from '../hooks/useGoogleAuth';
 
@@ -32,13 +33,12 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const user = await register(name, email, password);
-      const token = localStorage.getItem('token');
       
       // Check user role and redirect accordingly (new users are typically regular users)
       if (user.role === 'Admin') {
-        window.location.href = 'http://127.0.0.1:3000/admin';
+        redirectToApp('user', '/admin', { includeToken: false });
       } else {
-        window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+        redirectToApp('task');
       }
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Registration failed');
@@ -53,13 +53,12 @@ export default function RegisterPage() {
     try {
       const idToken = await triggerGoogleLogin();
       const user = await googleLogin(idToken);
-      const token = localStorage.getItem('token');
       
       // Check user role and redirect accordingly
       if (user.role === 'Admin') {
-        window.location.href = 'http://127.0.0.1:3000/admin';
+        redirectToApp('user', '/admin', { includeToken: false });
       } else {
-        window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+        redirectToApp('task');
       }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Google Sign-Up failed');

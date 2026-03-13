@@ -7,7 +7,7 @@ export default function Header({ boards, selectedBoard, onSelectBoard, onCreateB
   const remainingCount = Math.max(0, boardMembers.length - 4)
 
   return (
-    <header className="h-16 flex items-center justify-between px-8 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-surface-highlight/50 z-40 shrink-0">
+    <header className="h-16 flex items-center justify-between px-8 bg-[#161b26] border-b border-[#2d3544] z-40 shrink-0">
       <div className="flex items-center gap-5">
         {loadingBoards ? (
           <div className="flex items-center gap-2">
@@ -26,10 +26,10 @@ export default function Header({ boards, selectedBoard, onSelectBoard, onCreateB
           />
         )}
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-xl font-extrabold text-white tracking-tight">
             {boardName || 'No Board Selected'}
           </h2>
-          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider border border-primary/20">
+          <span className="px-3 py-1 rounded-full bg-[#144bb8]/10 text-[#144bb8] text-[11px] font-bold uppercase tracking-wider border border-[#144bb8]/20">
             {sprint || 'Sprint 4'} Active
           </span>
         </div>
@@ -44,13 +44,13 @@ export default function Header({ boards, selectedBoard, onSelectBoard, onCreateB
                 key={member.id}
                 alt={member.name}
                 title={member.name}
-                className="h-8 w-8 rounded-full ring-2 ring-white dark:ring-surface-dark border border-slate-300 dark:border-transparent"
+                className="h-8 w-8 rounded-full ring-2 ring-[#161b26] border border-[#2d3544]"
                 src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=144bb8&color=fff`}
               />
             ))}
             {remainingCount > 0 && (
               <div 
-                className="h-8 w-8 rounded-full bg-surface-highlight flex items-center justify-center ring-2 ring-white dark:ring-surface-dark text-xs font-bold text-white"
+                className="h-8 w-8 rounded-full bg-[#2d3544] flex items-center justify-center ring-2 ring-[#161b26] text-xs font-bold text-white"
                 title={`+${remainingCount} more members`}
               >
                 +{remainingCount}
@@ -63,7 +63,7 @@ export default function Header({ boards, selectedBoard, onSelectBoard, onCreateB
         <button
           onClick={() => onNewTask && onNewTask()}
           disabled={!selectedBoard}
-          className="bg-primary hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[#144bb8] hover:bg-[#0f3a91] text-white text-sm font-bold py-2 px-5 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-[#144bb8]/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
           <span>New Task</span>

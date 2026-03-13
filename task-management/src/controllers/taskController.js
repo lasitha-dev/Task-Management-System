@@ -60,6 +60,7 @@ const createTask = async (req, res) => {
     if (validationError) return;
 
     try {
+        const authToken = req.headers.authorization?.split(' ')[1] || null;
         const { title, description, status, priority, deadline, assignees, progress, tags, project, sprint, estimatedHours, board } = req.body;
 
         const task = await taskService.createTask(
@@ -78,6 +79,7 @@ const createTask = async (req, res) => {
                 estimatedHours: estimatedHours || null,
             },
             req.user,
+            authToken,
         );
 
         res.status(201).json({ success: true, message: 'Task created successfully.', task });
@@ -92,7 +94,8 @@ const updateTask = async (req, res) => {
     if (validationError) return;
 
     try {
-        const task = await taskService.updateTask(req.params.id, req.body, req.user);
+        const authToken = req.headers.authorization?.split(' ')[1] || null;
+        const task = await taskService.updateTask(req.params.id, req.body, req.user, authToken);
 
         if (!task) {
             return res.status(404).json({ success: false, message: 'Task not found.' });
@@ -111,7 +114,8 @@ const updateTask = async (req, res) => {
 // Used by drag-and-drop to update status only (or any partial update)
 const patchTask = async (req, res) => {
     try {
-        const task = await taskService.patchTask(req.params.id, req.body, req.user);
+        const authToken = req.headers.authorization?.split(' ')[1] || null;
+        const task = await taskService.patchTask(req.params.id, req.body, req.user, authToken);
 
         if (!task) {
             return res.status(404).json({ success: false, message: 'Task not found.' });
@@ -180,6 +184,7 @@ const searchUsersHandler = async (req, res) => {
 // ─── POST /api/tasks/:id/assignees ───────────────────────────────────────────────────
 const addAssignee = async (req, res) => {
     try {
+        const authToken = req.headers.authorization?.split(' ')[1] || null;
         const { id: assigneeId, name, email, role, avatar } = req.body;
         if (!assigneeId || !name) {
             return res.status(400).json({ success: false, message: 'assignee id and name are required.' });
@@ -188,6 +193,7 @@ const addAssignee = async (req, res) => {
             req.params.id,
             { id: assigneeId, name, email: email || '', role: role || 'member', avatar: avatar || '' },
             req.user,
+            authToken,
         );
         if (!task) return res.status(404).json({ success: false, message: 'Task not found.' });
         res.status(200).json({ success: true, message: 'Assignee added.', task });

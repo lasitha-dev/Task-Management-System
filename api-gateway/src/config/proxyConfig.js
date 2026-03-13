@@ -7,12 +7,12 @@ const proxyConfig = {
         {
             path: '/api/users',
             target: process.env.USER_SERVICE_URL || 'http://localhost:5001',
-            pathRewrite: {},
+            pathRewrite: { '^/': '/api/users/' },
         },
         {
             path: '/api/tasks',
             target: process.env.TASK_SERVICE_URL || 'http://localhost:5002',
-            pathRewrite: {},
+            pathRewrite: { '^/': '/api/tasks/' },
         },
         {
             path: '/api/boards',
@@ -22,12 +22,12 @@ const proxyConfig = {
         {
             path: '/api/notifications',
             target: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5003',
-            pathRewrite: {},
+            pathRewrite: { '^/': '/api/notifications/' },
         },
         {
             path: '/api/reports',
             target: process.env.REPORT_SERVICE_URL || 'http://localhost:5004',
-            pathRewrite: {},
+            pathRewrite: { '^/': '/api/reports/' },
         },
     ],
 };

@@ -4,6 +4,7 @@ const connectDB = require('./config/db');
 const taskRoutes = require('./routes/taskRoutes');
 const boardRoutes = require('./routes/boardRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
+const { startDeadlineReminderScheduler } = require('./services/deadlineReminderService');
 
 require('dotenv').config();
 
@@ -31,6 +32,7 @@ app.use(errorHandler);
 
 // Only start server if this file is run directly (not during tests)
 if (require.main === module) {
+    startDeadlineReminderScheduler();
     app.listen(PORT, () => {
         console.log(`Task Management Service running on port ${PORT}`);
     });

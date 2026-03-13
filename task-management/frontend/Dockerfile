@@ -5,16 +5,17 @@ FROM node:20-alpine AS builder
 ARG VITE_API_URL=http://127.0.0.1:8000
 ENV VITE_API_URL=$VITE_API_URL
 
-WORKDIR /app
+WORKDIR /workspace/task-management/frontend
 
 # Copy package files
-COPY package*.json ./
+COPY task-management/frontend/package*.json ./
+COPY shared-ui /workspace/shared-ui
 
 # Install dependencies (need ALL deps including dev dependencies for build)
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY task-management/frontend ./
 
 # Build the application
 RUN npm run build
@@ -23,10 +24,10 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy built assets from builder
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /workspace/task-management/frontend/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY task-management/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80

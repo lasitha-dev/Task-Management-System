@@ -1,5 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { buildAppUrl } from '@taskmaster/shared-ui/appLinks';
+import {
+  AppSidebarBody,
+  AppSidebarBrand,
+  AppSidebarProfile,
+  AppSidebarSectionLabel,
+  AppSidebarShell,
+} from '@taskmaster/shared-ui/components';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axiosConfig';
 
@@ -35,55 +43,70 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111621] flex">
+    <div className="min-h-screen bg-[#111621]">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#161b26] border-r border-[#2d3544] flex flex-col">
-        <div className="p-6 border-b border-[#2d3544]">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#144bb8] text-2xl">task_alt</span>
-            <span className="text-white text-xl font-bold">TaskMaster</span>
-          </div>
-        </div>
-
-        <div className="p-4">
-          <p className="text-[#64748b] text-xs font-semibold uppercase tracking-wider mb-3">Account</p>
-          <nav className="space-y-1">
-            <div className="flex items-center gap-3 px-3 py-2.5 bg-[#144bb8]/10 text-[#144bb8] rounded-lg cursor-pointer">
-              <span className="material-symbols-outlined text-xl">person</span>
-              <span className="text-sm font-medium">My Profile</span>
-            </div>
-          </nav>
-        </div>
-
-        <div className="mt-auto p-4 border-t border-[#2d3544]">
+      <AppSidebarShell
+        className="hidden lg:flex fixed top-0 left-0 bottom-0 z-50"
+        footer={
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 text-[#94a3b8] hover:text-red-400 hover:bg-red-500/10 rounded-lg cursor-pointer transition w-full"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#1c212c] border border-[#2d3544] hover:border-slate-500 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-all"
           >
-            <span className="material-symbols-outlined text-xl">logout</span>
-            <span className="text-sm font-medium">Logout</span>
+            <span className="material-symbols-outlined text-lg">logout</span>
+            <span>Logout</span>
           </button>
-        </div>
-      </aside>
+        }
+      >
+        <AppSidebarBrand />
+        <AppSidebarBody>
+          <AppSidebarProfile
+            name={user?.name || 'User'}
+            subtitle={user?.role || 'User'}
+            avatarName={user?.name || 'User'}
+          />
+
+          {user?.role === 'Admin' && (
+            <>
+              <AppSidebarSectionLabel>Administration</AppSidebarSectionLabel>
+              <nav className="flex flex-col gap-1">
+                <a
+                  href={buildAppUrl('user', '/admin', { includeToken: false })}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-[#1c212c] hover:text-white transition-colors text-sm font-medium"
+                >
+                  <span className="material-symbols-outlined text-[20px]">group</span>
+                  <span>User Monitoring</span>
+                </a>
+                <a
+                  href="#"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#144bb8]/10 text-[#144bb8] transition-colors text-sm font-medium"
+                >
+                  <span className="material-symbols-outlined text-[20px]">settings</span>
+                  <span>Settings</span>
+                </a>
+              </nav>
+            </>
+          )}
+
+          {user?.role !== 'Admin' && (
+            <>
+              <AppSidebarSectionLabel>Account</AppSidebarSectionLabel>
+              <nav className="flex flex-col gap-1">
+                <a
+                  href="#"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#144bb8]/10 text-[#144bb8] transition-colors text-sm font-medium"
+                >
+                  <span className="material-symbols-outlined text-[20px]">person</span>
+                  <span>My Profile</span>
+                </a>
+              </nav>
+            </>
+          )}
+        </AppSidebarBody>
+      </AppSidebarShell>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Nav */}
-        <header className="bg-[#161b26] border-b border-[#2d3544] px-8 py-4 flex items-center justify-between">
-          <span className="text-white font-semibold">My Profile</span>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-white text-sm font-medium">{user?.name}</p>
-              <p className="text-[#64748b] text-xs">{user?.email}</p>
-            </div>
-            <div className="w-9 h-9 bg-[#144bb8] rounded-full flex items-center justify-center text-white text-sm font-bold">
-              {user?.name?.charAt(0) || 'U'}
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 p-8">
+      <div className="lg:ml-[256px] min-h-screen">
+        <main className="p-8">
           <div className="max-w-2xl">
             <h1 className="text-white text-2xl font-bold mb-2">Profile Settings</h1>
             <p className="text-[#94a3b8] text-sm mb-8">Manage your account information.</p>

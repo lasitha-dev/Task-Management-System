@@ -12,12 +12,12 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-lg hover:border-primary dark:hover:border-primary transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-[#111621] border border-[#2d3544] rounded-lg hover:border-[#144bb8] transition-colors"
       >
-        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-white">
+        <span className="material-symbols-outlined text-[20px] text-slate-300">
           dashboard
         </span>
-        <span className="font-semibold text-slate-800 dark:text-white max-w-[200px] truncate">
+        <span className="font-semibold text-white max-w-[200px] truncate">
           {currentBoardName}
         </span>
         <span className={`material-symbols-outlined text-[18px] text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
@@ -31,19 +31,19 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-surface-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xl z-50 py-2 max-h-[400px] overflow-y-auto custom-scrollbar">
+          <div className="absolute top-full left-0 mt-2 w-72 bg-[#1c212c] border border-[#2d3544] rounded-xl shadow-xl z-50 py-2 max-h-[400px] overflow-y-auto custom-scrollbar">
             {/* Create new board button */}
             <button
               onClick={() => {
                 setIsOpen(false)
                 onCreateBoard()
               }}
-              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-surface-highlight transition-colors text-left border-b border-slate-100 dark:border-border-dark mb-2"
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#202634] transition-colors text-left border-b border-[#2d3544] mb-2"
             >
-              <span className="material-symbols-outlined text-[20px] text-primary">
+              <span className="material-symbols-outlined text-[20px] text-[#144bb8]">
                 add_circle
               </span>
-              <span className="font-semibold text-primary">
+              <span className="font-semibold text-[#144bb8]">
                 Create New Board
               </span>
             </button>
@@ -69,19 +69,19 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
                           onSelectBoard(board._id)
                           setIsOpen(false)
                         }}
-                        className={`w-full px-4 py-3 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-surface-highlight transition-colors text-left ${
-                          selectedBoard === board._id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-primary' : ''
+                        className={`w-full px-4 py-3 flex items-start gap-3 hover:bg-[#202634] transition-colors text-left ${
+                          selectedBoard === board._id ? 'bg-[#144bb8]/10 border-l-4 border-[#144bb8]' : ''
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[20px] text-slate-600 dark:text-white mt-0.5">
+                        <span className="material-symbols-outlined text-[20px] text-slate-300 mt-0.5">
                           {selectedBoard === board._id ? 'check_circle' : 'dashboard'}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-slate-800 dark:text-white truncate">
+                          <div className="font-semibold text-white truncate">
                             {board.name}
                           </div>
                           {board.description && (
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                            <div className="text-xs text-slate-400 mt-1 truncate">
                               {board.description}
                             </div>
                           )}
@@ -101,14 +101,14 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
                       
                       {/* Edit/Delete buttons for board creator */}
                       {isCreator && hoveredBoard === board._id && (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-surface-dark rounded-lg shadow-lg border border-slate-200 dark:border-border-dark p-1">
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-[#111621] rounded-lg shadow-lg border border-[#2d3544] p-1">
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
                               setIsOpen(false)
                               onEditBoard(board)
                             }}
-                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-surface-highlight rounded transition-colors"
+                            className="p-1.5 hover:bg-[#202634] rounded transition-colors"
                             title="Edit board"
                           >
                             <span className="material-symbols-outlined text-[18px] text-blue-500">edit</span>
@@ -119,7 +119,7 @@ export default function BoardSelector({ boards, selectedBoard, onSelectBoard, on
                               setIsOpen(false)
                               onDeleteBoard(board)
                             }}
-                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-surface-highlight rounded transition-colors"
+                            className="p-1.5 hover:bg-[#202634] rounded transition-colors"
                             title="Delete board"
                           >
                             <span className="material-symbols-outlined text-[18px] text-red-500">delete</span>

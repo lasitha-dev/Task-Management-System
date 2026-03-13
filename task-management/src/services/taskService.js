@@ -1,4 +1,68 @@
 const Task = require('../models/Task');
+const {
+    createNotification,
+    createBulkNotifications,
+} = require('./notificationService');
+const { triggerDeadlineReminderForTask } = require('./deadlineReminderService');
+
+function buildTaskAssignedNotification(task, assignee, actor) {
+    return {
+        type: 'task_assigned',
+        title: `New task assigned: ${task.title}`,
+        message: `${actor?.name || 'A teammate'} assigned you to \"${task.title}\".`,
+        recipientId: assignee.id,
+        priority: task.priority === 'urgent' ? 'high' : 'medium',
+        metadata: {
+            taskId: task._id.toString(),
+            taskTitle: task.title,
+            assignedBy: actor?.id || null,
+            assignedByName: actor?.name || null,
+            boardId: task.board ? task.board.toString() : null,
+            deadline: task.deadline,            recipientEmail: assignee.email || null,        },
+    };
+}
+function buildActorAssignedNotification(task, assignees, actor) {
+    const names = assignees.map((a) => a.name).join(', ');
+    return {
+        type: 'task_assigned',
+        title: `You assigned members to: ${task.title}`,
+        message: `You assigned ${names} to "${task.title}".`,
+        recipientId: actor.id,
+        priority: task.priority === 'urgent' ? 'high' : 'medium',
+        metadata: {
+            taskId: task._id.toString(),
+            taskTitle: task.title,
+            assignedBy: actor.id,
+            assignedByName: actor.name,
+            boardId: task.board ? task.board.toString() : null,
+            deadline: task.deadline,
+            recipientEmail: actor.email || null,
+        },
+    };
+}
+async function sendAssignmentNotifications(task, assignees, actor, authToken = null) {
+    if (!Array.isArray(assignees) || assignees.length === 0) {
+        return;
+    }
+
+    const notifications = assignees
+        .filter((assignee) => assignee.id !== actor?.id)
+        .map((assignee) => buildTaskAssignedNotification(task, assignee, actor));
+
+    if (actor?.id) {
+        notifications.push(buildActorAssignedNotification(task, assignees, actor));
+    }
+
+    if (notifications.length === 0) {
+        return;
+    }
+
+    try {
+        await createBulkNotifications(notifications, authToken);
+    } catch (error) {
+        console.error(`Failed to send task assignment notifications for task ${task._id}: ${error.message}`);
+    }
+}
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
 function makeActivity(user, action, field = null, oldValue = null, newValue = null) {
@@ -15,7 +79,7 @@ function makeActivity(user, action, field = null, oldValue = null, newValue = nu
 /**
  * Create a new task
  */
-async function createTask(data, reporter = null) {
+async function createTask(data, reporter = null, authToken = null) {
     const taskData = { ...data };
 
     // Attach reporter from JWT user if not supplied in body
@@ -34,7 +98,9 @@ async function createTask(data, reporter = null) {
     ];
 
     const task = new Task(taskData);
-    return await task.save();
+    const savedTask = await task.save();
+    await sendAssignmentNotifications(savedTask, savedTask.assignees, reporter, authToken);
+    return savedTask;
 }
 
 /**
@@ -68,45 +134,83 @@ async function getTaskById(id) {
 /**
  * Update a task fully (PUT) — tracks field changes in activity log
  */
-async function updateTask(id, data, user = null) {
+async function updateTask(id, data, user = null, authToken = null) {
     const task = await Task.findById(id);
     if (!task) return null;
 
     const TRACKED = ['title', 'description', 'status', 'priority', 'deadline', 'progress', 'project', 'sprint'];
     const activities = [];
 
+    const deadlineChanged = data.deadline !== undefined && String(task.deadline ?? '') !== String(data.deadline ?? '');
+
     TRACKED.forEach((field) => {
         if (data[field] !== undefined && String(task[field] ?? '') !== String(data[field] ?? '')) {
             activities.push(makeActivity(user, 'updated', field, task[field], data[field]));
         }
     });
 
+    if (deadlineChanged) {
+        const newDeadlineIso = data.deadline ? new Date(data.deadline).toISOString() : null;
+        task.notificationDispatches = newDeadlineIso
+            ? (task.notificationDispatches || []).filter((d) => d.key.endsWith(`:${newDeadlineIso}`))
+            : [];
+    }
+
     Object.assign(task, data);
     if (activities.length) task.activity.push(...activities);
 
-    return await task.save();
+    const savedTask = await task.save();
+
+    if (deadlineChanged && savedTask.deadline) {
+        try {
+            await triggerDeadlineReminderForTask(savedTask, authToken);
+        } catch (error) {
+            console.error(`Failed to trigger deadline reminder after update for task ${savedTask._id}: ${error.message}`);
+        }
+    }
+
+    return savedTask;
 }
 
 /**
  * Partially update a task (PATCH) — used for drag-drop status change
  */
-async function patchTask(id, data, user = null) {
+async function patchTask(id, data, user = null, authToken = null) {
     const task = await Task.findById(id);
     if (!task) return null;
 
     const TRACKED = ['title', 'description', 'status', 'priority', 'deadline', 'progress'];
     const activities = [];
 
+    const deadlineChanged = data.deadline !== undefined && String(task.deadline ?? '') !== String(data.deadline ?? '');
+
     TRACKED.forEach((field) => {
         if (data[field] !== undefined && String(task[field] ?? '') !== String(data[field] ?? '')) {
             activities.push(makeActivity(user, 'updated', field, task[field], data[field]));
         }
     });
 
+    if (deadlineChanged) {
+        const newDeadlineIso = data.deadline ? new Date(data.deadline).toISOString() : null;
+        task.notificationDispatches = newDeadlineIso
+            ? (task.notificationDispatches || []).filter((d) => d.key.endsWith(`:${newDeadlineIso}`))
+            : [];
+    }
+
     Object.keys(data).forEach((k) => { task[k] = data[k]; });
     if (activities.length) task.activity.push(...activities);
 
-    return await task.save();
+    const savedTask = await task.save();
+
+    if (deadlineChanged && savedTask.deadline) {
+        try {
+            await triggerDeadlineReminderForTask(savedTask, authToken);
+        } catch (error) {
+            console.error(`Failed to trigger deadline reminder after patch for task ${savedTask._id}: ${error.message}`);
+        }
+    }
+
+    return savedTask;
 }
 
 /**
@@ -121,7 +225,7 @@ async function deleteTask(id) {
 /**
  * Add an assignee to a task (prevents duplicates)
  */
-async function addAssignee(taskId, assignee, user = null) {
+async function addAssignee(taskId, assignee, user = null, authToken = null) {
     const task = await Task.findById(taskId);
     if (!task) return null;
 
@@ -134,7 +238,23 @@ async function addAssignee(taskId, assignee, user = null) {
 
     task.assignees.push(assignee);
     task.activity.push(makeActivity(user, 'assigned', 'assignees', null, assignee.name));
-    return await task.save();
+    const savedTask = await task.save();
+
+    try {
+        await createNotification(buildTaskAssignedNotification(savedTask, assignee, user), authToken);
+    } catch (error) {
+        console.error(`Failed to send assignment notification for task ${savedTask._id}: ${error.message}`);
+    }
+
+    if (user?.id && user.id !== assignee.id) {
+        try {
+            await createNotification(buildActorAssignedNotification(savedTask, [assignee], user), authToken);
+        } catch (error) {
+            console.error(`Failed to send actor assignment notification for task ${savedTask._id}: ${error.message}`);
+        }
+    }
+
+    return savedTask;
 }
 
 /**

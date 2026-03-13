@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { redirectToApp } from '@taskmaster/shared-ui/appLinks';
 import { useAuth } from '../context/AuthContext';
 import useGoogleAuth from '../hooks/useGoogleAuth';
 
@@ -11,17 +12,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { login, googleLogin, logout } = useAuth();
-  const { triggerGoogleLogin, isGoogleAvailable } = useGoogleAuth();
   const navigate = useNavigate();
+  const { triggerGoogleLogin, isGoogleAvailable } = useGoogleAuth();
 
   // Clear localStorage if coming from logout
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     if (params.get('logout') === 'true') {
       console.log('[Login] Logout flag detected, clearing localStorage');
       logout();
       // Clean up URL
-      window.history.replaceState({}, '', '/login');
+      globalThis.history.replaceState({}, '', '/login');
     }
   }, [logout]);
 
@@ -33,15 +34,14 @@ export default function LoginPage() {
       console.log('[Login] Attempting login for:', email);
       const user = await login(email, password);
       console.log('[Login] Login successful:', user);
-      const token = localStorage.getItem('token');
       
       // Check user role and redirect accordingly
       if (user.role === 'Admin') {
         console.log('[Login] Admin user detected, redirecting to admin dashboard');
-        window.location.href = 'http://127.0.0.1:3000/admin';
+        navigate('/admin');
       } else {
         console.log('[Login] Regular user detected, redirecting to task dashboard');
-        window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+        redirectToApp('task');
       }
     } catch (err) {
       console.error('[Login] Login failed:', err);
@@ -59,15 +59,14 @@ export default function LoginPage() {
       const idToken = await triggerGoogleLogin();
       const user = await googleLogin(idToken);
       console.log('[Login] Google login successful:', user);
-      const token = localStorage.getItem('token');
       
       // Check user role and redirect accordingly
       if (user.role === 'Admin') {
         console.log('[Login] Admin user detected, redirecting to admin dashboard');
-        window.location.href = 'http://127.0.0.1:3000/admin';
+        navigate('/admin');
       } else {
         console.log('[Login] Regular user detected, redirecting to task dashboard');
-        window.location.href = `http://127.0.0.1:3001/#token=${token}`;
+        redirectToApp('task');
       }
     } catch (err) {
       console.error('[Login] Google login failed:', err);
@@ -133,9 +132,9 @@ export default function LoginPage() {
                 </div>
               </label>
 
-              <label className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-300 text-sm font-medium">Password</span>
+                  <label htmlFor="login-password" className="text-slate-300 text-sm font-medium">Password</label>
                   <Link to="#" className="text-[#144bb8] text-xs font-semibold hover:underline">Forgot password?</Link>
                 </div>
                 <div className="relative">
@@ -143,6 +142,7 @@ export default function LoginPage() {
                     <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '20px' }}>lock</span>
                   </div>
                   <input
+                    id="login-password"
                     style={{ paddingLeft: '44px', paddingRight: '44px', backgroundColor: '#111621' }}
                     className="w-full rounded-lg border border-slate-600 h-12 text-white text-sm placeholder:text-slate-400 focus:border-[#144bb8] focus:ring-1 focus:ring-[#144bb8] focus:outline-none transition-all"
                     placeholder="Enter your password"
@@ -162,7 +162,7 @@ export default function LoginPage() {
                     </span>
                   </button>
                 </div>
-              </label>
+              </div>
 
               <button
                 className="mt-2 w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-4 bg-[#144bb8] hover:bg-[#113d96] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"

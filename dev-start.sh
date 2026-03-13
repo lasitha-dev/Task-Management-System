@@ -45,8 +45,10 @@ declare -a SERVICES=(
     "api-gateway:8000"
     "user-management:5001"
     "task-management:5002"
+    "notifications-management:5003"
     "user-management/frontend:3000"
     "task-management/frontend:3001"
+    "notifications-management/frontend:3002"
 )
 
 # Function to install dependencies if needed
@@ -157,8 +159,10 @@ all_healthy=true
 check_service "http://localhost:8000/health" "API Gateway" || all_healthy=false
 check_service "http://localhost:5001/health" "User Management" || all_healthy=false
 check_service "http://localhost:5002/health" "Task Management" || all_healthy=false
+check_service "http://localhost:5003/health" "Notifications" || all_healthy=false
 check_service "http://localhost:3000" "User Frontend" || all_healthy=false
 check_service "http://localhost:3001" "Task Frontend" || all_healthy=false
+check_service "http://localhost:3002" "Notifications Frontend" || all_healthy=false
 
 echo ""
 echo "======================================"
@@ -174,14 +178,17 @@ echo -e "${CYAN}📱 Access the applications:${NC}"
 echo ""
 echo -e "   ${GREEN}🔐 User Login:${NC}        http://localhost:3000"
 echo -e "   ${GREEN}📋 Task Dashboard:${NC}    http://localhost:3001"
+echo -e "   ${GREEN}🔔 Notifications:${NC}     http://localhost:3002"
 echo -e "   ${GREEN}🚪 API Gateway:${NC}       http://localhost:8000"
 echo ""
 echo -e "${CYAN}📊 View logs:${NC}"
 echo -e "   tail -f logs/api-gateway.log"
 echo -e "   tail -f logs/user-management.log"
 echo -e "   tail -f logs/task-management.log"
+echo -e "   tail -f logs/notifications-management.log"
 echo -e "   tail -f logs/user-management-frontend.log"
 echo -e "   tail -f logs/task-management-frontend.log"
+echo -e "   tail -f logs/notifications-management-frontend.log"
 echo ""
 echo -e "${CYAN}🛑 Stop all services:${NC}"
 echo -e "   ./dev-stop.sh"

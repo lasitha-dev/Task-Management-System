@@ -46,6 +46,16 @@ const timeLogSchema = new mongoose.Schema(
     { _id: true, timestamps: true }
 );
 
+const notificationDispatchSchema = new mongoose.Schema(
+    {
+        key:         { type: String, required: true },
+        type:        { type: String, required: true },
+        recipientId: { type: String, required: true },
+        sentAt:      { type: Date, default: Date.now },
+    },
+    { _id: false }
+);
+
 // ─── Main Task Schema ─────────────────────────────────────────────────────────
 
 const taskSchema = new mongoose.Schema(
@@ -137,6 +147,10 @@ const taskSchema = new mongoose.Schema(
         // ── Activity log ───────────────────────────────────────────────────
         activity: {
             type: [activitySchema],
+            default: [],
+        },
+        notificationDispatches: {
+            type: [notificationDispatchSchema],
             default: [],
         },
     },
