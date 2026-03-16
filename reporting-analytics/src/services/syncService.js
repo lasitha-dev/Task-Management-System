@@ -1,4 +1,5 @@
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 const TasksMirror = require('../models/TasksMirror');
 
 /**
@@ -12,8 +13,20 @@ const syncTasksFromExternal = async () => {
         // Fetch tasks via API Gateway (or directly if configured)
         const taskServiceUrl = process.env.TASK_SERVICE_URL || 'http://localhost:5000/api/tasks';
         
-        const response = await axios.get(taskServiceUrl);
-        const tasksData = response.data?.data || response.data || [];
+        // Generate an internal service token
+        const token = jwt.sign(
+            { id: 'internal-sync-service', name: 'Sync Service', role: 'admin' },
+            process.env.JWT_SECRET,
+            { expiresIn: '5m' }
+        );
+
+        const response = await axios.get(taskServiceUrl, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        // task-management API returns data in the 'tasks' field
+        const tasksData = response.data?.tasks || response.data?.data || response.data || [];
         
         if (!Array.isArray(tasksData)) {
             throw new Error('Invalid data format received from task service');

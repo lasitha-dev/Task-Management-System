@@ -16,6 +16,7 @@ const navItems = [
   { icon: 'notifications', label: 'Notifications', to: '/notifications' },
   { icon: 'diversity_3', label: 'Team Space', to: '/team' },
   { icon: 'insights', label: 'Analytics', to: '/analytics' },
+  { icon: 'description', label: 'Reports', to: '/reports' },
 ]
 
 export default function Sidebar({ user, unreadCount = 0 }) {

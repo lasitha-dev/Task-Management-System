@@ -18,7 +18,7 @@ function resolveTarget(req) {
     if (req.url.startsWith('/notifications')) {
         return process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:5003';
     }
-    if (req.url.startsWith('/reports')) {
+    if (req.url.startsWith('/reports') || req.url.startsWith('/analytics') || req.url.startsWith('/sync')) {
         return process.env.REPORTING_SERVICE_URL || 'http://localhost:5004';
     }
     return process.env.TASK_SERVICE_URL || 'http://localhost:5002';
