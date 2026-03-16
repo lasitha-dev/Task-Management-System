@@ -6,6 +6,7 @@ import { buildAppUrl } from '@taskmaster/shared-ui/appLinks'
 import { AppEmptyState, AppPageHeader, AppSectionCard, AppStatCard } from '@taskmaster/shared-ui/components'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts'
 import Sidebar from './components/Sidebar'
 import NotificationsWorkspace from './components/NotificationsWorkspace'
 import Header from './components/Header'
@@ -350,6 +351,7 @@ function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ total: 0, todo: 0, in_progress: 0, done: 0 })
   const [tasks, setTasks] = useState([])
+  const [chartType, setChartType] = useState('pie')
 
   useEffect(() => {
     let isCancelled = false
@@ -426,28 +428,153 @@ function AnalyticsPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-6">
         <AppSectionCard className="p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Status Breakdown</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white">Status Breakdown</h3>
+            <div className="flex items-center bg-[#1c212c] p-1 rounded-lg border border-[#2d3544]">
+              <button
+                onClick={() => setChartType('pie')}
+                className={`flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  chartType === 'pie' 
+                    ? 'bg-[#144bb8] text-white shadow-sm' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="View as Pie Chart"
+              >
+                <span className="material-symbols-outlined text-[16px]">pie_chart</span>
+              </button>
+              <button
+                onClick={() => setChartType('bar')}
+                className={`flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  chartType === 'bar' 
+                    ? 'bg-[#144bb8] text-white shadow-sm' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="View as Bar Chart"
+              >
+                <span className="material-symbols-outlined text-[16px]">bar_chart</span>
+              </button>
+            </div>
+          </div>
+          
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((item) => <div key={item} className="h-10 rounded-xl bg-[#202634] animate-pulse" />)}
             </div>
           ) : (
-            <div className="space-y-4">
-              {['todo', 'in_progress', 'done'].map((status) => {
-                const count = stats[status] || 0
-                const width = stats.total > 0 ? `${Math.max(8, Math.round((count / stats.total) * 100))}%` : '8%'
-                return (
-                  <div key={status}>
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-slate-300 font-medium">{formatStatusLabel(status)}</span>
-                      <span className="text-slate-400">{count}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-[#161b26] overflow-hidden">
-                      <div className={`h-full rounded-full ${getStatusBarClass(status)}`} style={{ width }} />
-                    </div>
-                  </div>
-                )
-              })}
+            <div className="h-[250px] w-full mt-4">
+              {chartType === 'pie' ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'To Do', value: stats.todo || 0, color: '#f59e0b' },
+                        { name: 'In Progress', value: stats.in_progress || 0, color: '#144bb8' },
+                        { name: 'Done', value: stats.done || 0, color: '#10b981' }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {[
+                        { name: 'To Do', value: stats.todo || 0, color: '#f59e0b' },
+                        { name: 'In Progress', value: stats.in_progress || 0, color: '#144bb8' },
+                        { name: 'Done', value: stats.done || 0, color: '#10b981' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-[#1c212c] border border-[#2d3544] rounded-lg p-3 shadow-xl">
+                              <p className="text-sm font-semibold text-white flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }}></span>
+                                {data.name}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-1">
+                                {data.value} {data.value === 1 ? 'Task' : 'Tasks'}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" className="fill-white font-bold text-xl">
+                      {stats.total}
+                    </text>
+                    <text x="50%" y="54%" textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[10px] uppercase tracking-wider font-semibold">
+                      Total Tasks
+                    </text>
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36} 
+                      iconType="circle"
+                      formatter={(value) => <span className="text-slate-300 text-sm font-medium ml-1">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={[
+                      { name: 'To Do', value: stats.todo || 0, color: '#f59e0b' },
+                      { name: 'In Progress', value: stats.in_progress || 0, color: '#144bb8' },
+                      { name: 'Done', value: stats.done || 0, color: '#10b981' }
+                    ]}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3544" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} 
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                      allowDecimals={false}
+                    />
+                    <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-[#1c212c] border border-[#2d3544] rounded-lg p-3 shadow-xl">
+                              <p className="text-sm font-semibold text-white flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }}></span>
+                                {data.name}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-1">
+                                {data.value} {data.value === 1 ? 'Task' : 'Tasks'}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                      {[
+                        { name: 'To Do', value: stats.todo || 0, color: '#f59e0b' },
+                        { name: 'In Progress', value: stats.in_progress || 0, color: '#144bb8' },
+                        { name: 'Done', value: stats.done || 0, color: '#10b981' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           )}
         </AppSectionCard>
