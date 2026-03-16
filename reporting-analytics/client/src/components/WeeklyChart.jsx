@@ -4,12 +4,12 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const WeeklyChart = ({ data, loading, error }) => {
   if (loading) {
     return (
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 h-80 flex items-center justify-center">
+      <div className="bg-[var(--tm-bg-surface)] border border-[var(--tm-border)] rounded-lg p-6 h-80 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin mb-3">
-            <div className="w-8 h-8 border-4 border-slate-700 border-t-blue-500 rounded-full mx-auto"></div>
+            <div className="w-8 h-8 border-4 border-[var(--tm-border)] border-t-[var(--tm-accent)] rounded-full mx-auto"></div>
           </div>
-          <p className="text-slate-400">Loading chart...</p>
+          <p className="text-[var(--tm-text-secondary)]">Loading chart...</p>
         </div>
       </div>
     );
@@ -17,7 +17,7 @@ const WeeklyChart = ({ data, loading, error }) => {
 
   if (error) {
     return (
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 h-80 flex items-center justify-center">
+      <div className="bg-[var(--tm-bg-surface)] border border-[var(--tm-border)] rounded-lg p-6 h-80 flex items-center justify-center">
         <p className="text-red-400">{error}</p>
       </div>
     );
@@ -34,10 +34,10 @@ const WeeklyChart = ({ data, loading, error }) => {
   ];
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+    <div className="bg-[var(--tm-bg-surface)] border border-[var(--tm-border)] rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-sm font-bold text-white uppercase tracking-wider">Tasks Completed per Day</h3>
-        <button className="text-slate-400 hover:text-white transition">⋮</button>
+        <button className="text-[var(--tm-text-secondary)] hover:text-white transition">⋮</button>
       </div>
       
       <ResponsiveContainer width="100%" height={300}>

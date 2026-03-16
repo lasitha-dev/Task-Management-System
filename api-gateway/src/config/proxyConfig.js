@@ -29,6 +29,16 @@ const proxyConfig = {
             target: process.env.REPORT_SERVICE_URL || 'http://localhost:5004',
             pathRewrite: { '^/': '/api/reports/' },
         },
+        {
+            path: '/api/analytics',
+            target: process.env.REPORT_SERVICE_URL || 'http://localhost:5004',
+            pathRewrite: { '^/': '/api/analytics/' },
+        },
+        {
+            path: '/api/sync',
+            target: process.env.REPORT_SERVICE_URL || 'http://localhost:5004',
+            pathRewrite: { '^/': '/api/sync/' },
+        },
     ],
 };
 

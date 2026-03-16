@@ -1,93 +1,63 @@
 const syncService = require('../../src/services/syncService');
 const TasksMirror = require('../../src/models/TasksMirror');
+const axios = require('axios');
 
-// Mock dependencies
 jest.mock('../../src/models/TasksMirror');
+jest.mock('axios');
 
 describe('Sync Service', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        process.env.TASK_SERVICE_URL = 'mock';
-    });
-
-    describe('generateMockTasks', () => {
-        it('should generate 20 mock tasks', async () => {
-            const tasks = syncService.generateMockTasks();
-
-            expect(Array.isArray(tasks)).toBe(true);
-            expect(tasks.length).toBe(20);
-        });
-
-        it('should generate tasks with all required fields', async () => {
-            const tasks = syncService.generateMockTasks();
-
-            expect(tasks[0]).toHaveProperty('taskId');
-            expect(tasks[0]).toHaveProperty('title');
-            expect(tasks[0]).toHaveProperty('status');
-            expect(tasks[0]).toHaveProperty('assignedUserId');
-            expect(tasks[0]).toHaveProperty('assignedUserName');
-            expect(tasks[0]).toHaveProperty('createdAt');
-        });
-
-        it('should generate tasks with valid statuses', async () => {
-            const tasks = syncService.generateMockTasks();
-            const validStatuses = ['todo', 'inProgress', 'done'];
-
-            tasks.forEach(task => {
-                expect(validStatuses).toContain(task.status);
-            });
-        });
-
-        it('should have unique task IDs', async () => {
-            const tasks = syncService.generateMockTasks();
-            const ids = tasks.map(t => t.taskId);
-            const uniqueIds = new Set(ids);
-
-            expect(uniqueIds.size).toBe(tasks.length);
-        });
-
-        it('should assign tasks to users from mock list', async () => {
-            const tasks = syncService.generateMockTasks();
-            const validNames = [
-                'Alice Johnson',
-                'Bob Smith',
-                'Carol Williams',
-                'David Brown',
-                'Emma Davis'
-            ];
-
-            tasks.forEach(task => {
-                expect(validNames).toContain(task.assignedUserName);
-            });
-        });
     });
 
     describe('syncTasksFromExternal', () => {
-        it('should sync tasks in mock mode', async () => {
+        it('should sync tasks successfully via API fetch', async () => {
+            TasksMirror.deleteMany = jest.fn().mockResolvedValue({});
             TasksMirror.updateOne = jest.fn().mockResolvedValue({});
+            
+            axios.get.mockResolvedValue({
+                data: {
+                    data: [
+                         { _id: '1', title: 'Task 1', status: 'done', assignedTo: { _id: 'u1', name: 'User 1' }, createdAt: new Date() },
+                         { _id: '2', title: 'Task 2', status: 'todo', assignedTo: 'u2', createdAt: new Date() }
+                    ]
+                }
+            });
 
             const result = await syncService.syncTasksFromExternal();
 
             expect(result.success).toBe(true);
-            expect(result.count).toBe(20);
-            expect(TasksMirror.updateOne).toHaveBeenCalled();
+            expect(result.count).toBe(2);
+            expect(TasksMirror.deleteMany).toHaveBeenCalled();
+            expect(TasksMirror.updateOne).toHaveBeenCalledTimes(2);
         });
 
-        it('should return success message', async () => {
-            TasksMirror.updateOne = jest.fn().mockResolvedValue({});
-
-            const result = await syncService.syncTasksFromExternal();
-
-            expect(result.message).toMatch(/Synced 20 tasks/);
-        });
-
-        it('should handle sync errors gracefully', async () => {
-            TasksMirror.updateOne = jest.fn().mockRejectedValue(new Error('DB Error'));
+        it('should handle invalid data format gracefully', async () => {
+            axios.get.mockResolvedValue({ data: { data: 'not an array' } });
 
             const result = await syncService.syncTasksFromExternal();
 
             expect(result.success).toBe(false);
-            expect(result.message).toBeDefined();
+            expect(result.message).toMatch(/Invalid data format/);
+        });
+
+        it('should handle API errors gracefully', async () => {
+            axios.get.mockRejectedValue(new Error('Network Error'));
+
+            const result = await syncService.syncTasksFromExternal();
+
+            expect(result.success).toBe(false);
+            expect(result.message).toMatch(/Network Error/);
+        });
+        
+        it('should handle DB errors gracefully', async () => {
+            axios.get.mockResolvedValue({ data: { data: [] } });
+            TasksMirror.deleteMany = jest.fn().mockRejectedValue(new Error('DB Error'));
+
+            const result = await syncService.syncTasksFromExternal();
+
+            expect(result.success).toBe(false);
+            expect(result.message).toMatch(/DB Error/);
         });
     });
 });

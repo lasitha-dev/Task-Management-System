@@ -139,7 +139,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex">
+    <div className="min-h-screen bg-[var(--tm-bg-app)] text-white flex">
       {/* Sidebar */}
       <Sidebar />
 
@@ -154,7 +154,7 @@ function App() {
             {/* Breadcrumb & Time Filters */}
             <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
               <div className="text-sm text-slate-400">
-                Home <span className="mx-2">/</span> <span className="text-blue-500 font-medium">Analytics</span>
+                Home <span className="mx-2">/</span> <span className="text-[var(--tm-accent)] font-medium">Analytics</span>
               </div>
               <div className="flex flex-col gap-3 flex-wrap">
                 <div className="flex gap-2 flex-wrap">
@@ -164,8 +164,8 @@ function App() {
                       onClick={() => handlePeriodChange(p)}
                       className={`px-4 py-2 rounded-lg font-medium text-sm transition ${
                         period === p
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-[#1e293b] text-gray-300 hover:bg-blue-600 hover:text-white'
+                          ? 'bg-[var(--tm-accent)] text-white'
+                          : 'bg-[var(--tm-bg-surface)] text-gray-300 hover:bg-[var(--tm-accent)] hover:text-white'
                       }`}
                     >
                       {p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : '📅 Custom'}
@@ -175,21 +175,21 @@ function App() {
                 
                 {/* Custom Date Picker */}
                 {showCustomPicker && (
-                  <div className="flex items-center gap-3 p-3 bg-[#1e293b] rounded-lg border border-[#334155]">
+                  <div className="flex items-center gap-3 p-3 bg-[var(--tm-bg-surface)] rounded-lg border border-[var(--tm-border)]">
                     <label className="text-gray-400 text-sm">From:</label>
                     <input type="date" value={customFrom}
                       onChange={(e) => setCustomFrom(e.target.value)}
-                      className="bg-[#0f172a] border border-[#334155] rounded px-3 py-1.5 text-white text-sm"/>
+                      className="bg-[#111621] border border-[var(--tm-border)] rounded px-3 py-1.5 text-white text-sm"/>
                     <label className="text-gray-400 text-sm">To:</label>
                     <input type="date" value={customTo}
                       onChange={(e) => setCustomTo(e.target.value)}
-                      className="bg-[#0f172a] border border-[#334155] rounded px-3 py-1.5 text-white text-sm"/>
+                      className="bg-[#111621] border border-[var(--tm-border)] rounded px-3 py-1.5 text-white text-sm"/>
                     <button onClick={() => {
                       if(customFrom && customTo) {
                         loadAllData('custom');
                         setShowCustomPicker(false);
                       }
-                    }} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Apply</button>
+                    }} className="px-4 py-1.5 bg-[var(--tm-accent)] hover:bg-[var(--tm-accent-hover)] text-white rounded text-sm">Apply</button>
                     <button onClick={() => {
                       setShowCustomPicker(false);
                       setPeriod('week');

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { FileText, Download, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { reportsApi } from '../services/analyticsApi';
@@ -63,10 +63,10 @@ const ReportsTable = ({ reports, onDelete, onRefresh }) => {
   };
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+    <div className="bg-[var(--tm-bg-surface)] border border-[var(--tm-border)] rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-sm font-bold text-white uppercase tracking-wider">Recent Reports</h3>
-        <a href="#view-all" className="text-blue-500 hover:text-blue-400 transition text-sm font-medium">
+        <a href="#view-all" className="text-[var(--tm-accent)] hover:text-blue-400 transition text-sm font-medium">
           View All 
         </a>
       </div>
@@ -75,7 +75,7 @@ const ReportsTable = ({ reports, onDelete, onRefresh }) => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider font-semibold">
+              <tr className="border-b border-[var(--tm-border)] text-[var(--tm-text-secondary)] text-xs uppercase tracking-wider font-semibold">
                 <th className="text-left py-3 px-4">Report Name</th>
                 <th className="text-left py-3 px-4">Date Generated</th>
                 <th className="text-left py-3 px-4">Author</th>
@@ -85,20 +85,20 @@ const ReportsTable = ({ reports, onDelete, onRefresh }) => {
             </thead>
             <tbody>
               {reports.map((report) => (
-                <tr key={report._id} className="border-b border-slate-700 hover:bg-slate-700/30 transition">
+                <tr key={report._id} className="border-b border-[var(--tm-border)] hover:bg-white/5 transition">
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2">
-                      <FileText size={15} className="text-blue-400 flex-shrink-0" />
+                      <FileText size={15} className="text-[var(--tm-accent)] flex-shrink-0" />
                       <span className="text-white">{report.title}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4 text-slate-300 text-sm">
                     <div>{formatDate(report.generatedAt)}</div>
-                    <div className="text-xs text-slate-400">{formatTime(report.generatedAt)}</div>
+                    <div className="text-xs text-[var(--tm-text-secondary)]">{formatTime(report.generatedAt)}</div>
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">
+                      <div className="w-6 h-6 rounded-full bg-[#144bb8]/20 flex items-center justify-center text-xs font-bold text-[var(--tm-accent)]">
                         {report.authorName?.charAt(0).toUpperCase()}
                       </div>
                       <span className="text-white text-sm">{report.authorName}</span>
@@ -140,7 +140,7 @@ const ReportsTable = ({ reports, onDelete, onRefresh }) => {
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-slate-400">No reports yet. Generate your first report!</p>
+          <p className="text-[var(--tm-text-secondary)]">No reports yet. Generate your first report!</p>
         </div>
       )}
     </div>

@@ -2,21 +2,19 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:5000';
 
-// Development token for testing
-const MOCK_JWT_TOKEN = 'mock-token-for-development';
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${MOCK_JWT_TOKEN}`
+    'Content-Type': 'application/json'
   }
 });
 
-// Add JWT token to all requests if it exists in localStorage, otherwise use mock
+// Add JWT token to all requests if it exists in localStorage
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('jwt_token') || MOCK_JWT_TOKEN;
-  config.headers.Authorization = `Bearer ${token}`;
+  const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
@@ -25,7 +23,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      localStorage.removeItem('token');
       localStorage.removeItem('jwt_token');
+      // Import appLinks to redirect to login if possible, or just reload
+      // globalThis.location.href = '/'; 
     }
     return Promise.reject(error);
   }

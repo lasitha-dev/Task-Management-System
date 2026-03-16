@@ -10,46 +10,34 @@ const Header = ({onGenerateReport, onSearch}) => {
   };
 
   return (
-    <div className="bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
+    <div className="bg-[var(--tm-bg-surface)] border-b border-[var(--tm-border)] sticky top-0 z-40">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl"></span>
             <h1 className="text-xl font-bold text-white">Reporting & Analytics</h1>
           </div>
 
           <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2 px-4 py-2 
-          bg-[#1e293b] border border-[#334155] rounded-lg 
-          text-gray-400 text-sm w-64 focus-within:border-blue-500 
-          focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-            <span className="text-slate-400">🔍</span>
+          bg-[#111621] border border-[var(--tm-border)] rounded-lg 
+          text-slate-400 text-sm w-64 focus-within:border-[var(--tm-accent)] 
+          focus-within:ring-1 focus-within:ring-[var(--tm-accent)] transition-all">
+            <span className="material-symbols-outlined text-slate-400 text-lg">search</span>
             <input
               type="text"
               placeholder="Search analytics..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="bg-transparent outline-none text-white 
-              placeholder-gray-500 text-sm w-full"
+              placeholder-slate-500 text-sm w-full"
             />
           </div>
 
-            <button className="relative text-slate-300 hover:text-white transition">
-              
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            <button className="text-slate-300 hover:text-white transition"></button>
-
             <button onClick={onGenerateReport}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--tm-accent)] hover:bg-[var(--tm-accent-hover)] 
               text-white rounded-lg text-sm font-medium transition-colors">
-              + Generate Report
+              <span className="material-symbols-outlined text-lg">add</span> Generate Report
             </button>
-
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:bg-blue-600 transition">
-              A
-            </div>
           </div>
         </div>
       </div>

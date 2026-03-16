@@ -1,15 +1,15 @@
-﻿import React from 'react';
+import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 const StatusChart = ({ data, loading }) => {
   if (loading) {
     return (
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 h-80 flex items-center justify-center">
+      <div className="bg-[var(--tm-bg-surface)] border border-[var(--tm-border)] rounded-lg p-6 h-80 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin mb-3">
-            <div className="w-8 h-8 border-4 border-slate-700 border-t-blue-500 rounded-full mx-auto"></div>
+            <div className="w-8 h-8 border-4 border-[var(--tm-border)] border-t-[var(--tm-accent)] rounded-full mx-auto"></div>
           </div>
-          <p className="text-slate-400">Loading chart...</p>
+          <p className="text-[var(--tm-text-secondary)]">Loading chart...</p>
         </div>
       </div>
     );
@@ -25,10 +25,10 @@ const StatusChart = ({ data, loading }) => {
   const colors = ['#3b82f6', '#60a5fa', '#1e40af'];
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+    <div className="bg-[var(--tm-bg-surface)] border border-[var(--tm-border)] rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-sm font-bold text-white uppercase tracking-wider">Task Status</h3>
-        <button className="text-slate-400 hover:text-white transition"></button>
+        <button className="text-[var(--tm-text-secondary)] hover:text-white transition"></button>
       </div>
 
       <div className="flex flex-col items-center relative">
@@ -56,7 +56,7 @@ const StatusChart = ({ data, loading }) => {
           <div style={{position:'absolute', top:'42%', left:'50%', 
             transform:'translate(-50%,-50%)', textAlign:'center', pointerEvents: 'none'}}>
             <div style={{fontSize:'28px', fontWeight:'bold', color:'white'}}>{total}</div>
-            <div style={{fontSize:'11px', color:'#94a3b8', letterSpacing:'1px'}}>TOTAL</div>
+            <div style={{fontSize:'11px', color:'var(--tm-text-secondary)', letterSpacing:'1px'}}>TOTAL</div>
           </div>
         </div>
 

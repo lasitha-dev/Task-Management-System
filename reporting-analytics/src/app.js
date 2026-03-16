@@ -13,7 +13,7 @@ const { syncTasksFromExternal } = require('./services/syncService');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5004;
 
 // Connect to Database
 connectDB();

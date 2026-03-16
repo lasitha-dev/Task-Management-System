@@ -1,26 +1,30 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{js,jsx}"
+    './index.html', 
+    './src/**/*.{js,jsx,ts,tsx}',
+    '../../shared-ui/**/*.{js,jsx,ts,tsx}'
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        'slate': {
-          '950': '#0d1117',
-          '900': '#0f172a',
-          '800': '#1a2035',
-          '700': '#1e293b',
-          '600': '#334155',
-          '400': '#94a3b8',
-          '300': '#cbd5e1'
-        },
-        'blue': {
-          '500': '#3b82f6'
-        }
-      }
-    }
+        primary: '#144bb8',
+        'background-light': '#f6f6f8',
+        'background-dark': '#0f172a',
+        'surface-dark': '#1e293b',
+        'surface-highlight': '#334155',
+      },
+      fontFamily: {
+        display: ['Inter', 'sans-serif'],
+      },
+      borderRadius: {
+        DEFAULT: '0.375rem',
+        lg: '0.5rem',
+        xl: '0.75rem',
+        '2xl': '1rem',
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 }

@@ -1,3 +1,4 @@
+@import "@taskmaster/shared-ui/theme.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
