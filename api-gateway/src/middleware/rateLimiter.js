@@ -19,7 +19,6 @@ const rateLimiter = (req, res, next) => {
     const record = requestCounts.get(ip);
 
     if (now - record.startTime > WINDOW_MS) {
-        // Reset window
         requestCounts.set(ip, { count: 1, startTime: now });
         return next();
     }

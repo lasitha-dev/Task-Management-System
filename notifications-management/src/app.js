@@ -3,14 +3,20 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const notificationRoutes = require('./routes/notificationRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
+const seedMockData = require('./utils/seedMockData');
+const Notification = require('./models/Notification');
 
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5003;
 
-// Connect to Database
-connectDB();
+// Connect to Database and seed mock data
+connectDB().then(() => {
+    if (process.env.ENABLE_MOCK_NOTIFICATIONS === 'true') {
+        seedMockData(Notification);
+    }
+});
 
 // Middleware
 app.use(cors());

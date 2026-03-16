@@ -1,6 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
+const passport = require('passport');
 const connectDB = require('./config/db');
+const logger = require('./config/logger');
+const configurePassport = require('./config/passport');
 const userRoutes = require('./routes/userRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
 
@@ -9,12 +13,20 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Connect to Database
-connectDB();
-
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// HTTP request logging via morgan, piped to winston
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('combined', {
+    stream: { write: (message) => logger.info(message.trim()) },
+  }));
+}
+
+// Passport initialization (stateless JWT — no sessions)
+configurePassport();
+app.use(passport.initialize());
 
 // Routes
 app.use('/api/users', userRoutes);
@@ -27,8 +39,12 @@ app.get('/health', (req, res) => {
 // Global Error Handler
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`User Management Service running on port ${PORT}`);
-});
+// Only start server and connect to DB when not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+  app.listen(PORT, () => {
+    logger.info(`User Management Service running on port ${PORT}`);
+  });
+}
 
 module.exports = app;

@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const taskRoutes = require('./routes/taskRoutes');
+const boardRoutes = require('./routes/boardRoutes');
 const { errorHandler } = require('./middleware/errorHandler');
+const { startDeadlineReminderScheduler } = require('./services/deadlineReminderService');
 
 require('dotenv').config();
 
@@ -18,6 +20,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/tasks', taskRoutes);
+app.use('/api/boards', boardRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
@@ -27,8 +30,12 @@ app.get('/health', (req, res) => {
 // Global Error Handler
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-    console.log(`Task Management Service running on port ${PORT}`);
-});
+// Only start server if this file is run directly (not during tests)
+if (require.main === module) {
+    startDeadlineReminderScheduler();
+    app.listen(PORT, () => {
+        console.log(`Task Management Service running on port ${PORT}`);
+    });
+}
 
 module.exports = app;
