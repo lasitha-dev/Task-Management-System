@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 // Mock dependencies
 jest.mock('../../src/config/db');
 jest.mock('../../src/models/TasksMirror');
+jest.mock('axios');
+const axios = require('axios');
 
 describe('Sync API Endpoints', () => {
     beforeAll(() => {
@@ -16,6 +18,18 @@ describe('Sync API Endpoints', () => {
 
     afterAll(() => {
         jest.restoreAllMocks();
+    });
+
+    beforeEach(() => {
+        const mockTasks = Array(20).fill(0).map((_, i) => ({
+            _id: `mock-${i}`,
+            title: `Mock task ${i}`,
+            status: 'todo',
+            assignedTo: { _id: 'user1', name: 'User 1' },
+            createdAt: new Date(),
+            updatedAt: new Date()
+        }));
+        axios.get.mockResolvedValue({ data: { tasks: mockTasks } });
     });
 
     describe('POST /api/sync/tasks', () => {

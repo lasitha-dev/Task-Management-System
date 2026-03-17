@@ -3,11 +3,24 @@
  * Run: npm test
  */
 
+process.env.JWT_SECRET = 'taskmanagement_super_secret_key_2026';
+process.env.NODE_ENV = 'test';
+
 require('dotenv').config();
 const request = require('supertest');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const app = require('../src/app');
+
+// Mock axios down below
+jest.mock('axios', () => {
+    return {
+        get: jest.fn().mockResolvedValue({ data: { users: [{ _id: 'user_001', name: 'Mock User', email: 'mock@example.com', role: 'user' }] } }),
+        post: jest.fn().mockResolvedValue({ data: { success: true } })
+    };
+});
+
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
 // ─── Generate a test token ─────────────────────────────────────────────────────
 const testToken = jwt.sign(
@@ -19,10 +32,13 @@ const testToken = jwt.sign(
 const authHeader = `Bearer ${testToken}`;
 
 let createdTaskId;
+let mongoServer;
 
 // ─── Connect / Disconnect DB ───────────────────────────────────────────────────
 beforeAll(async () => {
-    await mongoose.connect(process.env.MONGO_URI);
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
 });
 
 afterAll(async () => {
@@ -33,6 +49,9 @@ afterAll(async () => {
         });
     }
     await mongoose.disconnect();
+    if (mongoServer) {
+        await mongoServer.stop();
+    }
 });
 
 // ─── Health Check ─────────────────────────────────────────────────────────────

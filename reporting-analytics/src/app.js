@@ -34,24 +34,26 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', service: 'reporting-analytics' });
 });
 
-// Auto-sync tasks on startup
-(async () => {
-    try {
-        await syncTasksFromExternal();
-    } catch (error) {
-        console.error('Failed to sync on startup:', error.message);
-    }
-})();
+// Auto-sync tasks on startup and schedule periodic sync
+if (process.env.NODE_ENV !== 'test') {
+    (async () => {
+        try {
+            await syncTasksFromExternal();
+        } catch (error) {
+            console.error('Failed to sync on startup:', error.message);
+        }
+    })();
 
-// Schedule periodic sync every 5 minutes
-cron.schedule('*/5 * * * *', async () => {
-    console.log('⏰ Running scheduled sync...');
-    try {
-        await syncTasksFromExternal();
-    } catch (error) {
-        console.error('Scheduled sync failed:', error.message);
-    }
-});
+    // Schedule periodic sync every 5 minutes
+    cron.schedule('*/5 * * * *', async () => {
+        console.log('⏳ Running scheduled sync...');
+        try {
+            await syncTasksFromExternal();
+        } catch (error) {
+            console.error('Scheduled sync failed:', error.message);
+        }
+    });
+}
 
 // Global Error Handler (must be last)
 app.use(errorHandler);

@@ -12,7 +12,9 @@ const app = express();
 const PORT = process.env.PORT || 5002;
 
 // Connect to Database
-connectDB();
+if (process.env.NODE_ENV !== 'test') {
+    connectDB();
+}
 
 // Middleware
 app.use(cors());

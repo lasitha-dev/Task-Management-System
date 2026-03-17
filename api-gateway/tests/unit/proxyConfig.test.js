@@ -5,8 +5,11 @@ describe('proxyConfig', () => {
         expect(proxyConfig.routes).toEqual([
             expect.objectContaining({ path: '/api/users', target: expect.any(String) }),
             expect.objectContaining({ path: '/api/tasks', target: expect.any(String) }),
+            expect.objectContaining({ path: '/api/boards', target: expect.any(String) }),
             expect.objectContaining({ path: '/api/notifications', target: expect.any(String) }),
             expect.objectContaining({ path: '/api/reports', target: expect.any(String) }),
+            expect.objectContaining({ path: '/api/analytics', target: expect.any(String) }),
+            expect.objectContaining({ path: '/api/sync', target: expect.any(String) }),
         ]);
     });
 

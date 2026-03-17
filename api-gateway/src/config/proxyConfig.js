@@ -17,7 +17,7 @@ const proxyConfig = {
         {
             path: '/api/boards',
             target: process.env.TASK_SERVICE_URL || 'http://localhost:5002',
-            pathRewrite: {},
+            pathRewrite: { '^/': '/api/boards/' },
         },
         {
             path: '/api/notifications',
