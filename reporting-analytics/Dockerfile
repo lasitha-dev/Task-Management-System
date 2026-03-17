@@ -1,13 +1,23 @@
 FROM node:18-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
 
-RUN npm ci --only=production
+# Install production dependencies only
+RUN npm install --omit=dev
 
-COPY . .
+# Copy source code
+COPY src ./src
 
-EXPOSE 5004
+# Expose port
+EXPOSE 5000
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:5000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+# Start application
 CMD ["node", "src/app.js"]
+

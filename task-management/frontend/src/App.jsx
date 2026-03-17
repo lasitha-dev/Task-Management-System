@@ -6,6 +6,7 @@ import { buildAppUrl } from '@taskmaster/shared-ui/appLinks'
 import { AppEmptyState, AppPageHeader, AppSectionCard, AppStatCard } from '@taskmaster/shared-ui/components'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from 'recharts'
 import Sidebar from './components/Sidebar'
 import NotificationsWorkspace from './components/NotificationsWorkspace'
 import Header from './components/Header'
@@ -348,8 +349,12 @@ function TeamSpacePage() {
 
 function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ total: 0, todo: 0, in_progress: 0, done: 0 })
+  const [summary, setSummary] = useState({ totalTasks: 0, completedTasks: 0, productivity: 0, totalChange: 0, completedChange: 0, productivityChange: 0 })
+  const [statusStats, setStatusStats] = useState({ pending: 0, inProgress: 0, completed: 0 })
+  const [weeklyData, setWeeklyData] = useState([])
+  const [userStats, setUserStats] = useState([])
   const [tasks, setTasks] = useState([])
+  const [chartType, setChartType] = useState('pie')
 
   useEffect(() => {
     let isCancelled = false
@@ -357,21 +362,32 @@ function AnalyticsPage() {
     async function loadAnalytics() {
       setLoading(true)
       try {
-        const [statsResponse, tasksResponse] = await Promise.all([
-          api.get('/api/tasks/stats'),
-          api.get('/api/tasks'),
+        // Automatically trigger sync first
+        try {
+          await api.post('/api/sync/tasks')
+        } catch (syncErr) {
+          console.warn('Sync failed, continuing with current stats', syncErr)
+        }
+
+        const [summaryRes, statusRes, weeklyRes, usersRes, tasksRes] = await Promise.all([
+          api.get('/api/analytics/summary').catch(() => ({ data: {} })),
+          api.get('/api/analytics/status').catch(() => ({ data: {} })),
+          api.get('/api/analytics/weekly').catch(() => ({ data: {} })),
+          api.get('/api/analytics/users').catch(() => ({ data: {} })),
+          api.get('/api/tasks').catch(() => ({ data: { tasks: [] } }))
         ])
 
-        if (isCancelled) {
-          return
-        }
+        if (isCancelled) return
 
-        setStats(statsResponse.data.stats || { total: 0, todo: 0, in_progress: 0, done: 0 })
-        setTasks(tasksResponse.data.tasks || [])
+        setSummary(summaryRes.data?.data || {})
+        setStatusStats(statusRes.data?.data || { pending: 0, inProgress: 0, completed: 0 })
+        setWeeklyData(weeklyRes.data?.data || [])
+        setUserStats(usersRes.data?.data || [])
+        setTasks(tasksRes.data?.tasks || [])
+      } catch (err) {
+        console.error('Failed to load analytics', err)
       } finally {
-        if (!isCancelled) {
-          setLoading(false)
-        }
+        if (!isCancelled) setLoading(false)
       }
     }
 
@@ -382,11 +398,7 @@ function AnalyticsPage() {
     }
   }, [])
 
-  const completionRate = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0
   const urgentTasks = tasks.filter((task) => task.priority === 'urgent').slice(0, 5)
-  const averageProgress = tasks.length > 0
-    ? Math.round(tasks.reduce((total, task) => total + (Number(task.progress) || 0), 0) / tasks.length)
-    : 0
 
   let urgentQueueContent
   if (loading) {
@@ -417,46 +429,449 @@ function AnalyticsPage() {
     <WorkspacePageLayout
       header={<AppPageHeader title="Analytics" subtitle="Track throughput, delivery pace, and the urgent work putting pressure on the team." />}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <AppStatCard label="Completion Rate" value={`${completionRate}%`} meta="Done versus total tasks" icon="trending_up" tone="success" />
-        <AppStatCard label="Average Progress" value={`${averageProgress}%`} meta="Across all task progress values" icon="speed" tone="accent" />
-        <AppStatCard label="To Do" value={stats.todo} meta="Waiting to start" icon="pending_actions" tone="warning" />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <AppStatCard label="Completion Rate" value={`${summary.productivity || 0}%`} meta={summary.productivityChange !== undefined ? `${summary.productivityChange > 0 ? '+' : ''}${summary.productivityChange}% vs last week` : 'Done versus total tasks'} icon="trending_up" tone="success" />
+        <AppStatCard label="Total Tasks" value={summary.totalTasks || 0} meta={summary.totalChange !== undefined ? `${summary.totalChange > 0 ? '+' : ''}${summary.totalChange} vs last week` : 'Overall volume'} icon="task" tone="accent" />
+        <AppStatCard label="Completed Tasks" value={summary.completedTasks || 0} meta={summary.completedChange !== undefined ? `${summary.completedChange > 0 ? '+' : ''}${summary.completedChange} vs last week` : 'Recently finished'} icon="check_circle" tone="success" />
         <AppStatCard label="Urgent Tasks" value={urgentTasks.length} meta="Highest priority queue" icon="crisis_alert" tone="danger" />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-6 mb-6">
         <AppSectionCard className="p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Status Breakdown</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-white">Status Breakdown</h3>
+            <div className="flex items-center bg-[#1c212c] p-1 rounded-lg border border-[#2d3544]">
+              <button
+                onClick={() => setChartType('pie')}
+                className={`flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  chartType === 'pie' 
+                    ? 'bg-[#144bb8] text-white shadow-sm' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="View as Pie Chart"
+              >
+                <span className="material-symbols-outlined text-[16px]">pie_chart</span>
+              </button>
+              <button
+                onClick={() => setChartType('bar')}
+                className={`flex items-center justify-center px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  chartType === 'bar' 
+                    ? 'bg-[#144bb8] text-white shadow-sm' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="View as Bar Chart"
+              >
+                <span className="material-symbols-outlined text-[16px]">bar_chart</span>
+              </button>
+            </div>
+          </div>
+          
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((item) => <div key={item} className="h-10 rounded-xl bg-[#202634] animate-pulse" />)}
             </div>
           ) : (
-            <div className="space-y-4">
-              {['todo', 'in_progress', 'done'].map((status) => {
-                const count = stats[status] || 0
-                const width = stats.total > 0 ? `${Math.max(8, Math.round((count / stats.total) * 100))}%` : '8%'
-                return (
-                  <div key={status}>
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-slate-300 font-medium">{formatStatusLabel(status)}</span>
-                      <span className="text-slate-400">{count}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-[#161b26] overflow-hidden">
-                      <div className={`h-full rounded-full ${getStatusBarClass(status)}`} style={{ width }} />
-                    </div>
-                  </div>
-                )
-              })}
+            <div className="h-[250px] w-full mt-4">
+              {chartType === 'pie' ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'To Do', value: statusStats.pending?.count || 0, color: '#f59e0b' },
+                        { name: 'In Progress', value: statusStats.inProgress?.count || 0, color: '#144bb8' },
+                        { name: 'Done', value: statusStats.completed?.count || 0, color: '#10b981' }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {[
+                        { name: 'To Do', value: statusStats.pending?.count || 0, color: '#f59e0b' },
+                        { name: 'In Progress', value: statusStats.inProgress?.count || 0, color: '#144bb8' },
+                        { name: 'Done', value: statusStats.completed?.count || 0, color: '#10b981' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-[#1c212c] border border-[#2d3544] rounded-lg p-3 shadow-xl">
+                              <p className="text-sm font-semibold text-white flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }}></span>
+                                {data.name}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-1">
+                                {data.value} {data.value === 1 ? 'Task' : 'Tasks'}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" className="fill-white font-bold text-xl">
+                      {summary.totalTasks || 0}
+                    </text>
+                    <text x="50%" y="54%" textAnchor="middle" dominantBaseline="middle" className="fill-slate-400 text-[10px] uppercase tracking-wider font-semibold">
+                      Total Tasks
+                    </text>
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36} 
+                      iconType="circle"
+                      formatter={(value) => <span className="text-slate-300 text-sm font-medium ml-1">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart 
+                    data={[
+                      { name: 'To Do', value: statusStats.pending?.count || 0, color: '#f59e0b' },
+                      { name: 'In Progress', value: statusStats.inProgress?.count || 0, color: '#144bb8' },
+                      { name: 'Done', value: statusStats.completed?.count || 0, color: '#10b981' }
+                    ]}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3544" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} 
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                      allowDecimals={false}
+                    />
+                    <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-[#1c212c] border border-[#2d3544] rounded-lg p-3 shadow-xl">
+                              <p className="text-sm font-semibold text-white flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }}></span>
+                                {data.name}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-1">
+                                {data.value} {data.value === 1 ? 'Task' : 'Tasks'}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                      {[
+                        { name: 'To Do', value: statusStats.pending?.count || 0, color: '#f59e0b' },
+                        { name: 'In Progress', value: statusStats.inProgress?.count || 0, color: '#144bb8' },
+                        { name: 'Done', value: statusStats.completed?.count || 0, color: '#10b981' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           )}
         </AppSectionCard>
 
         <AppSectionCard className="p-6">
+          <h3 className="text-lg font-bold text-white mb-4">Weekly Productivity</h3>
+          {loading ? (
+            <div className="space-y-4">
+              <div className="h-[250px] rounded-xl bg-[#202634] animate-pulse" />
+            </div>
+          ) : (
+            <div className="h-[250px] w-full mt-4">
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={weeklyData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3544" />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} allowDecimals={false} />
+                  <RechartsTooltip 
+                    cursor={{ stroke: '#2d3544', strokeDasharray: '3 3' }}
+                    contentStyle={{ backgroundColor: '#1c212c', border: '1px solid #2d3544', borderRadius: '8px', color: '#fff' }}
+                    itemStyle={{ color: '#10b981', fontWeight: 600 }}
+                  />
+                  <Line type="monotone" dataKey="completedTasks" stroke="#10b981" strokeWidth={3} dot={{ r: 4, stroke: "#1c212c", strokeWidth: 2, fill: '#10b981' }} activeDot={{ r: 6, strokeWidth: 0, fill: '#10b981' }} name="Completed Tasks" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </AppSectionCard>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-6">
+        <AppSectionCard className="p-6">
           <h3 className="text-lg font-bold text-white mb-4">Urgent Queue</h3>
           {urgentQueueContent}
         </AppSectionCard>
+        
+        <AppSectionCard className="p-6 flex flex-col h-full">
+          <h3 className="text-lg font-bold text-white mb-4">Team Leaderboard</h3>
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '350px' }}>
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((item) => <div key={item} className="h-16 rounded-xl bg-[#202634] animate-pulse" />)}
+              </div>
+            ) : userStats.length > 0 ? (
+              <div className="space-y-3">
+                {userStats.map((user) => (
+                  <div key={user.userId} className="rounded-xl border border-[#2d3544] bg-[#161b26] px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-[#202634] flex items-center justify-center text-[#94a3b8] font-bold text-sm">
+                        {user.userName ? user.userName.substring(0, 2).toUpperCase() : '?'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{user.userName}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">{user.completedTasks} / {user.totalTasks} Tasks Completed</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-[#10b981]">{user.completionRate}%</p>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Rate</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <AppEmptyState icon="group" title="No team data" description="No users found or no tasks assigned." />
+              </div>
+            )}
+          </div>
+        </AppSectionCard>
       </div>
+    </WorkspacePageLayout>
+  )
+}
+
+function ReportsPage() {
+  const [loading, setLoading] = useState(true)
+  const [reports, setReports] = useState([])
+  const [generateModalOpen, setGenerateModalOpen] = useState(false)
+  const [viewModalOpen, setViewModalOpen] = useState(false)
+  const [selectedReport, setSelectedReport] = useState(null)
+  const [form, setForm] = useState({ title: '', authorName: '', period: 'week' })
+  const [generating, setGenerating] = useState(false)
+  const [toast, setToast] = useState(null)
+
+  const showToast = (message, type = 'success') => setToast({ message, type })
+
+  async function fetchReports() {
+    setLoading(true)
+    try {
+      await api.post('/api/sync/tasks').catch(() => {})
+      const { data } = await api.get('/api/reports')
+      setReports(data.data || [])
+    } catch (err) {
+      console.error('Failed to load reports', err)
+      showToast('Failed to load reports', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchReports()
+  }, [])
+
+  async function handleGenerate(e) {
+    e.preventDefault()
+    setGenerating(true)
+    try {
+      await api.post('/api/reports/generate', form)
+      setGenerateModalOpen(false)
+      setForm({ title: '', authorName: '', period: 'week' })
+      showToast('Report generated successfully')
+      fetchReports()
+    } catch (err) {
+      console.error(err)
+      showToast('Failed to generate report', 'error')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!globalThis.confirm('Are you sure you want to delete this report?')) return
+    try {
+      await api.delete(`/api/reports/${id}`)
+      showToast('Report deleted successfully')
+      fetchReports()
+    } catch (err) {
+      console.error(err)
+      showToast('Failed to delete report', 'error')
+    }
+  }
+
+  function handleView(report) {
+    setSelectedReport(report)
+    setViewModalOpen(true)
+  }
+
+  return (
+    <WorkspacePageLayout
+      header={
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <AppPageHeader title="Reports" subtitle="Generate and view historical analytics snapshots." />
+          <button
+            onClick={() => setGenerateModalOpen(true)}
+            className="flex items-center gap-2 bg-[#144bb8] hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            Generate Report
+          </button>
+        </div>
+      }
+    >
+      <AppSectionCard className="p-0 overflow-hidden">
+        {loading ? (
+          <div className="p-6 space-y-4">
+            {[1, 2, 3].map((item) => <div key={item} className="h-16 rounded-xl bg-[#202634] animate-pulse" />)}
+          </div>
+        ) : reports.length === 0 ? (
+          <div className="p-12">
+            <AppEmptyState icon="description" title="No reports yet" description="Generate your first report to freeze analytics data in time." />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-300">
+              <thead className="bg-[#161b26] text-xs uppercase text-slate-400 font-semibold border-b border-[#2d3544]">
+                <tr>
+                  <th className="px-6 py-4">Title</th>
+                  <th className="px-6 py-4">Author</th>
+                  <th className="px-6 py-4">Period</th>
+                  <th className="px-6 py-4">Generated Date</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.map((report) => (
+                  <tr key={report._id} className="border-b border-[#2d3544] hover:bg-[#161b26]/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-white">{report.title}</td>
+                    <td className="px-6 py-4">{report.authorName}</td>
+                    <td className="px-6 py-4 capitalize">{report.period}</td>
+                    <td className="px-6 py-4">{new Date(report.generatedAt).toLocaleString()}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${report.status === 'ready' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                        {report.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-3">
+                      <button onClick={() => handleView(report)} disabled={report.status !== 'ready'} className="text-[#144bb8] hover:text-blue-400 disabled:opacity-50 transition-colors">
+                        View
+                      </button>
+                      <button onClick={() => handleDelete(report._id)} className="text-red-500 hover:text-red-400 transition-colors">
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </AppSectionCard>
+
+      {/* Generate Modal */}
+      {generateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm px-4">
+          <div className="bg-[#1c212c] w-full max-w-md rounded-xl shadow-2xl border border-[#2d3544] overflow-hidden">
+            <div className="px-6 py-4 flex items-center justify-between border-b border-[#2d3544]">
+              <h3 className="text-lg font-bold text-white">Generate Report</h3>
+              <button onClick={() => setGenerateModalOpen(false)} className="text-slate-400 hover:text-white">
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleGenerate}>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-300 mb-1.5">Report Title</label>
+                  <input required value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full bg-[#161b26] border border-[#2d3544] rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#144bb8]/50 focus:border-[#144bb8] text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-300 mb-1.5">Author Name</label>
+                  <input required value={form.authorName} onChange={e => setForm({...form, authorName: e.target.value})} className="w-full bg-[#161b26] border border-[#2d3544] rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#144bb8]/50 focus:border-[#144bb8] text-white" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-300 mb-1.5">Period</label>
+                  <select value={form.period} onChange={e => setForm({...form, period: e.target.value})} className="w-full bg-[#161b26] border border-[#2d3544] rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#144bb8]/50 focus:border-[#144bb8] text-white">
+                    <option value="week">Weekly</option>
+                    <option value="month">Monthly</option>
+                  </select>
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-[#161b26]/50 border-t border-[#2d3544] flex justify-end gap-3">
+                <button type="button" onClick={() => setGenerateModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white">Cancel</button>
+                <button type="submit" disabled={generating} className="px-4 py-2 text-sm font-medium bg-[#144bb8] hover:bg-blue-600 text-white rounded-lg flex items-center gap-2 disabled:opacity-60">
+                  {generating ? 'Generating...' : 'Generate'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {viewModalOpen && selectedReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm px-4">
+          <div className="bg-[#1c212c] w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl shadow-2xl border border-[#2d3544] overflow-hidden">
+            <div className="px-6 py-4 flex items-center justify-between border-b border-[#2d3544]">
+              <div>
+                <h3 className="text-xl font-bold text-white">{selectedReport.title}</h3>
+                <p className="text-sm text-slate-400">Generated by {selectedReport.authorName} on {new Date(selectedReport.generatedAt).toLocaleString()}</p>
+              </div>
+              <button onClick={() => setViewModalOpen(false)} className="text-slate-400 hover:text-white">
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-[#161b26] border border-[#2d3544] p-4 rounded-xl">
+                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Total Tasks</p>
+                  <p className="text-2xl font-bold text-white">{selectedReport.data?.summary?.totalTasks || 0}</p>
+                </div>
+                <div className="bg-[#161b26] border border-[#2d3544] p-4 rounded-xl">
+                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Completed Tasks</p>
+                  <p className="text-2xl font-bold text-[#10b981]">{selectedReport.data?.summary?.completedTasks || 0}</p>
+                </div>
+                <div className="bg-[#161b26] border border-[#2d3544] p-4 rounded-xl">
+                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Productivity</p>
+                  <p className="text-2xl font-bold text-[#f59e0b]">{selectedReport.data?.summary?.productivity || 0}%</p>
+                </div>
+              </div>
+              <div className="bg-[#161b26] border border-[#2d3544] p-4 rounded-xl">
+                <p className="text-slate-400 text-sm font-semibold mb-3">Status Breakdown</p>
+                <div className="flex gap-4">
+                   <div className="flex-1 text-center py-2 bg-[#1c212c] rounded-lg text-white"><span className="text-amber-500 font-bold mr-2">To Do:</span> {selectedReport.data?.statusBreakdown?.pending?.count || 0}</div>
+                   <div className="flex-1 text-center py-2 bg-[#1c212c] rounded-lg text-white"><span className="text-blue-500 font-bold mr-2">In Progress:</span> {selectedReport.data?.statusBreakdown?.inProgress?.count || 0}</div>
+                   <div className="flex-1 text-center py-2 bg-[#1c212c] rounded-lg text-white"><span className="text-emerald-500 font-bold mr-2">Done:</span> {selectedReport.data?.statusBreakdown?.completed?.count || 0}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+      )}
     </WorkspacePageLayout>
   )
 }
@@ -762,6 +1177,7 @@ export default function App() {
           <Route path="/notifications" element={<NotificationsWorkspace currentUser={currentUser} onCountRefresh={refreshUnreadCount} />} />
           <Route path="/team" element={<TeamSpacePage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
           <Route path="/settings" element={<SettingsRedirect />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

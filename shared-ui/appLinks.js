@@ -2,6 +2,7 @@ const APP_PORTS = {
   user: 3000,
   task: 3001,
   notifications: 3002,
+  reporting: 3003,
 };
 
 function getToken() {

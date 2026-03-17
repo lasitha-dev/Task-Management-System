@@ -3,11 +3,16 @@
  * Run: npm test
  */
 
+process.env.JWT_SECRET = 'taskmanagement_super_secret_key_2026';
+process.env.NODE_ENV = 'test';
+
 require('dotenv').config();
 const request = require('supertest');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const app = require('../src/app');
+
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
 // ─── Generate test tokens ──────────────────────────────────────────────────────
 const adminToken = jwt.sign(
@@ -26,10 +31,13 @@ const authHeader = `Bearer ${adminToken}`;
 const memberAuthHeader = `Bearer ${memberToken}`;
 
 let createdBoardId;
+let mongoServer;
 
 // ─── Connect / Disconnect DB ───────────────────────────────────────────────────
 beforeAll(async () => {
-    await mongoose.connect(process.env.MONGO_URI);
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
 });
 
 afterAll(async () => {
@@ -44,6 +52,9 @@ afterAll(async () => {
         name: { $regex: /^Test Board|Board for/ },
     });
     await mongoose.disconnect();
+    if (mongoServer) {
+        await mongoServer.stop();
+    }
 });
 
 // ─── Board CRUD ───────────────────────────────────────────────────────────────

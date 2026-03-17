@@ -272,13 +272,13 @@ DA:40,6
 LF:14
 LH:14
 BRDA:6,0,0,6
-BRDA:6,0,1,6
+BRDA:6,0,1,0
 BRDA:16,1,0,2
 BRDA:16,1,1,3
 BRDA:21,2,0,1
 BRDA:21,2,1,2
 BRF:6
-BRH:6
+BRH:5
 end_of_record
 TN:
 SF:src\services\notificationService.js
