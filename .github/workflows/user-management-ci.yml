@@ -93,15 +93,10 @@ jobs:
           command: test
 
   # ---------------------------------------------------------------------------
-  # Job 3: Docker Build & Push
-  # ---------------------------------------------------------------------------
-  # Builds the Docker image using the service's Dockerfile (node:18-alpine)
-  # and pushes it to Docker Hub with two tags:
-  #   - 'latest' for convenience
-  #   - '<commit-sha>' for traceability and rollback
+  # Job 3: Docker Build & Push to Azure Container Registry (ACR)
   # ---------------------------------------------------------------------------
   docker-build-push:
-    name: 🐳 Docker Build & Push
+    name: 🐳 Docker Build & Push to Azure
     runs-on: ubuntu-latest
     needs: security-scan
 
@@ -109,14 +104,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Authenticate with Docker Hub using repository secrets
-      - name: Login to Docker Hub
+      # Authenticate with Azure Container Registry using your secrets
+      - name: Login to Azure Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: taskappregistry9921.azurecr.io
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      # Build and push the container image with 'latest' and SHA tags
+      # Build and push the container image to Azure
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -124,8 +120,8 @@ jobs:
           file: ./user-management/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/user-management:latest
-            ${{ secrets.DOCKER_USERNAME }}/user-management:${{ github.sha }}
+            taskappregistry9921.azurecr.io/user-management:latest
+            taskappregistry9921.azurecr.io/user-management:${{ github.sha }}
 
   # ---------------------------------------------------------------------------
   # Job 4: Deploy (Placeholder)
