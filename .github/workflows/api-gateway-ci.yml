@@ -19,6 +19,8 @@ on:
     branches: [main]
     paths:
       - 'api-gateway/**'
+      - '.github/workflows/api-gateway-ci.yml'
+  workflow_dispatch:
 
 # ---------------------------------------------------------------------------
 # Job 1: Build

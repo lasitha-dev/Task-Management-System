@@ -16,6 +16,8 @@ on:
     branches: [main]
     paths:
       - 'user-management/**'
+      - '.github/workflows/user-management-ci.yml'
+  workflow_dispatch:
 
 # ---------------------------------------------------------------------------
 # Job 1: Build & Test

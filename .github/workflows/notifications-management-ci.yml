@@ -16,6 +16,8 @@ on:
     branches: [main]
     paths:
       - 'notifications-management/**'
+      - '.github/workflows/notifications-management-ci.yml'
+  workflow_dispatch:
 
 # ---------------------------------------------------------------------------
 # Job 1: Build & Test
