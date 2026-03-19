@@ -127,11 +127,7 @@ jobs:
   # Job 4: Deploy (Placeholder)
   # ---------------------------------------------------------------------------
   # This job serves as a placeholder for cloud deployment.
-  # Replace the echo commands with actual deployment steps for your provider:
-  #   - AWS ECS: aws ecs update-service ...
-  #   - Google Cloud Run: gcloud run deploy ...
-  #   - Azure Container Apps: az containerapp update ...
-  #   - Kubernetes: kubectl set image ...
+  # Replace the echo commands with actual deployment steps for your provider.
   # ---------------------------------------------------------------------------
   deploy:
     name: 🚀 Deploy to Cloud
@@ -139,15 +135,12 @@ jobs:
     needs: docker-build-push
 
     steps:
-      - name: Deploy User Management Service
+      - name: Deploy Service
         run: |
           echo "============================================="
           echo "  DEPLOYMENT PLACEHOLDER"
           echo "============================================="
           echo "Service:  User Management"
-          echo "Image:    ${{ secrets.DOCKER_USERNAME }}/user-management:${{ github.sha }}"
+          echo "Image:    taskappregistry9921.azurecr.io/user-management:${{ github.sha }}"
           echo "Status:   Ready for cloud deployment"
-          echo ""
-          echo "To enable real deployment, replace this step"
-          echo "with your cloud provider's deployment command."
           echo "============================================="
