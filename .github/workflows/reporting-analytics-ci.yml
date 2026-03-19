@@ -144,54 +144,32 @@ jobs:
             taskappregistry9921.azurecr.io/reporting-analytics:${{ github.sha }}
 
   # ---------------------------------------------------------------------------
-  # Job 4: Deploy to AWS App Runner
+  # Job 4: Deploy (Placeholder)
   # ---------------------------------------------------------------------------
-  # Deploys the Docker image to AWS App Runner for production hosting.
-  # Only runs on successful push to main branch.
-  # Requires AWS credentials configured as repository secrets.
+  # This job serves as a placeholder for cloud deployment.
+  # Replace the echo commands with actual deployment steps for your provider:
+  #   - Azure Container Apps: az containerapp update ...
+  #   - Kubernetes: kubectl set image ...
   # ---------------------------------------------------------------------------
   deploy:
-    name: 🚀 Deploy to AWS App Runner
+    name: 🚀 Deploy to Cloud
     runs-on: ubuntu-latest
     needs: docker-build-push
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      # Configure AWS credentials for deployment
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
-
-      # Deploy service to AWS App Runner
-      - name: Deploy to AWS App Runner
+      - name: Deploy Reporting & Analytics Service
         run: |
-          # Create or update AppRunner service
-          SERVICE_ARN=$(aws apprunner list-services \
-            --query "ServiceSummaryList[?ServiceName=='reporting-analytics'].ServiceArn" \
-            --output text 2>/dev/null || echo "")
-          
-          if [ -z "$SERVICE_ARN" ]; then
-            echo "Creating new AppRunner service..."
-            aws apprunner create-service \
-              --service-name reporting-analytics \
-              --source-configuration \
-                ImageRepository="{RepositoryUrl=${{ env.REGISTRY }}/${{ github.repository }}/reporting-analytics,ImageRepositoryType=ECR_PUBLIC,ImageConfiguration={Port=5000,StartCommand='node src/app.js'}}" \
-              --instance-configuration Cpu=1,Memory=2GB \
-              --auto-deployment-config AutoDeploymentsEnabled=true
-          else
-            echo "Updating existing AppRunner service..."
-            aws apprunner update-service \
-              --service-arn "$SERVICE_ARN" \
-              --source-configuration \
-                ImageRepository="{RepositoryUrl=${{ env.REGISTRY }}/${{ github.repository }}/reporting-analytics,ImageRepositoryType=ECR_PUBLIC,ImageConfiguration={Port=5000,StartCommand='node src/app.js'}}"
-          fi
-        continue-on-error: true
+          echo "============================================="
+          echo "  DEPLOYMENT PLACEHOLDER"
+          echo "============================================="
+          echo "Service:  Reporting & Analytics"
+          echo "Image:    taskappregistry9921.azurecr.io/reporting-analytics:${{ github.sha }}"
+          echo "Status:   Ready for cloud deployment"
+          echo ""
+          echo "To enable real deployment, replace this step"
+          echo "with your cloud provider's deployment command."
+          echo "============================================="
 
   # ---------------------------------------------------------------------------
   # Job 5: Notify Results
@@ -216,6 +194,6 @@ jobs:
             echo "✅ Docker image built and pushed successfully"
           fi
           if [ "${{ needs.deploy.result }}" == "success" ]; then
-            echo "🚀 Deployment to AWS App Runner successful"
+            echo "🚀 Deployment to Cloud successful"
           fi
 
