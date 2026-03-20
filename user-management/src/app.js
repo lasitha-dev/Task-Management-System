@@ -14,7 +14,11 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // HTTP request logging via morgan, piped to winston

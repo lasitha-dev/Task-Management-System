@@ -19,7 +19,11 @@ const PORT = process.env.PORT || 5004;
 connectDB();
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(rateLimiter);
 app.use(authMiddleware);

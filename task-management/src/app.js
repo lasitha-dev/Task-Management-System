@@ -17,7 +17,11 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+    credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes

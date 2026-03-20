@@ -28,7 +28,17 @@ function buildQueryString(query = {}) {
   return serialized ? `?${serialized}` : '';
 }
 
-function getBaseOrigin(port) {
+function getBaseOrigin(app, port) {
+  // Use production environment variables if they are injected at build time
+  try {
+    if (app === 'user' && import.meta.env.VITE_USER_APP_URL) return import.meta.env.VITE_USER_APP_URL;
+    if (app === 'task' && import.meta.env.VITE_TASK_APP_URL) return import.meta.env.VITE_TASK_APP_URL;
+    if (app === 'notifications' && import.meta.env.VITE_NOTIFICATIONS_APP_URL) return import.meta.env.VITE_NOTIFICATIONS_APP_URL;
+    if (app === 'reporting' && import.meta.env.VITE_REPORTING_APP_URL) return import.meta.env.VITE_REPORTING_APP_URL;
+  } catch (e) {
+    // Ignore error if import.meta.env is not defined (e.g. in non-Vite contexts)
+  }
+
   if (typeof window === 'undefined') {
     return `http://127.0.0.1:${port}`;
   }
@@ -50,7 +60,9 @@ export function buildAppUrl(app, path = '/', options = {}) {
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   const queryString = buildQueryString(query);
-  const baseUrl = `${getBaseOrigin(port)}${normalizedPath}${queryString}`;
+  // Ensure the origin does not have a trailing slash, and normalizedPath starts with slash
+  const origin = getBaseOrigin(app, port).replace(/\/$/, "");
+  const baseUrl = `${origin}${normalizedPath}${queryString}`;
 
   if (!includeToken) {
     return baseUrl;

@@ -114,8 +114,8 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      # Build and push the container image to Azure
-      - name: Build and Push Docker Image
+      # Build and push the backend container image to Azure
+      - name: Build and Push Backend Docker Image
         uses: docker/build-push-action@v5
         with:
           context: ./task-management
@@ -124,6 +124,23 @@ jobs:
           tags: |
             taskappregistry9921.azurecr.io/task-management:latest
             taskappregistry9921.azurecr.io/task-management:${{ github.sha }}
+
+      # Build and push the frontend container image to Azure
+      - name: Build and Push Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./task-management/frontend/Dockerfile
+          push: true
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL_TASKS }}
+            VITE_USER_APP_URL=${{ secrets.VITE_USER_APP_URL }}
+            VITE_TASK_APP_URL=${{ secrets.VITE_TASK_APP_URL }}
+            VITE_NOTIFICATIONS_APP_URL=${{ secrets.VITE_NOTIFICATIONS_APP_URL }}
+            VITE_REPORTING_APP_URL=${{ secrets.VITE_REPORTING_APP_URL }}
+          tags: |
+            taskappregistry9921.azurecr.io/task-frontend:latest
+            taskappregistry9921.azurecr.io/task-frontend:${{ github.sha }}
 
   # ---------------------------------------------------------------------------
   # Job 4: Deploy (Placeholder)
